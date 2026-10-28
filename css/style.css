@@ -88,6 +88,8 @@ textarea { resize: vertical; }
 .total-row td { font-weight: 700; background: #fafbf8; }
 .num-input { width: 80px; text-align: right; padding: 5px 8px; }
 .slot { min-width: 170px; padding: 5px 6px; font-size: 13px; }
+.qty { display: flex; gap: 4px; }
+.unit { width: auto; padding: 5px 6px; font-size: 13px; }
 .andro-input { width: 90px; padding: 5px 6px; }
 .add-line { display: flex; gap: 8px; margin-top: 10px; }
 .add-line input:first-child { flex: 1; }

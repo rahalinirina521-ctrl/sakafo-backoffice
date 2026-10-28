@@ -2,10 +2,10 @@ import { html, useState, useMemo } from '../lib.js';
 import { useApp, Badge, Field, Modal } from '../ui.js';
 import { isComplete, kcalCheck, nextId, fmt, toNum } from '../calc.js';
 
-const CATS = ['Féculent', 'Protéine', 'Légumineuse', 'Légume', 'Fruit', 'Laitier', 'Matière grasse', 'Condiment', 'Autre'];
+const CATS = ['Féculent', 'Protéine', 'Légumineuse', 'Légume', 'Fruit', 'Boisson', 'Laitier', 'Matière grasse', 'Condiment', 'Autre'];
 const NUM = [
   ['kcal', 'Kcal'], ['proteines', 'Protéines g'], ['glucides', 'Glucides g'], ['lipides', 'Lipides g'],
-  ['fibres', 'Fibres g'], ['sucres', 'Sucres g'], ['sodium', 'Sodium mg'], ['ig', 'Index glycémique'], ['prix_kg', 'Vidiny Ar/kg'],
+  ['fibres', 'Fibres g'], ['sucres', 'Sucres g'], ['sodium', 'Sodium mg'], ['ig', 'Index glycémique'], ['poids_piece', 'Lanjan\'ny isa iray (g)'], ['densite', 'Densité (g/ml)'], ['prix_kg', 'Vidiny Ar/kg'],
 ];
 
 export function Ingredients() {
@@ -79,7 +79,7 @@ function IngForm({ row, onClose, onSave, onDelete, isNew }) {
       <${Field} label="Nom (FR)"><input value=${f.nom_fr || ''} onInput=${(e) => set('nom_fr', e.target.value)} /><//>
       <${Field} label="Sokajy"><select value=${f.categorie || ''} onChange=${(e) => set('categorie', e.target.value || null)}><option value="">—</option>${CATS.map((c) => html`<option>${c}</option>`)}</select><//>
       <${Field} label="Toetra"><select value=${f.etat || ''} onChange=${(e) => set('etat', e.target.value || null)}><option value="">—</option><option>Masaka</option><option>Manta</option><option>Vonona</option></select><//>
-      ${NUM.map(([k, l]) => html`<${Field} label=${l + (k === 'prix_kg' || k === 'ig' ? '' : ' /100g')}><input type="number" step="any" value=${f[k] ?? ''} onInput=${(e) => set(k, e.target.value)} /><//>`)}
+      ${NUM.map(([k, l]) => html`<${Field} label=${l + (['prix_kg', 'ig', 'poids_piece', 'densite'].includes(k) ? '' : ' /100g')}><input type="number" step="any" value=${f[k] ?? ''} onInput=${(e) => set(k, e.target.value)} /><//>`)}
       <${Field} label="Loharano (source)" wide><input value=${f.source || ''} onInput=${(e) => set('source', e.target.value)} placeholder="USDA FDC / Ciqual + anaran'ny sakafo" /><//>
       <label class="check wide"><input type="checkbox" checked=${!f.a_verifier} onChange=${(e) => set('a_verifier', !e.target.checked)} /> Efa nohamarinina tamin'ny loharano</label>
     </div>

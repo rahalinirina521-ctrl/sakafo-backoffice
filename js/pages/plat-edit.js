@@ -1,13 +1,16 @@
 import { html, useState, useMemo } from '../lib.js';
 import { useApp, Card, Badge, Field, CopyBox, navigate } from '../ui.js';
 import {
-  FOTOANA, lineValues, sumLines, slotTarget, fitStatus, nextId, uid, fmt, pct, toNum, kcalCheck, NUTR,
+  FOTOANA, UNITES, lineValues, lineGrams, sumLines, slotTarget, fitStatus, nextId, uid, fmt, pct, toNum, kcalCheck, NUTR,
 } from '../calc.js';
-import { promptHameno, promptSary, extractJson, ingredientsToFill } from '../prompts.js';
+import { promptHameno, promptSary, extractJson, ingredientsToFill, PLAT_TEXT_FIELDS } from '../prompts.js';
 import { exportHameno, importHameno } from '../excel.js';
 
+const PLAT_LABELS = { nom_commercial: 'Anarana commercial', marketing: 'Résumé marketing', description: 'Famaritana', avantages: 'Tombony', effets: 'Vokatra', nom_en: 'Anarana anglisy (sary)' };
+const NEW_ING = { nom_fr: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true };
+
 const EMPTY_PLAT = {
-  nom: '', nom_en: '', fotoana: 'Atoandro', categories: [], description: '', avantages: '', effets: '',
+  nom: '', nom_commercial: '', marketing: '', nom_en: '', fotoana: 'Atoandro', categories: [], description: '', avantages: '', effets: '',
   image_url: '', prix_vente: null, statut: 'Draft', notes: '',
 };
 
@@ -27,11 +30,12 @@ export function PlatEdit({ id }) {
   const isNew = id === 'vaovao';
   const existing = data.plats.find((p) => p.id === id);
   const [form, setForm] = useState(() => (existing ? { ...EMPTY_PLAT, ...existing } : { ...EMPTY_PLAT, id: nextId('SK', data.plats) }));
-  const [lines, setLines] = useState(() => data.composition.filter((c) => c.plat_id === id).sort((a, b) => (a.ordre || 0) - (b.ordre || 0)).map((c) => ({ ...c })));
+  const [lines, setLines] = useState(() => data.composition.filter((c) => c.plat_id === id).sort((a, b) => (a.ordre || 0) - (b.ordre || 0)).map((c) => ({ ...c, quantite: c.quantite ?? c.grammes, unite: c.unite || 'g' })));
   const [dirty, setDirty] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [newIng, setNewIng] = useState('');
   const [newG, setNewG] = useState('');
+  const [newU, setNewU] = useState('g');
 
   const totals = useMemo(() => sumLines(lines, ingMap), [lines, ingMap]);
   if (!isNew && !existing) return html`<div class="page"><p>Tsy hita ny sakafo ${id}.</p><a href="#/plats">← Hiverina</a></div>`;
@@ -46,15 +50,11 @@ export function PlatEdit({ id }) {
     let ing = findIngredient(txt, data.ingredients);
     if (!ing) {
       if (!confirm(`"${txt}" mbola tsy ao amin'ny ingrédients. Hampidirina ho ingrédient vaovao (ho fenoin'ny IA ny valeur-ny)?`)) return;
-      ing = {
-        id: nextId('I', data.ingredients, 3), nom_mg: txt, nom_fr: null, categorie: null, etat: null,
-        kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null,
-        prix_kg: null, source: null, a_verifier: true,
-      };
+      ing = { ...NEW_ING, id: nextId('I', data.ingredients, 3), nom_mg: txt };
       try { await app.save('ingredients', ing); toast(`Ingrédient vaovao: ${ing.id} ${txt}`); } catch (e) { toast(e.message, 'bad'); return; }
     }
-    setLines((ls) => [...ls, { id: uid(), plat_id: form.id, ingredient_id: ing.id, grammes: toNum(newG) || 0, ordre: ls.length }]);
-    setNewIng(''); setNewG(''); setDirty(true);
+    setLines((ls) => [...ls, { id: uid(), plat_id: form.id, ingredient_id: ing.id, quantite: toNum(newG) || 0, unite: newU, grammes: 0, ordre: ls.length }]);
+    setNewIng(''); setNewG(''); setNewU('g'); setDirty(true);
   }
 
   async function save() {
@@ -65,7 +65,7 @@ export function PlatEdit({ id }) {
       delete row.created_at;
       if (existing?.created_at) row.created_at = existing.created_at;
       await app.save('plats', row);
-      await app.setComposition(row.id, lines.map((l, i) => ({ id: l.id, plat_id: row.id, ingredient_id: l.ingredient_id, grammes: toNum(l.grammes) || 0, ordre: i })));
+      await app.setComposition(row.id, lines.map((l, i) => ({ id: l.id, plat_id: row.id, ingredient_id: l.ingredient_id, quantite: toNum(l.quantite) || 0, unite: l.unite || 'g', grammes: Math.round((lineGrams(l, ingMap.get(l.ingredient_id)) || 0) * 10) / 10, ordre: i })));
       setDirty(false);
       toast('Voatahiry');
       if (isNew) navigate('/plats/' + row.id);
@@ -91,7 +91,7 @@ export function PlatEdit({ id }) {
       <div class="col">
         <${Card} title="Momba ny sakafo">
           <div class="form-grid">
-            <${Field} label="Anaran'ny sakafo" wide><input value=${form.nom} onInput=${(e) => set('nom', e.target.value)} placeholder="ohatra: Akoho sy legioma, vary mena" /><//>
+            <${Field} label="Anarana / code anatiny" wide hint="Ho anao ihany (ohatra: M1 – Maraina 1)"><input value=${form.nom} onInput=${(e) => set('nom', e.target.value)} placeholder="ohatra: M1 (Maraina 1)" /><//>
             <${Field} label="Fotoana">
               <select value=${form.fotoana} onChange=${(e) => set('fotoana', e.target.value)}>${FOTOANA.map((f) => html`<option>${f}</option>`)}</select>
             <//>
@@ -104,6 +104,8 @@ export function PlatEdit({ id }) {
                 return html`<button type="button" class=${'chip' + (on ? ' on' : '')} onClick=${() => set('categories', on ? form.categories.filter((x) => x !== c.id) : [...(form.categories || []), c.id])}>${c.nom}</button>`;
               })}</div>
             <//>
+            <${Field} label="Anarana commercial" wide hint="Fenoin'ny IA: anarana hita amin'ny client"><input value=${form.nom_commercial || ''} onInput=${(e) => set('nom_commercial', e.target.value)} /><//>
+            <${Field} label="Résumé marketing" wide hint="Fenoin'ny IA: fehezanteny mampisafidy ny client"><textarea rows="3" value=${form.marketing || ''} onInput=${(e) => set('marketing', e.target.value)}></textarea><//>
             <${Field} label="Famaritana" wide><textarea rows="2" value=${form.description || ''} onInput=${(e) => set('description', e.target.value)}></textarea><//>
             <${Field} label="Tombony (avantages)" wide><textarea rows="2" value=${form.avantages || ''} onInput=${(e) => set('avantages', e.target.value)}></textarea><//>
             <${Field} label="Vokatra (effets)" wide><textarea rows="2" value=${form.effets || ''} onInput=${(e) => set('effets', e.target.value)}></textarea><//>
@@ -115,14 +117,15 @@ export function PlatEdit({ id }) {
 
         <${Card} title="Composition">
           <div class="table-wrap"><table class="table compact">
-            <thead><tr><th>Ingrédient</th><th class="num">Grammes</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">Gluc.</th><th class="num">Lip.</th><th></th></tr></thead>
+            <thead><tr><th>Ingrédient</th><th>Habetsahana</th><th class="num">≈ g</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">Gluc.</th><th class="num">Lip.</th><th></th></tr></thead>
             <tbody>
               ${lines.map((l, i) => {
                 const ing = ingMap.get(l.ingredient_id);
                 const v = lineValues(l, ing);
                 return html`<tr>
-                  <td>${ing ? ing.nom_mg : html`<span class="error">${l.ingredient_id} tsy hita</span>`} <span class="muted mono small">${l.ingredient_id}</span>${v.missing && html` <${Badge} tone="warn">tsy misy valeur<//>`}</td>
-                  <td class="num"><input class="num-input" type="number" min="0" step="1" value=${l.grammes} onInput=${(e) => setLine(i, { grammes: e.target.value })} /></td>
+                  <td>${ing ? ing.nom_mg : html`<span class="error">${l.ingredient_id} tsy hita</span>`} <span class="muted mono small">${l.ingredient_id}</span>${v.grammesInconnus ? html` <${Badge} tone="warn">lanjany tsy fantatra<//>` : v.missing && html` <${Badge} tone="warn">tsy misy valeur<//>`}</td>
+                  <td><div class="qty"><input class="num-input" type="number" min="0" step="any" value=${l.quantite} onInput=${(e) => setLine(i, { quantite: e.target.value })} /><select class="unit" value=${l.unite || 'g'} onChange=${(e) => setLine(i, { unite: e.target.value })}>${UNITES.map(([u, lab]) => html`<option value=${u}>${lab}</option>`)}</select></div></td>
+                  <td class="num muted">${v.grammesInconnus ? '?' : fmt(v.grammes)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.kcal)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.proteines, 1)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.glucides, 1)}</td>
@@ -130,22 +133,23 @@ export function PlatEdit({ id }) {
                   <td><button class="btn ghost small" title="Esory" onClick=${() => { setLines((ls) => ls.filter((_, j) => j !== i)); setDirty(true); }}>✕</button></td>
                 </tr>`;
               })}
-              <tr class="total-row"><td>Total</td><td class="num">${fmt(totals.grammes)} g</td><td class="num">${fmt(totals.kcal)}</td><td class="num">${fmt(totals.proteines, 1)}</td><td class="num">${fmt(totals.glucides, 1)}</td><td class="num">${fmt(totals.lipides, 1)}</td><td></td></tr>
+              <tr class="total-row"><td>Total</td><td></td><td class="num">${fmt(totals.grammes)} g</td><td class="num">${fmt(totals.kcal)}</td><td class="num">${fmt(totals.proteines, 1)}</td><td class="num">${fmt(totals.glucides, 1)}</td><td class="num">${fmt(totals.lipides, 1)}</td><td></td></tr>
             </tbody>
           </table></div>
           <datalist id="ing-list">${data.ingredients.map((i) => html`<option value=${ingLabel(i)}></option>`)}</datalist>
           <div class="add-line">
             <input list="ing-list" placeholder="Ingrédient (soraty ny anarany)…" value=${newIng} onInput=${(e) => setNewIng(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
-            <input type="number" min="0" placeholder="g" class="num-input" value=${newG} onInput=${(e) => setNewG(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
+            <input type="number" min="0" step="any" placeholder="isa" class="num-input" value=${newG} onInput=${(e) => setNewG(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
+            <select class="unit" value=${newU} onChange=${(e) => setNewU(e.target.value)}>${UNITES.map(([u, lab]) => html`<option value=${u}>${lab}</option>`)}</select>
             <button class="btn" onClick=${addLine}>Ampio</button>
           </div>
-          <p class="hint">Lanjan'ny ingrédient araka ny fanomezana azy (masaka raha masaka). Raha tsy ao amin'ny lisitra, soraty fotsiny ny anarany dia tsindrio "Ampio".</p>
+          <p class="hint">Azonao soratana amin'ny g, ml na isa (ohatra: atody 2 isa, café 150 ml). Ny lanjan'ny "isa" sy ny valeur tsy fantatra dia fenoin'ny IA. Ingrédient tsy ao amin'ny lisitra? Soraty fotsiny ny anarany dia tsindrio "Ampio".</p>
         <//>
       </div>
 
       <div class="col side">
         <${Card} title="Valeur nutritionnelle" class="sticky">
-          ${totals.missing > 0 && html`<p class="warn-box">Ingrédient ${totals.missing} mbola tsy misy valeur: tsy feno ny kajy. Ampiasao ny "Hameno amin'ny IA".</p>`}
+          ${totals.missing > 0 && html`<p class="warn-box">Ingrédient ${totals.missing} mbola tsy misy valeur na lanja: tsy feno ny kajy. Ampiasao ny "Hameno amin'ny IA" eo ambany.</p>`}
           <div class="big-kcal">${fmt(totals.kcal)}<span>kcal</span></div>
           <div class="macro-bar">
             <i style=${'flex:' + (totals.protPct || 0) + ';background:var(--prot)'}></i>
@@ -216,7 +220,7 @@ function AiPanel({ form, setForm, lines, dirty, save }) {
     const plat = r.plat || {};
     const ings = (r.ingredients || []).filter((i) => i && (i.id || i.nom_mg)).map((i) => {
       const o = { ...i };
-      for (const k of [...NUTR, 'ig']) o[k] = toNum(o[k]);
+      for (const k of [...NUTR, 'ig', 'poids_piece', 'densite']) o[k] = toNum(o[k]);
       return o;
     });
     return { plat, ingredients: ings };
@@ -230,13 +234,9 @@ function AiPanel({ form, setForm, lines, dirty, save }) {
       let pool = [...data.ingredients];
       for (const r of result.ingredients) {
         const cur = r.id ? pool.find((x) => x.id === r.id) : null;
-        const base = cur || {
-          id: nextId('I', pool, 3), nom_mg: r.nom_mg || r.nom_fr || '?', nom_fr: null, categorie: null, etat: null,
-          kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null,
-          prix_kg: null, source: null, a_verifier: true,
-        };
+        const base = cur || { ...NEW_ING, id: nextId('I', pool, 3), nom_mg: r.nom_mg || r.nom_fr || '?' };
         const merged = { ...base };
-        for (const k of ['nom_fr', 'categorie', 'etat', 'source', ...NUTR, 'ig']) {
+        for (const k of ['nom_fr', 'categorie', 'etat', 'source', ...NUTR, 'ig', 'poids_piece', 'densite']) {
           if (r[k] !== null && r[k] !== undefined && r[k] !== '') merged[k] = r[k];
         }
         if (merged.categorie && merged.categorie.includes('/')) merged.categorie = null;
@@ -249,10 +249,13 @@ function AiPanel({ form, setForm, lines, dirty, save }) {
       // 2. sakafo
       const p = result.plat || {};
       const next = { ...form };
-      for (const k of ['nom_en', 'description', 'avantages', 'effets']) if (p[k]) next[k] = String(p[k]);
+      for (const k of PLAT_TEXT_FIELDS) if (p[k]) next[k] = String(p[k]);
       setForm(next);
       const row = { ...next, prix_vente: toNum(next.prix_vente) };
       await app.save('plats', row);
+      // averina kajiana ny grammes (lanjan'ny isa vao fantatra)
+      const newMap = new Map(ingMap); rows.forEach((r) => newMap.set(r.id, r));
+      await app.setComposition(form.id, lines.map((l, i) => ({ id: l.id, plat_id: form.id, ingredient_id: l.ingredient_id, quantite: toNum(l.quantite) || 0, unite: l.unite || 'g', grammes: Math.round((lineGrams(l, newMap.get(l.ingredient_id)) || 0) * 10) / 10, ordre: i })));
       toast(`Voatahiry: ingrédient ${rows.length} sy ny momba ny sakafo`);
       setResult(null); setText('');
     } catch (e) { toast('Nisy olana: ' + (e.message || e), 'bad'); } finally { setBusy(false); }
@@ -263,7 +266,7 @@ function AiPanel({ form, setForm, lines, dirty, save }) {
     <div class="ai-steps">
       <div class="ai-step">
         <h3><span class="num-circle">1</span> Adikao ny prompt</h3>
-        <p class="muted small">Ingrédient ${toFill.length} no mila valeur${toFill.length ? ': ' + toFill.map((i) => i.nom_mg).join(', ') : ''}. Hosoratan'ny IA koa ny famaritana, tombony sy vokatra.</p>
+        <p class="muted small">Ingrédient ${toFill.length} no hofenoina${toFill.length ? ': ' + toFill.map((x) => x.ing.nom_mg).join(', ') : ''}. Hosoratan'ny IA koa ny anarana commercial, résumé marketing, famaritana, tombony sy vokatra.</p>
         <${CopyBox} text=${prompt} rows="14" />
       </div>
       <div class="ai-step">
@@ -284,16 +287,16 @@ function AiPanel({ form, setForm, lines, dirty, save }) {
     ${result && html`<div class="preview">
       <h3>Hamarino alohan'ny hitahirizana</h3>
       ${result.plat && html`<table class="kv wide">
-        ${['nom_en', 'description', 'avantages', 'effets'].filter((k) => result.plat[k]).map((k) => html`<tr><td>${k}</td><td>${result.plat[k]}</td></tr>`)}
+        ${PLAT_TEXT_FIELDS.filter((k) => result.plat[k]).map((k) => html`<tr><td>${PLAT_LABELS[k] || k}</td><td>${result.plat[k]}</td></tr>`)}
       </table>`}
       ${result.ingredients.length > 0 && html`<div class="table-wrap"><table class="table compact">
-        <thead><tr><th>ID</th><th>Anarana</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">Gluc.</th><th class="num">Lip.</th><th class="num">Fibres</th><th class="num">IG</th><th>Fanamarinana</th><th>Source</th></tr></thead>
+        <thead><tr><th>ID</th><th>Anarana</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">Gluc.</th><th class="num">Lip.</th><th class="num">Fibres</th><th class="num">IG</th><th class="num">g / isa</th><th>Fanamarinana</th><th>Source</th></tr></thead>
         <tbody>${result.ingredients.map((i) => {
           const cur = ingMap.get(i.id);
           const chk = kcalCheck(i);
           return html`<tr>
             <td class="mono">${i.id || 'vaovao'}</td><td>${cur?.nom_mg || i.nom_mg || i.nom_fr}</td>
-            <td class="num">${fmt(i.kcal)}</td><td class="num">${fmt(i.proteines, 1)}</td><td class="num">${fmt(i.glucides, 1)}</td><td class="num">${fmt(i.lipides, 1)}</td><td class="num">${fmt(i.fibres, 1)}</td><td class="num">${fmt(i.ig)}</td>
+            <td class="num">${fmt(i.kcal)}</td><td class="num">${fmt(i.proteines, 1)}</td><td class="num">${fmt(i.glucides, 1)}</td><td class="num">${fmt(i.lipides, 1)}</td><td class="num">${fmt(i.fibres, 1)}</td><td class="num">${fmt(i.ig)}</td><td class="num">${fmt(i.poids_piece)}</td>
             <td>${chk ? html`<${Badge} tone=${chk.ok ? 'ok' : 'warn'}>${chk.ok ? 'mifanaraka' : '4P+4G+9L = ' + fmt(chk.est)}<//>` : html`<${Badge} tone="warn">tsy feno<//>`}</td>
             <td class="small">${i.source || '—'}</td>
           </tr>`;

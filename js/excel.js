@@ -1,6 +1,6 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
 import { ING_FIELDS, PLAT_FIELDS, ingredientsToFill } from './prompts.js';
-import { NUTR, sumLines } from './calc.js';
+import { NUTR, sumLines, lineGrams } from './calc.js';
 
 let XLSX = null;
 async function lib() {
@@ -22,17 +22,20 @@ export async function exportHameno(plat, lines, ingMap) {
   const guide = [
     ['FICHIER À COMPLÉTER — ' + plat.id + ' — ' + plat.nom],
     [''],
-    ['1. Onglet "Plat" : remplir nom_en, description, avantages, effets (cellules vides).'],
-    ['2. Onglet "Ingredients" : remplir les valeurs nutritionnelles POUR 100 g et la source (USDA / Ciqual).'],
+    ['1. Onglet "Plat" : remplir nom_commercial, marketing, description, avantages, effets, nom_en (cellules vides).'],
+    ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, poids_piece (g d\'une pièce si utilisé en "isa"), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
     ['3. Onglet "Composition" : information seulement, ne pas modifier.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
   ];
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
   X.utils.book_append_sheet(wb, sheetFromRows(X, PLAT_FIELDS, [plat]), 'Plat');
-  const toFill = ingredientsToFill(lines, ingMap);
+  const toFill = ingredientsToFill(lines, ingMap).map((x) => x.ing);
   X.utils.book_append_sheet(wb, sheetFromRows(X, ING_FIELDS, toFill), 'Ingredients');
-  const comp = lines.map((l) => ({ ingredient_id: l.ingredient_id, nom: ingMap.get(l.ingredient_id)?.nom_mg || '', grammes: l.grammes }));
-  X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'grammes'], comp), 'Composition');
+  const comp = lines.map((l) => {
+    const ing = ingMap.get(l.ingredient_id);
+    return { ingredient_id: l.ingredient_id, nom: ing?.nom_mg || '', quantite: l.quantite ?? l.grammes, unite: l.unite || 'g', grammes_estimes: lineGrams(l, ing) };
+  });
+  X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'quantite', 'unite', 'grammes_estimes'], comp), 'Composition');
   X.writeFile(wb, `hameno_${plat.id}.xlsx`);
 }
 
@@ -41,7 +44,7 @@ function normHeader(h) {
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/\s*\/\s*100\s*g/g, '').replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
-const NUM_FIELDS = new Set(['kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'prix_kg', 'grammes']);
+const NUM_FIELDS = new Set(['kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'prix_kg', 'grammes', 'poids_piece', 'densite', 'quantite']);
 
 function readSheet(X, ws) {
   if (!ws) return [];

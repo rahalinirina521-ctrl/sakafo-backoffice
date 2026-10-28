@@ -45,7 +45,8 @@ export function Propositions() {
             id = 'NEW-' + i;
             temp.set(id, nouvel);
           }
-          return { id: uid(), ingredient_id: id, grammes: toNum(c.grammes) || 0, nouvel };
+          const g = toNum(c.grammes) || 0;
+          return { id: uid(), ingredient_id: id, grammes: g, quantite: g, unite: 'g', nouvel };
         });
         return { ...p, fotoana: FOTOANA.includes(p.fotoana) ? p.fotoana : opts.fotoana, lines, totals: sumLines(lines, temp), selected: false };
       });
@@ -67,7 +68,7 @@ export function Propositions() {
       for (const p of chosen) {
         const platId = nextId('SK', platPool);
         const plat = {
-          id: platId, nom: p.nom || 'Sakafo vaovao', nom_en: p.nom_en || '', fotoana: p.fotoana, categories: [opts.categorie],
+          id: platId, nom: p.nom || 'Sakafo vaovao', nom_commercial: p.nom_commercial || '', marketing: p.marketing || '', nom_en: p.nom_en || '', fotoana: p.fotoana, categories: [opts.categorie],
           description: p.description || '', avantages: p.avantages || '', effets: p.effets || '', image_url: '', prix_vente: null,
           statut: 'Draft', notes: 'Soso-kevitra IA',
         };
@@ -83,7 +84,7 @@ export function Propositions() {
               ingPool.push(ing); newIngs.push(ing); ingId = ing.id;
             }
           }
-          newLines.push({ id: uid(), plat_id: platId, ingredient_id: ingId, grammes: l.grammes, ordre: i });
+          newLines.push({ id: uid(), plat_id: platId, ingredient_id: ingId, quantite: l.grammes, unite: 'g', grammes: l.grammes, ordre: i });
         });
       }
       if (newIngs.length) await app.save('ingredients', newIngs);
@@ -120,8 +121,8 @@ export function Propositions() {
       <div class="prop-grid">${props.map((p, idx) => {
         const fit = fitStatus(p.totals.kcal, target, category?.tolerance);
         return html`<article class=${'prop' + (p.selected ? ' on' : '')} onClick=${() => setProps((ps) => ps.map((x, j) => (j === idx ? { ...x, selected: !x.selected } : x)))}>
-          <header><input type="checkbox" checked=${p.selected} /><h3>${p.nom}</h3></header>
-          <p class="small">${p.description}</p>
+          <header><input type="checkbox" checked=${p.selected} /><h3>${p.nom_commercial || p.nom}</h3></header>
+          <p class="small">${p.marketing || p.description}</p>
           <div class="row gap wrap"><b>${fmt(p.totals.kcal)} kcal</b><span>P ${fmt(p.totals.proteines)} g</span><span>G ${fmt(p.totals.glucides)} g</span><span>L ${fmt(p.totals.lipides)} g</span><${Badge} tone=${fit.tone}>${fit.label}<//></div>
           <ul class="small ing-list">${p.lines.map((l) => html`<li>${l.nouvel ? html`<${Badge} tone="warn">vaovao<//> ${l.nouvel.nom_mg}` : ingMap.get(l.ingredient_id)?.nom_mg} — ${fmt(l.grammes)} g</li>`)}</ul>
           ${p.totals.missing > 0 && html`<p class="small warn-text">Misy ingrédient tsy misy valeur: tsy feno ny kajy.</p>`}

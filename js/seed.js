@@ -16,7 +16,9 @@ export const INGREDIENTS = [
   "ig": 73,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I002",
@@ -34,7 +36,9 @@ export const INGREDIENTS = [
   "ig": 55,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I003",
@@ -52,7 +56,9 @@ export const INGREDIENTS = [
   "ig": 46,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I004",
@@ -70,7 +76,9 @@ export const INGREDIENTS = [
   "ig": 63,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I005",
@@ -88,7 +96,9 @@ export const INGREDIENTS = [
   "ig": 78,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I006",
@@ -106,7 +116,9 @@ export const INGREDIENTS = [
   "ig": 52,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I007",
@@ -124,7 +136,9 @@ export const INGREDIENTS = [
   "ig": 75,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I008",
@@ -142,7 +156,9 @@ export const INGREDIENTS = [
   "ig": 55,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I010",
@@ -160,7 +176,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I011",
@@ -178,7 +196,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I012",
@@ -196,7 +216,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I013",
@@ -214,7 +236,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I014",
@@ -232,7 +256,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 50,
+  "densite": null
  },
  {
   "id": "I015",
@@ -250,7 +276,9 @@ export const INGREDIENTS = [
   "ig": 30,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I016",
@@ -268,7 +296,9 @@ export const INGREDIENTS = [
   "ig": 32,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I017",
@@ -286,7 +316,9 @@ export const INGREDIENTS = [
   "ig": 32,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I020",
@@ -304,7 +336,9 @@ export const INGREDIENTS = [
   "ig": 15,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I021",
@@ -322,7 +356,9 @@ export const INGREDIENTS = [
   "ig": 15,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I022",
@@ -340,7 +376,9 @@ export const INGREDIENTS = [
   "ig": 40,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I023",
@@ -358,7 +396,9 @@ export const INGREDIENTS = [
   "ig": 39,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 60,
+  "densite": null
  },
  {
   "id": "I024",
@@ -376,7 +416,9 @@ export const INGREDIENTS = [
   "ig": 15,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 100,
+  "densite": null
  },
  {
   "id": "I025",
@@ -394,7 +436,9 @@ export const INGREDIENTS = [
   "ig": 15,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 110,
+  "densite": null
  },
  {
   "id": "I026",
@@ -412,7 +456,9 @@ export const INGREDIENTS = [
   "ig": 10,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I030",
@@ -430,7 +476,9 @@ export const INGREDIENTS = [
   "ig": 51,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 120,
+  "densite": null
  },
  {
   "id": "I031",
@@ -448,7 +496,9 @@ export const INGREDIENTS = [
   "ig": 36,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 180,
+  "densite": null
  },
  {
   "id": "I032",
@@ -466,7 +516,9 @@ export const INGREDIENTS = [
   "ig": 43,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 130,
+  "densite": null
  },
  {
   "id": "I033",
@@ -484,7 +536,9 @@ export const INGREDIENTS = [
   "ig": 51,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 200,
+  "densite": null
  },
  {
   "id": "I034",
@@ -502,7 +556,9 @@ export const INGREDIENTS = [
   "ig": 15,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": 150,
+  "densite": null
  },
  {
   "id": "I040",
@@ -520,7 +576,9 @@ export const INGREDIENTS = [
   "ig": 31,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": 1.03
  },
  {
   "id": "I041",
@@ -538,7 +596,9 @@ export const INGREDIENTS = [
   "ig": 35,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": 1.03
  },
  {
   "id": "I050",
@@ -556,7 +616,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": 0.92
  },
  {
   "id": "I051",
@@ -574,7 +636,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": 0.97
  },
  {
   "id": "I052",
@@ -592,7 +656,9 @@ export const INGREDIENTS = [
   "ig": 14,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I060",
@@ -610,7 +676,9 @@ export const INGREDIENTS = [
   "ig": 0,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I061",
@@ -628,7 +696,9 @@ export const INGREDIENTS = [
   "ig": 65,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  },
  {
   "id": "I062",
@@ -646,7 +716,9 @@ export const INGREDIENTS = [
   "ig": 58,
   "prix_kg": null,
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
-  "a_verifier": true
+  "a_verifier": true,
+  "poids_piece": null,
+  "densite": null
  }
 ];
 
@@ -707,6 +779,6 @@ export const DEMO = {
   ingredients: INGREDIENTS,
   categories: CATEGORIES,
   plats: [{"id": "SK0001", "nom": "Akoho sy legioma, vary mena", "nom_en": "Grilled skinless chicken breast with mixed vegetables and red rice", "fotoana": "Atoandro", "categories": ["perte-de-poids", "diabete"], "description": "Akoho tsy misy hoditra natono, legioma mifangaro, vary mena.", "avantages": "Proteine avo, kcal antonony, fibres avy amin'ny vary mena sy legioma.", "effets": "Mampihena hanoanana ela, tsy mampiakatra haingana ny siramamy anaty ra.", "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}, {"id": "SK0002", "nom": "Flocons d'avoine, ronono, akondro", "nom_en": "Oatmeal porridge with milk and sliced banana", "fotoana": "Maraina", "categories": ["perte-de-poids"], "description": "Avoine nandrahoina tamin'ny ronono, akondro.", "avantages": "Fibres (bêta-glucane), angovo maharitra.", "effets": "Mahavoky ela hatramin'ny atoandro.", "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}],
-  composition: [{"id": "c1", "plat_id": "SK0001", "ingredient_id": "I012", "grammes": 120, "ordre": 0}, {"id": "c2", "plat_id": "SK0001", "ingredient_id": "I022", "grammes": 150, "ordre": 1}, {"id": "c3", "plat_id": "SK0001", "ingredient_id": "I002", "grammes": 120, "ordre": 2}, {"id": "c4", "plat_id": "SK0001", "ingredient_id": "I050", "grammes": 5, "ordre": 3}, {"id": "c5", "plat_id": "SK0002", "ingredient_id": "I008", "grammes": 50, "ordre": 4}, {"id": "c6", "plat_id": "SK0002", "ingredient_id": "I040", "grammes": 200, "ordre": 5}, {"id": "c7", "plat_id": "SK0002", "ingredient_id": "I030", "grammes": 100, "ordre": 6}],
+  composition: [{"id": "c1", "plat_id": "SK0001", "ingredient_id": "I012", "grammes": 120, "ordre": 0, "quantite": 120, "unite": "g"}, {"id": "c2", "plat_id": "SK0001", "ingredient_id": "I022", "grammes": 150, "ordre": 1, "quantite": 150, "unite": "g"}, {"id": "c3", "plat_id": "SK0001", "ingredient_id": "I002", "grammes": 120, "ordre": 2, "quantite": 120, "unite": "g"}, {"id": "c4", "plat_id": "SK0001", "ingredient_id": "I050", "grammes": 5, "ordre": 3, "quantite": 5, "unite": "g"}, {"id": "c5", "plat_id": "SK0002", "ingredient_id": "I008", "grammes": 50, "ordre": 4, "quantite": 50, "unite": "g"}, {"id": "c6", "plat_id": "SK0002", "ingredient_id": "I040", "grammes": 200, "ordre": 5, "quantite": 200, "unite": "g"}, {"id": "c7", "plat_id": "SK0002", "ingredient_id": "I030", "grammes": 100, "ordre": 6, "quantite": 100, "unite": "g"}],
   menus: [{"id": "MN0001", "categorie_id": "perte-de-poids", "andro": "Andro 1", "maraina": "SK0002", "atoandro": "SK0001", "hariva": null, "gouter": null, "notes": ""}],
 };

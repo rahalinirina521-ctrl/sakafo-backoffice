@@ -16,10 +16,43 @@ export function isComplete(ing) {
   return !!ing && ['kcal', 'proteines', 'glucides', 'lipides'].every((k) => num(ing[k]) !== null);
 }
 
+// Unités azo ampiasaina ao amin'ny composition
+export const UNITES = [
+  ['g', 'g'],
+  ['ml', 'ml'],
+  ['isa', 'isa (pièce)'],
+  ['cas', 'sotro lehibe (c. à soupe)'],
+  ['cac', 'sotro kely (c. à café)'],
+];
+const ML_PAR_UNITE = { ml: 1, cas: 15, cac: 5 };
+
+// Mamadika ny habetsahana ho grammes. null raha tsy fantatra (ohatra: isa nefa tsy misy poids_piece)
+export function lineGrams(line, ing) {
+  const unite = line.unite || 'g';
+  const q = num(line.quantite ?? line.grammes);
+  if (q === null) return 0;
+  if (unite === 'g') return q;
+  if (ML_PAR_UNITE[unite]) return q * ML_PAR_UNITE[unite] * (num(ing?.densite) || 1);
+  if (unite === 'isa') return ing && num(ing.poids_piece) ? q * num(ing.poids_piece) : null;
+  return q;
+}
+
+export function needsPieceWeight(line, ing) {
+  return (line.unite || 'g') === 'isa' && !(ing && num(ing.poids_piece));
+}
+
+export function qtyLabel(line) {
+  const u = line.unite || 'g';
+  const q = num(line.quantite ?? line.grammes);
+  if (q === null) return '?';
+  return u === 'isa' ? `${q} isa` : u === 'cas' ? `${q} sotro lehibe` : u === 'cac' ? `${q} sotro kely` : `${q} ${u}`;
+}
+
 export function lineValues(line, ing) {
-  const g = num(line.grammes) || 0;
+  const gr = lineGrams(line, ing);
+  const g = gr || 0;
   const f = g / 100;
-  const out = { grammes: g, missing: !isComplete(ing) };
+  const out = { grammes: g, grammesInconnus: gr === null, missing: !isComplete(ing) || gr === null };
   for (const k of NUTR) out[k] = ing && num(ing[k]) !== null ? f * num(ing[k]) : 0;
   out.cg = ing && num(ing.ig) !== null ? (num(ing.ig) * out.glucides) / 100 : 0;
   out.cout = ing && num(ing.prix_kg) !== null ? (g / 1000) * num(ing.prix_kg) : 0;

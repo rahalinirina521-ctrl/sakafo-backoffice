@@ -43,7 +43,7 @@ export function PlatsList() {
         const fit = catObj ? fitStatus(t.kcal, slotTarget(catObj, p.fotoana), catObj.tolerance) : null;
         return html`<tr class="clickable" onClick=${() => navigate('/plats/' + p.id)}>
           <td class="mono">${p.id}</td>
-          <td><b>${p.nom}</b>${t.missing > 0 && html` <${Badge} tone="warn">${t.missing} ingr. tsy feno<//>`}</td>
+          <td><b>${p.nom}</b>${p.nom_commercial ? html`<div class="muted small">${p.nom_commercial}</div>` : null}${t.missing > 0 && html` <${Badge} tone="warn">${t.missing} ingr. tsy feno<//>`}</td>
           <td>${p.fotoana || '—'}</td>
           <td class="num"><b>${fmt(t.kcal)}</b></td>
           <td class="num">${fmt(t.proteines, 1)}</td>

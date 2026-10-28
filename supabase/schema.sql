@@ -17,6 +17,8 @@ create table if not exists ingredients (
   sucres      numeric,
   sodium      numeric,                       -- mg isaky ny 100 g
   ig          numeric,                       -- index glycémique
+  poids_piece numeric,                       -- g isaky ny isa (atody 1 = 50 g)
+  densite     numeric,                       -- g isaky ny ml (ranon-javatra)
   prix_kg     numeric,                       -- Ar / kg
   source      text,
   a_verifier  boolean not null default true,
@@ -37,6 +39,8 @@ create table if not exists categories (
 create table if not exists plats (
   id          text primary key,              -- ohatra: SK0001
   nom         text not null,
+  nom_commercial text,                       -- anarana hita amin'ny client
+  marketing   text,                          -- résumé marketing
   nom_en      text,
   fotoana     text,                          -- Maraina / Atoandro / Hariva / Goûter
   categories  text[] not null default '{}',
@@ -54,7 +58,9 @@ create table if not exists composition (
   id            text primary key,
   plat_id       text not null references plats(id) on delete cascade,
   ingredient_id text not null references ingredients(id) on update cascade,
-  grammes       numeric not null default 0,
+  quantite      numeric not null default 0,
+  unite         text not null default 'g',   -- g / ml / isa / cas / cac
+  grammes       numeric not null default 0,  -- kajiana ho azy
   ordre         int default 0
 );
 create index if not exists composition_plat_idx on composition(plat_id);
