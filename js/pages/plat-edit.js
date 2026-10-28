@@ -5,7 +5,7 @@ import {
 } from '../calc.js';
 import { promptHameno, photoBrief, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js';
 import { exportHameno, importHameno } from '../excel.js';
-import { uploadPlatImage, removePlatImage, MODE, callAI } from '../db.js';
+import { uploadPlatImage, removePlatImage, MODE } from '../db.js';
 import { tr, fotLabel, unitLabel, ingName, catName, PLAT_TEXT_FIELDS, LANG_SHORT, getLang } from '../i18n.js';
 import { fitLabel } from './plats.js';
 import { PhotoEditor } from '../photo-editor.js';
@@ -268,8 +268,8 @@ export function PlatEdit({ id }) {
 
         <${Card} title=${tr('Textes (vente et marketing)', 'Texts (sales and marketing)', 'Texte (fivarotana sy marketing)')} actions=${html`<div class="tabs mini">${TEXT_LANGS.map((l) => html`<button class=${'tab' + (l === txtLang ? ' on' : '')} onClick=${() => setTxtLang(l)}>${LANG_SHORT[l]}</button>`)}</div>`}>
       <p class="hint">${tr('Remplis par l\'IA en français, anglais et malgache. Vous pouvez les corriger.', 'Filled by the AI in French, English and Malagasy. You can edit them.', 'Fenoin\'ny IA amin\'ny frantsay, anglisy ary malagasy. Azonao ahitsy.')}</p>
-      ${!form.marketing && !form.nom_commercial && html`<p class="ok-box row gap wrap between"><span>${tr('Encore vides : lancez l\'analyse IA de la composition pour tout remplir.', 'Still empty: run the AI analysis of the composition to fill everything.', 'Mbola foana: ampandehano ny famakafakana IA ny composition mba ho feno daholo.')}</span>
-        <button class="btn small primary" onClick=${() => document.querySelector('.ai-auto')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>${tr('Aller à l\'analyse IA', 'Go to AI analysis', 'Mankany amin\'ny famakafakana IA')} ↓</button></p>`}
+      ${!form.marketing && !form.nom_commercial && html`<p class="ok-box row gap wrap between"><span>${tr('Encore vides : utilisez « Compléter avec l\'IA » (copier le prompt, coller la réponse) pour tout remplir.', 'Still empty: use "Complete with AI" (copy the prompt, paste the answer) to fill everything.', 'Mbola foana: ampiasao ny "Hameno amin\'ny IA" (adikao ny prompt, apetaho ny valiny) mba ho feno daholo.')}</span>
+        <button class="btn small primary" onClick=${() => document.querySelector('.ai-steps')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>${tr('Aller à « Compléter avec l\'IA »', 'Go to "Complete with AI"', 'Mankany amin\'ny "Hameno amin\'ny IA"')} ↓</button></p>`}
       <div class="form-grid">
         ${PLAT_TEXT_FIELDS.map((f) => html`<${Field} label=${textLabel(f) + ' (' + LANG_SHORT[txtLang] + ')'} wide>
           ${f === 'nom_commercial'
@@ -298,20 +298,8 @@ function AiPanel({ form, setForm, lines, isNew, persist }) {
   const [busy, setBusy] = useState(false);
   const toFill = ingredientsToFill(lines, ingMap);
   const prompt = promptHameno(form, lines, ingMap, data.categories);
-  const [auto, setAuto] = useState(false);
-  const [aiErr, setAiErr] = useState(null);
 
-  async function autoFill() {
-    if (!lines.length) { toast(tr('Ajoutez d\'abord la composition.', 'Add the composition first.', 'Ampidiro aloha ny composition.'), 'bad'); return; }
-    setAuto(true); setAiErr(null);
-    try {
-      const answer = await callAI(prompt);
-      setText(answer);
-      setResult(normalize(extractJson(answer)));
-      toast(tr('Analyse terminée : vérifiez puis validez.', 'Analysis done: check, then accept.', 'Vita ny famakafakana: hamarino dia ekeo.'));
-      setTimeout(() => document.querySelector('.preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-    } catch (e) { setAiErr(e); } finally { setAuto(false); }
-  }
+
 
   function parseText() {
     try { setResult(normalize(extractJson(text))); } catch (e) { toast(tr('JSON illisible : ', 'Unreadable JSON: ', 'Tsy voavaky ny JSON: ') + e.message, 'bad'); }
@@ -384,21 +372,7 @@ function AiPanel({ form, setForm, lines, isNew, persist }) {
 
   return html`<${Card} title=${tr('Compléter avec l\'IA', 'Complete with AI', 'Hameno amin\'ny IA')}>
     ${!lines.length && html`<p class="warn-box">${tr('Ajoutez d\'abord la composition (ingrédients et quantités) : le prompt l\'utilise.', 'Add the composition first (ingredients and quantities): the prompt uses it.', 'Ampidiro aloha ny composition (ingrédients sy habetsahana): ampiasain\'ny prompt izany.')}</p>`}
-    <p class="muted small">${tr('« Valider et enregistrer » enregistre aussi le plat et sa composition.', '"Accept and save" also saves the dish and its composition.', '"Ekena sy tehirizo" dia mitahiry koa ny sakafo sy ny composition.')}</p>
-    <div class="ai-auto">
-      <div>
-        <h3>${tr('Analyse automatique', 'Automatic analysis', 'Famakafakana ho azy')}</h3>
-        <p class="small muted">${tr('L\'IA analyse la composition et remplit tout : valeurs nutritionnelles et poids des pièces, puis ce qui convainc le client : nom commercial, résumé marketing, 3 avantages (FR / EN / MG), allergènes et étiquettes.', 'The AI analyses the composition and fills everything: nutrition values and piece weights, then what convinces the customer: commercial name, marketing summary, 3 benefits (FR / EN / MG), allergens and labels.', 'Famakafakan\'ny IA ny composition ary fenoiny daholo: valeur nutritionnelle sy lanjan\'ny isa, ary izay mandresy lahatra ny client: anarana commercial, résumé marketing, tombony 3 (FR / EN / MG), allergènes sy marika.')}</p>
-      </div>
-      <button class="btn primary big" disabled=${auto || !lines.length} onClick=${autoFill}>${auto ? tr('Analyse en cours… (30 s environ)', 'Analysing… (about 30 s)', 'Mamakafaka… (30 s eo ho eo)') : tr('Analyser et remplir avec l\'IA', 'Analyse and fill with AI', 'Famakafakao sy fenoy amin\'ny IA')}</button>
-    </div>
-    ${aiErr && (aiErr.code === 'no_key'
-      ? html`<div class="warn-box">${tr(html`<b>L'IA intégrée n'est pas encore activée.</b> Il faut une clé API Anthropic (console.anthropic.com → API Keys), puis dans Supabase : <b>Edge Functions → Secrets → Add</b>, nom <code>ANTHROPIC_API_KEY</code>, valeur = votre clé. En attendant, utilisez la méthode manuelle ci-dessous (copier-coller dans ChatGPT ou Claude).`,
-          html`<b>Built-in AI is not enabled yet.</b> You need an Anthropic API key (console.anthropic.com → API Keys), then in Supabase: <b>Edge Functions → Secrets → Add</b>, name <code>ANTHROPIC_API_KEY</code>, value = your key. Meanwhile, use the manual method below (copy-paste into ChatGPT or Claude).`,
-          html`<b>Mbola tsy mandeha ny IA ao anatiny.</b> Mila clé API Anthropic (console.anthropic.com → API Keys), dia ao amin'ny Supabase: <b>Edge Functions → Secrets → Add</b>, anarana <code>ANTHROPIC_API_KEY</code>, sanda = ny clé-nao. Mandritra izany, ampiasao ny fomba tanana eto ambany (adika sy apetaka ao amin'ny ChatGPT na Claude).`)}</div>`
-      : html`<p class="warn-box">${tr('Analyse impossible : ', 'Analysis failed: ', 'Tsy nety ny famakafakana: ')}${aiErr.message}</p>`)}
-    <details class="manual" open=${MODE === 'demo'}>
-      <summary>${tr('Méthode manuelle (copier-coller dans ChatGPT / Claude, ou Excel)', 'Manual method (copy-paste into ChatGPT / Claude, or Excel)', 'Fomba tanana (adika ao amin\'ny ChatGPT / Claude, na Excel)')}</summary>
+    <p class="small">${tr('Gratuit : copiez le prompt dans ChatGPT ou Claude.ai, puis collez la réponse (ou importez l\'Excel rempli). « Valider et enregistrer » enregistre aussi le plat et sa composition.', 'Free: copy the prompt into ChatGPT or Claude.ai, then paste the answer (or import the filled Excel). "Accept and save" also saves the dish and its composition.', 'Maimaim-poana: adikao ao amin\'ny ChatGPT na Claude.ai ny prompt, dia apetaho ny valiny (na ampidiro ny Excel feno). "Ekena sy tehirizo" dia mitahiry koa ny sakafo sy ny composition.')}</p>
     <div class="ai-steps">
       <div class="ai-step">
         <h3><span class="num-circle">1</span> ${tr('Copier le prompt', 'Copy the prompt', 'Adikao ny prompt')}</h3>
@@ -419,7 +393,6 @@ function AiPanel({ form, setForm, lines, isNew, persist }) {
         </div>
       </div>
     </div>
-    </details>
 
     ${result && html`<div class="preview">
       <h3>${tr('Vérifiez avant d\'enregistrer', 'Check before saving', 'Hamarino alohan\'ny hitahirizana')}</h3>
