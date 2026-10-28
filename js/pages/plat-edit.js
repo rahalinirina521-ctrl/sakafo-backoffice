@@ -110,8 +110,9 @@ export function PlatEdit({ id }) {
 
   // Mitahiry ny sakafo + composition (ampiasain'ny "Enregistrer" sy ny IA)
   async function persist(formArg = form, mapArg = ingMap) {
-    if (!(formArg.nom || '').trim()) { toast(tr('Indiquez le nom du plat', 'Enter the dish name', 'Soraty ny anaran\'ny sakafo'), 'bad'); return false; }
-    const row = { ...EMPTY_PLAT, ...formArg, nom: formArg.nom.trim(), prix_vente: toNum(formArg.prix_vente) };
+    // Raha tsy misy anarana: raisina ny anarana commercial, na ny ID
+    const nom = (formArg.nom || '').trim() || (formArg.nom_commercial || '').trim() || formArg.id;
+    const row = { ...EMPTY_PLAT, ...formArg, nom, prix_vente: toNum(formArg.prix_vente) };
     delete row.created_at;
     if (existing?.created_at) row.created_at = existing.created_at;
     await app.save('plats', row);

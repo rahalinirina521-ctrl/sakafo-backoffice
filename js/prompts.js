@@ -246,7 +246,7 @@ export function extractJson(text) {
 
 // Mamadika ny "plat" avy amin'ny IA (JSON na Excel) ho { photo_en, texts: { fr:{}, en:{}, mg:{} } }
 export function normalizePlatTexts(p) {
-  const out = { photo_en: p?.photo_en || p?.nom_en || '', texts: { fr: {}, en: {}, mg: {} }, details: {} };
+  const out = { photo_en: p?.photo_en || p?.nom_en || '', nom: (p && typeof p.nom === 'string' ? p.nom.trim() : ''), texts: { fr: {}, en: {}, mg: {} }, details: {} };
   if (!p) return out;
   const d = (p.details && typeof p.details === 'object') ? p.details : p;
   const list = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? v.split(/[;,\n]/) : []).map((x) => String(x).trim()).filter(Boolean);
@@ -270,6 +270,7 @@ export function normalizePlatTexts(p) {
 export function applyPlatTexts(plat, norm) {
   const next = { ...plat, traductions: { en: { ...(plat.traductions?.en || {}) }, mg: { ...(plat.traductions?.mg || {}) } } };
   if (norm.photo_en) next.nom_en = norm.photo_en;
+  if (!(next.nom || '').trim()) next.nom = norm.nom || norm.texts.fr.nom_commercial || next.id || '';
   next.details = { ...(plat.details || {}), ...(norm.details || {}) };
   for (const f of PLAT_TEXT_FIELDS) {
     if (norm.texts.fr[f]) next[f] = norm.texts.fr[f];
