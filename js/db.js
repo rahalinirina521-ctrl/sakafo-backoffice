@@ -2,6 +2,7 @@
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { DEMO } from './seed.js';
+import { resizeImage, blobToDataUrl } from './image.js';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus'];
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
@@ -36,6 +37,24 @@ export function resetDemo() {
   demoSave();
 }
 
+// ---------- Colonnes feno isaky ny table (mba tsy ho null ny not null) ----------
+const COLS = {
+  ingredients: { id: null, nom_mg: '', nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true },
+  categories: { id: null, nom: '', nom_en: null, nom_mg: null, kcal_cible: null, tolerance: 0.1, prot_g_kg: null, cg_max: null, ordre: 0, regles: null },
+  plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, image_url: null, prix_vente: null, statut: 'Draft', notes: null },
+  composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
+  menus: { id: null, categorie_id: null, andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
+};
+export function normalizeRow(table, r) {
+  const def = COLS[table];
+  if (!def) return r;
+  const o = {};
+  for (const [k, v] of Object.entries(def)) o[k] = r[k] === undefined || (r[k] === null && v !== null && typeof v !== 'number') ? (Array.isArray(v) ? [...v] : (v && typeof v === 'object' ? { ...v } : v)) : r[k];
+  if (table === 'composition' && (r.quantite === undefined || r.quantite === null)) o.quantite = r.grammes ?? 0;
+  if (r.created_at) o.created_at = r.created_at;
+  return o;
+}
+
 // ---------- API iraisana ----------
 export async function loadAll() {
   if (MODE === 'demo') return JSON.parse(JSON.stringify(demoLoad()));
@@ -51,7 +70,7 @@ export async function loadAll() {
 
 // rows: andalana FENO foana (tsy ampahany), satria manolo ny andalana iray manontolo.
 export async function upsert(table, rows) {
-  rows = Array.isArray(rows) ? rows : [rows];
+  rows = (Array.isArray(rows) ? rows : [rows]).map((r) => normalizeRow(table, r));
   if (!rows.length) return;
   if (MODE === 'demo') {
     const d = demoLoad();
@@ -101,4 +120,42 @@ export async function signOut() {
   if (MODE === 'demo') return;
   const c = await getClient();
   await c.auth.signOut();
+}
+
+// ---------- Sary ----------
+// Mampakatra ny sary an'ny sakafo iray ary mamerina ny lien-ny
+export async function uploadPlatImage(platId, file) {
+  const blob = await resizeImage(file, MODE === 'demo' ? 700 : 1200, MODE === 'demo' ? 0.75 : 0.85);
+  if (MODE === 'demo') return blobToDataUrl(blob);
+  const c = await getClient();
+  const path = `plats/${platId}.jpg`;
+  const { error } = await c.storage.from('sary').upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' });
+  if (error) throw error;
+  const { data } = c.storage.from('sary').getPublicUrl(path);
+  return data.publicUrl + '?v=' + Date.now();
+}
+export async function removePlatImage(platId) {
+  if (MODE === 'demo') return;
+  const c = await getClient();
+  await c.storage.from('sary').remove([`plats/${platId}.jpg`]);
+}
+
+// ---------- Famindrana données démo → Supabase ----------
+export function readBrowserDemo() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY));
+    if (d && d.plats) return d;
+  } catch (e) { /* tsy misy */ }
+  return null;
+}
+export async function migrateDemoToSupabase(d) {
+  if (MODE !== 'supabase') throw new Error('Supabase ?');
+  const order = ['ingredients', 'categories', 'plats', 'composition', 'menus'];
+  const counts = {};
+  for (const t of order) {
+    const rows = (d[t] || []).map((r) => normalizeRow(t, r));
+    counts[t] = rows.length;
+    for (let i = 0; i < rows.length; i += 200) await upsert(t, rows.slice(i, i + 200));
+  }
+  return counts;
 }

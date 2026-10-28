@@ -2,6 +2,7 @@ import { html, useMemo } from '../lib.js';
 import { useApp, Card, Badge } from '../ui.js';
 import { platTotals, isComplete } from '../calc.js';
 import { tr, ingName, platTitle } from '../i18n.js';
+import { MODE } from '../db.js';
 
 export function Dashboard() {
   const { data, ingMap } = useApp();
@@ -23,6 +24,7 @@ export function Dashboard() {
 
   return html`<div class="page">
     <h1>${tr('Tableau de bord', 'Dashboard', 'Tableau de bord')}</h1>
+    ${MODE === 'demo' && html`<p class="warn-box">${tr('Supabase n\'est pas encore connecté : les données restent dans ce navigateur. Suivez le README (config.js) pour enregistrer dans Supabase.', 'Supabase is not connected yet: data stays in this browser. Follow the README (config.js) to save to Supabase.', 'Mbola tsy mifandray amin\'ny Supabase: ato amin\'ity navigateur ity ihany ny données. Araho ny README (config.js) mba hitahiry ao amin\'ny Supabase.')}</p>`}
     <div class="stats">
       <a class="stat" href="#/plats"><b>${stats.plats}</b><span>${tr('Plats', 'Dishes', 'Sakafo')}</span><small>${stats.voamarina} ${tr('validés', 'validated', 'voamarina')}</small></a>
       <a class="stat" href="#/ingredients"><b>${stats.ings}</b><span>${tr('Ingrédients', 'Ingredients', 'Ingrédients')}</span><small>${stats.ingsVerif} ${tr('à vérifier', 'to check', 'mbola hamarinina')}</small></a>

@@ -5,6 +5,7 @@ import {
 } from '../calc.js';
 import { promptHameno, promptSary, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js';
 import { exportHameno, importHameno } from '../excel.js';
+import { uploadPlatImage, removePlatImage, MODE } from '../db.js';
 import { tr, fotLabel, unitLabel, ingName, catName, PLAT_TEXT_FIELDS, LANG_SHORT, getLang } from '../i18n.js';
 import { fitLabel } from './plats.js';
 
@@ -214,18 +215,7 @@ export function PlatEdit({ id }) {
       ? html`<${Card} title=${tr('Compléter avec l\'IA', 'Complete with AI', 'Hameno amin\'ny IA')}><p class="muted">${tr('Enregistrez d\'abord le plat : le prompt apparaîtra ici.', 'Save the dish first: the prompt will appear here.', 'Tehirizo aloha ny sakafo dia hiseho eto ny prompt.')}</p><//>`
       : html`<${AiPanel} form=${form} setForm=${setForm} lines=${lines} dirty=${dirty} save=${save} compRows=${compRows} />`}
 
-    <${Card} title=${tr('Photo', 'Photo', 'Sary')}>
-      <div class="photo-row">
-        <div class="photo">${form.image_url ? html`<img src=${form.image_url} alt=${form.nom} />` : html`<span class="muted">${tr('Pas encore de photo', 'No photo yet', 'Tsy mbola misy sary')}</span>`}</div>
-        <div class="col grow">
-          <p>1. ${tr('Copiez ce prompt dans ChatGPT (image), Gemini, Midjourney ou Ideogram.', 'Copy this prompt into ChatGPT (image), Gemini, Midjourney or Ideogram.', 'Adikao ity prompt ity ao amin\'ny ChatGPT (image), Gemini, Midjourney na Ideogram.')}</p>
-          <${CopyBox} text=${promptSary(form)} label=${tr('Copier le prompt photo', 'Copy the photo prompt', 'Adikao ny prompt sary')} rows="5" />
-          <${Field} label=${tr('Description photo (anglais, remplie par l\'IA)', 'Photo description (English, filled by AI)', 'Famaritana sary (anglisy, fenoin\'ny IA)')} wide><input value=${form.nom_en || ''} onInput=${(e) => set('nom_en', e.target.value)} /><//>
-          <p>2. ${tr('Hébergez l\'image (Supabase Storage, imgbb…) et collez son lien ici.', 'Host the image (Supabase Storage, imgbb…) and paste its link here.', 'Ampakaro any amin\'ny toerana (Supabase Storage, imgbb…) ny sary dia apetaho eto ny lien-ny.')}</p>
-          <${Field} label=${tr('Lien de la photo (URL)', 'Photo link (URL)', 'Lien ny sary (URL)')} wide><input value=${form.image_url || ''} onInput=${(e) => set('image_url', e.target.value)} placeholder="https://…" /><//>
-        </div>
-      </div>
-    <//>
+    <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} dirty=${dirty} />
   </div>`;
 }
 
@@ -332,5 +322,58 @@ function AiPanel({ form, setForm, lines, dirty, save, compRows }) {
       </table></div>`}
       <div class="row gap"><button class="btn primary" disabled=${busy} onClick=${apply}>${busy ? tr('Enregistrement…', 'Saving…', 'Mitahiry…') : tr('Valider et enregistrer', 'Accept and save', 'Ekena sy tehirizo')}</button><button class="btn ghost" onClick=${() => setResult(null)}>${tr('Annuler', 'Cancel', 'Aoka ihany')}</button></div>
     </div>`}
+  <//>`;
+}
+
+// ---------------------------------------------------------------
+function PhotoCard({ form, setForm, isNew }) {
+  const app = useApp();
+  const { data, toast } = app;
+  const [busy, setBusy] = useState(false);
+  const [over, setOver] = useState(false);
+
+  async function persist(patch) {
+    const cur = data.plats.find((p) => p.id === form.id);
+    if (cur) await app.save('plats', { ...cur, ...patch });
+    setForm((f) => ({ ...f, ...patch }));
+  }
+  async function onFile(file) {
+    if (!file) return;
+    if (isNew) { toast(tr('Enregistrez d\'abord le plat.', 'Save the dish first.', 'Tehirizo aloha ny sakafo.'), 'bad'); return; }
+    setBusy(true);
+    try {
+      const url = await uploadPlatImage(form.id, file);
+      await persist({ image_url: url });
+      toast(tr('Photo enregistrée', 'Photo saved', 'Voatahiry ny sary'));
+    } catch (e) { toast(tr('Envoi impossible : ', 'Upload failed: ', 'Tsy lasa ny sary: ') + (e.message || e), 'bad'); } finally { setBusy(false); }
+  }
+  async function onRemove() {
+    if (!confirm(tr('Retirer la photo ?', 'Remove the photo?', 'Esorina ve ny sary?'))) return;
+    setBusy(true);
+    try { await removePlatImage(form.id); await persist({ image_url: null }); } catch (e) { toast(e.message, 'bad'); } finally { setBusy(false); }
+  }
+
+  return html`<${Card} title=${tr('Photo', 'Photo', 'Sary')}>
+    <div class="photo-row">
+      <label class=${'photo drop' + (over ? ' over' : '') + (busy ? ' busy' : '')}
+        onDragOver=${(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave=${() => setOver(false)}
+        onDrop=${(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files[0]); }}>
+        ${form.image_url ? html`<img src=${form.image_url} alt=${form.nom} />` : html`<span class="muted">${busy ? tr('Envoi…', 'Uploading…', 'Mampakatra…') : tr('Cliquez ou glissez une photo ici', 'Click or drop a photo here', 'Tsindrio na apetraho eto ny sary')}</span>`}
+        <input type="file" accept="image/*" hidden disabled=${busy} onChange=${(e) => { onFile(e.target.files[0]); e.target.value = ''; }} />
+      </label>
+      <div class="col grow">
+        <div class="row gap wrap">
+          <label class=${'btn primary' + (busy ? ' disabled' : '')}>${form.image_url ? tr('Changer la photo', 'Change photo', 'Ovay ny sary') : tr('Choisir une photo', 'Choose a photo', 'Misafidiana sary')}<input type="file" accept="image/*" hidden disabled=${busy} onChange=${(e) => { onFile(e.target.files[0]); e.target.value = ''; }} /></label>
+          ${form.image_url && html`<button class="btn ghost danger" disabled=${busy} onClick=${onRemove}>${tr('Retirer', 'Remove', 'Esory')}</button>`}
+        </div>
+        <p class="hint">${MODE === 'supabase'
+          ? tr('La photo est réduite automatiquement et enregistrée dans Supabase.', 'The photo is resized automatically and stored in Supabase.', 'Hakelezina ho azy ny sary ary tehirizina ao amin\'ny Supabase.')
+          : tr('Mode démo : photo gardée dans ce navigateur uniquement.', 'Demo mode: photo kept in this browser only.', 'Mode démo: ao amin\'ity navigateur ity ihany ny sary.')}</p>
+        <h3>${tr('Pas encore de photo ? Générez-la avec l\'IA', 'No photo yet? Generate it with AI', 'Tsy mbola misy sary? Ampiasao ny IA')}</h3>
+        <p class="small muted">${tr('Copiez ce prompt dans ChatGPT (image), Gemini ou Midjourney, enregistrez l\'image puis choisissez-la ci-dessus.', 'Copy this prompt into ChatGPT (image), Gemini or Midjourney, save the image, then choose it above.', 'Adikao ao amin\'ny ChatGPT (image), Gemini na Midjourney ity prompt ity, tehirizo ny sary dia safidio eo ambony.')}</p>
+        <${CopyBox} text=${promptSary(form)} label=${tr('Copier le prompt photo', 'Copy the photo prompt', 'Adikao ny prompt sary')} rows="5" />
+      </div>
+    </div>
   <//>`;
 }
