@@ -62,18 +62,47 @@ export function PlatEdit({ id }) {
   const sortedCats = [...data.categories].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
   const compRows = (ls, map) => ls.map((l, i) => ({ id: l.id, plat_id: form.id, ingredient_id: l.ingredient_id, quantite: toNum(l.quantite) || 0, unite: l.unite || 'g', note: (l.note || '').trim() || null, grammes: Math.round((lineGrams(l, map.get(l.ingredient_id)) || 0) * 10) / 10, ordre: i }));
 
+  // Mitady ingrédient amin'ny anarany; raha tsy misy dia mamorona vaovao (rehefa ekena)
+  async function resolveIngredient(txt) {
+    txt = txt.trim();
+    if (!txt) return null;
+    const found = findIngredient(txt, data.ingredients);
+    if (found) return found;
+    if (!confirm(tr(`« ${txt} » n'existe pas encore. L'ajouter comme nouvel ingrédient (valeurs à compléter par l'IA) ?`, `"${txt}" does not exist yet. Add it as a new ingredient (values to be filled by AI)?`, `"${txt}" mbola tsy ao. Hampidirina ho ingrédient vaovao (fenoin'ny IA ny valeur)?`))) return null;
+    const field = getLang() === 'en' ? 'nom_en' : getLang() === 'mg' ? 'nom_mg' : 'nom_fr';
+    const ing = { ...NEW_ING, id: nextId('I', data.ingredients, 3), nom_mg: txt, [field]: txt };
+    try { await app.save('ingredients', ing); toast(`${tr('Nouvel ingrédient', 'New ingredient', 'Ingrédient vaovao')} : ${ing.id} ${txt}`); } catch (e) { toast(e.message, 'bad'); return null; }
+    return ing;
+  }
+
   async function addLine() {
-    const txt = newIng.trim();
-    if (!txt) return;
-    let ing = findIngredient(txt, data.ingredients);
-    if (!ing) {
-      if (!confirm(tr(`« ${txt} » n'existe pas encore. L'ajouter comme nouvel ingrédient (valeurs à compléter par l'IA) ?`, `"${txt}" does not exist yet. Add it as a new ingredient (values to be filled by AI)?`, `"${txt}" mbola tsy ao. Hampidirina ho ingrédient vaovao (fenoin'ny IA ny valeur)?`))) return;
-      const field = getLang() === 'en' ? 'nom_en' : getLang() === 'mg' ? 'nom_mg' : 'nom_fr';
-      ing = { ...NEW_ING, id: nextId('I', data.ingredients, 3), nom_mg: txt, [field]: txt };
-      try { await app.save('ingredients', ing); toast(`${tr('Nouvel ingrédient', 'New ingredient', 'Ingrédient vaovao')} : ${ing.id} ${txt}`); } catch (e) { toast(e.message, 'bad'); return; }
-    }
+    const ing = await resolveIngredient(newIng);
+    if (!ing) return;
     setLines((ls) => [...ls, { id: uid(), plat_id: form.id, ingredient_id: ing.id, quantite: toNum(newG) || 0, unite: newU, note: newNote.trim(), grammes: 0, ordre: ls.length }]);
     setNewIng(''); setNewG(''); setNewU('g'); setNewNote(''); setDirty(true);
+  }
+
+  async function changeLineIngredient(i, txt, input) {
+    const cur = ingMap.get(lines[i].ingredient_id);
+    if (cur && txt.trim() === ingLabel(cur)) return;
+    const ing = await resolveIngredient(txt);
+    if (ing) setLine(i, { ingredient_id: ing.id });
+    else if (input) input.value = cur ? ingLabel(cur) : '';
+  }
+  function moveLine(i, d) {
+    const j = i + d;
+    if (j < 0 || j >= lines.length) return;
+    setLines((ls) => { const n = [...ls]; [n[i], n[j]] = [n[j], n[i]]; return n; });
+    setDirty(true);
+  }
+  function removeLine(i) {
+    setLines((ls) => ls.filter((_, j) => j !== i));
+    setDirty(true);
+  }
+  function clearLines() {
+    if (!lines.length) return;
+    if (!confirm(tr('Supprimer toute la composition ?', 'Delete the whole composition?', 'Hofafana daholo ve ny composition?'))) return;
+    setLines([]); setDirty(true);
   }
 
   async function save() {
@@ -131,7 +160,7 @@ export function PlatEdit({ id }) {
           </div>
         <//>
 
-        <${Card} title=${tr('Composition', 'Composition', 'Composition')}>
+        <${Card} title=${tr('Composition', 'Composition', 'Composition')} actions=${lines.length ? html`<button class="btn ghost small danger" onClick=${clearLines}>${tr('Tout supprimer', 'Delete all', 'Fafao daholo')}</button>` : null}>
           <div class="table-wrap"><table class="table compact">
             <thead><tr><th>${tr('Ingrédient', 'Ingredient', 'Ingrédient')}</th><th>${tr('Quantité', 'Quantity', 'Habetsahana')}</th><th>NB</th><th class="num">≈ g</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th></th></tr></thead>
             <tbody>
@@ -139,7 +168,8 @@ export function PlatEdit({ id }) {
                 const ing = ingMap.get(l.ingredient_id);
                 const v = lineValues(l, ing);
                 return html`<tr>
-                  <td>${ing ? ingName(ing) : html`<span class="error">${l.ingredient_id} ?</span>`} <span class="muted mono small">${l.ingredient_id}</span>${v.grammesInconnus ? html` <${Badge} tone="warn">${tr('poids inconnu', 'unknown weight', 'lanjany tsy fantatra')}<//>` : v.missing && html` <${Badge} tone="warn">${tr('sans valeurs', 'no values', 'tsy misy valeur')}<//>`}</td>
+                  <td><input class="ing-input" list="ing-list" key=${l.id + ':' + l.ingredient_id} defaultValue=${ing ? ingLabel(ing) : l.ingredient_id} title=${tr('Changer l\'ingrédient', 'Change ingredient', 'Ovay ny ingrédient')}
+                      onChange=${(e) => changeLineIngredient(i, e.target.value, e.target)} onKeyDown=${(e) => { if (e.key === 'Enter') e.target.blur(); }} />${v.grammesInconnus ? html` <${Badge} tone="warn">${tr('poids inconnu', 'unknown weight', 'lanjany tsy fantatra')}<//>` : v.missing && html` <${Badge} tone="warn">${tr('sans valeurs', 'no values', 'tsy misy valeur')}<//>`}</td>
                   <td><div class="qty"><input class="num-input" type="number" min="0" step="any" value=${l.quantite} onInput=${(e) => setLine(i, { quantite: e.target.value })} /><select class="unit" value=${l.unite || 'g'} onChange=${(e) => setLine(i, { unite: e.target.value })}>${units}</select></div></td>
                   <td><input class="note-input" value=${l.note || ''} placeholder=${tr('ex. sans sel', 'e.g. no salt', 'ohatra: tsy misy sira')} onInput=${(e) => setLine(i, { note: e.target.value })} /></td>
                   <td class="num muted">${v.grammesInconnus ? '?' : fmt(v.grammes)}</td>
@@ -147,7 +177,11 @@ export function PlatEdit({ id }) {
                   <td class="num">${v.missing ? '?' : fmt(v.proteines, 1)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.glucides, 1)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.lipides, 1)}</td>
-                  <td><button class="btn ghost small" title=${tr('Retirer', 'Remove', 'Esory')} onClick=${() => { setLines((ls) => ls.filter((_, j) => j !== i)); setDirty(true); }}>✕</button></td>
+                  <td class="line-actions">
+                    <button class="btn ghost small" title=${tr('Monter', 'Move up', 'Akaro')} disabled=${i === 0} onClick=${() => moveLine(i, -1)}>↑</button>
+                    <button class="btn ghost small" title=${tr('Descendre', 'Move down', 'Ampidino')} disabled=${i === lines.length - 1} onClick=${() => moveLine(i, 1)}>↓</button>
+                    <button class="btn ghost small danger" title=${tr('Supprimer cette ligne', 'Delete this line', 'Fafao ity andalana ity')} onClick=${() => removeLine(i)}>✕</button>
+                  </td>
                 </tr>`;
               })}
               <tr class="total-row"><td>Total</td><td></td><td></td><td class="num">${fmt(totals.grammes)} g</td><td class="num">${fmt(totals.kcal)}</td><td class="num">${fmt(totals.proteines, 1)}</td><td class="num">${fmt(totals.glucides, 1)}</td><td class="num">${fmt(totals.lipides, 1)}</td><td></td></tr>
@@ -162,9 +196,9 @@ export function PlatEdit({ id }) {
             <button class="btn" onClick=${addLine}>${tr('Ajouter', 'Add', 'Ampio')}</button>
           </div>
           <p class="hint">${tr(
-            'Quantités en g, ml ou pièces (ex. 2 œufs, café 150 ml). Le poids des pièces et les valeurs manquantes seront complétés par l\'IA. Le NB (sans sel, sans sucre…) sert à l\'IA pour le calcul et le texte marketing.',
-            'Quantities in g, ml or pieces (e.g. 2 eggs, coffee 150 ml). Piece weights and missing values will be filled by the AI. The NB (no salt, no sugar…) helps the AI with values and marketing text.',
-            'Habetsahana amin\'ny g, ml na isa (ohatra: atody 2, café 150 ml). Fenoin\'ny IA ny lanjan\'ny isa sy ny valeur tsy misy. Ny NB (tsy misy sira, tsy misy siramamy…) dia ampiasain\'ny IA amin\'ny kajy sy ny texte marketing.')}</p>
+            'Tout est modifiable : cliquez sur un ingrédient pour le remplacer, changez la quantité, l\'unité ou le NB, ✕ pour supprimer une ligne, puis « Enregistrer ». Quantités en g, ml ou pièces (ex. 2 œufs, café 150 ml). Le poids des pièces et les valeurs manquantes seront complétés par l\'IA. Le NB (sans sel, sans sucre…) sert à l\'IA pour le calcul et le texte marketing.',
+            'Everything is editable: click an ingredient to replace it, change quantity, unit or NB, ✕ to delete a line, then "Save". Quantities in g, ml or pieces (e.g. 2 eggs, coffee 150 ml). Piece weights and missing values will be filled by the AI. The NB (no salt, no sugar…) helps the AI with values and marketing text.',
+            'Azo ovaina daholo: tsindrio ny ingrédient raha hanolo azy, ovay ny habetsahana, unité na NB, ✕ hamafana andalana, dia "Tehirizo". Habetsahana amin\'ny g, ml na isa (ohatra: atody 2, café 150 ml). Fenoin\'ny IA ny lanjan\'ny isa sy ny valeur tsy misy. Ny NB (tsy misy sira, tsy misy siramamy…) dia ampiasain\'ny IA amin\'ny kajy sy ny texte marketing.')}</p>
         <//>
 
         <${Card} title=${tr('Textes (vente et marketing)', 'Texts (sales and marketing)', 'Texte (fivarotana sy marketing)')} actions=${html`<div class="tabs mini">${TEXT_LANGS.map((l) => html`<button class=${'tab' + (l === txtLang ? ' on' : '')} onClick=${() => setTxtLang(l)}>${LANG_SHORT[l]}</button>`)}</div>`}>

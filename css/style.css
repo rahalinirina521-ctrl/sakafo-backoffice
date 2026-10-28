@@ -90,6 +90,9 @@ textarea { resize: vertical; }
 .slot { min-width: 170px; padding: 5px 6px; font-size: 13px; }
 .qty { display: flex; gap: 4px; }
 .unit { width: auto; padding: 5px 6px; font-size: 13px; }
+.ing-input { min-width: 190px; padding: 5px 8px; font-size: 13px; font-weight: 600; }
+.line-actions { white-space: nowrap; }
+.line-actions .btn { padding: 4px 6px; }
 .note-input { min-width: 120px; padding: 5px 8px; font-size: 13px; }
 .lang-switch { display: inline-flex; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; overflow: hidden; align-self: flex-start; margin-left: 8px; }
 .login .lang-switch { border-color: var(--line); margin: 0; }
