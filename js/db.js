@@ -159,3 +159,20 @@ export async function migrateDemoToSupabase(d) {
   }
   return counts;
 }
+
+// ---------- IA ao anatiny (Edge Function "ia-hameno") ----------
+// Mamerina ny soratra navalin'ny IA. Raha tsy voafetra ny cle API: error.code = 'no_key'
+export async function callAI(prompt) {
+  if (MODE === 'demo') { const e = new Error('Supabase requis'); e.code = 'demo'; throw e; }
+  const c = await getClient();
+  const { data, error } = await c.functions.invoke('ia-hameno', { body: { prompt } });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (x) { /* tsy JSON */ }
+    const e = new Error(info.error || error.message || 'Erreur IA');
+    e.code = info.code || 'ai';
+    throw e;
+  }
+  if (!data || typeof data.text !== 'string') throw new Error('Réponse IA vide');
+  return data.text;
+}

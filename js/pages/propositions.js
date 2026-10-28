@@ -3,6 +3,7 @@ import { useApp, Card, Badge, Field, CopyBox } from '../ui.js';
 import { FOTOANA, SLOT_SHARE, sumLines, slotTarget, fitStatus, nextId, uid, fmt, toNum, NUTR } from '../calc.js';
 import { promptPropositions, extractJson, normalizePlatTexts, applyPlatTexts } from '../prompts.js';
 import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js';
+import { callAI } from '../db.js';
 import { fitLabel } from './plats.js';
 
 const EMPTY_ING = { nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true };
@@ -32,9 +33,16 @@ export function Propositions() {
 
   const prompt = promptPropositions(opts, data.plats, data.ingredients, category);
 
-  function parse() {
+  async function askAI() {
+    setBusy(true);
+    try { const t = await callAI(prompt); setText(t); parse(t); } catch (e) {
+      toast(e.code === 'no_key' ? tr('IA intégrée non activée (clé ANTHROPIC_API_KEY dans Supabase). Utilisez le copier-coller.', 'Built-in AI not enabled (ANTHROPIC_API_KEY in Supabase). Use copy-paste.', 'Tsy mbola mandeha ny IA ao anatiny (ANTHROPIC_API_KEY ao amin\'ny Supabase). Ampiasao ny adika sy apetaka.') : e.message, 'bad');
+    } finally { setBusy(false); }
+  }
+
+  function parse(src = text) {
     try {
-      const j = extractJson(text);
+      const j = extractJson(src);
       const list = (j.propositions || j.plats || []).map((p) => {
         const temp = new Map(ingMap);
         const lines = (p.composition || []).map((c, i) => {
@@ -115,11 +123,15 @@ export function Propositions() {
         <${Field} label=${tr('Style', 'Style', 'Endrika')} wide><input value=${opts.style} onInput=${(e) => set('style', e.target.value)} placeholder=${tr('ex. uniquement malgache, ou asiatique, sans porc…', 'e.g. Malagasy only, or Asian, no pork…', 'ohatra: malagasy fotsiny, na asiatique, tsy misy henakisoa…')} /><//>
         <${Field} label=${tr('Autres remarques', 'Other remarks', 'Fanamarihana hafa')} wide><input value=${opts.fanamarihana} onInput=${(e) => set('fanamarihana', e.target.value)} /><//>
       </div>
+      <div class="row gap wrap">
+        <button class="btn primary big" disabled=${busy} onClick=${askAI}>${busy ? tr('L\'IA réfléchit… (30–60 s)', 'AI is thinking… (30–60 s)', 'Mieritreritra ny IA… (30–60 s)') : tr('Demander à l\'IA maintenant', 'Ask the AI now', 'Anontanio ny IA izao')}</button>
+        <span class="muted small">${tr('ou copiez le prompt dans ChatGPT / Claude :', 'or copy the prompt into ChatGPT / Claude:', 'na adikao ao amin\'ny ChatGPT / Claude ny prompt:')}</span>
+      </div>
       <${CopyBox} text=${prompt} rows="14" />
     <//>
     <${Card} title=${'2. ' + tr('Collez la réponse de l\'IA', 'Paste the AI answer', 'Apetaho ny valin\'ny IA')}>
       <textarea rows="6" class="mono" placeholder=${tr('Collez ici le JSON donné par l\'IA…', 'Paste the JSON from the AI here…', 'Apetaho eto ny JSON nomen\'ny IA…')} value=${text} onInput=${(e) => setText(e.target.value)}></textarea>
-      <button class="btn primary" disabled=${!text.trim()} onClick=${parse}>${tr('Afficher les suggestions', 'Show the suggestions', 'Asehoy ny soso-kevitra')}</button>
+      <button class="btn primary" disabled=${!text.trim()} onClick=${() => parse()}>${tr('Afficher les suggestions', 'Show the suggestions', 'Asehoy ny soso-kevitra')}</button>
     <//>
     ${props.length > 0 && html`<${Card} title=${'3. ' + tr('Choisissez', 'Choose', 'Safidio') + ' (' + props.filter((p) => p.selected).length + '/' + props.length + ')'} actions=${html`<button class="btn primary" disabled=${busy} onClick=${importSelected}>${busy ? tr('Ajout…', 'Adding…', 'Mampiditra…') : tr('Ajouter la sélection', 'Add selected', 'Ampidiro ireo voafidy')}</button>`}>
       <div class="prop-grid">${props.map((p, idx) => {
