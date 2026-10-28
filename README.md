@@ -20,32 +20,20 @@ Tsy mila "build": pejy HTML + JavaScript mandeha mivantana amin'ny GitHub Pages.
 
 ## Fametrahana (indray mandeha ihany)
 
-### 1. Supabase (base de données)
-1. Midira ao amin'ny [supabase.com](https://supabase.com) → **New project** (anarana: `sakafo`, région akaiky: Europe).
-2. **SQL Editor** → New query → adikao ny ao amin'ny `supabase/schema.sql` → **Run**.
-3. New query indray → adikao ny ao amin'ny `supabase/seed.sql` → **Run** (ingrédients 36 sy sokajy 5).
-   *(Raha efa namorona ny tables ianao tamin'ny version taloha: ampandehano koa ny `supabase/migration_002.sql`.)*
-4. **Authentication → Users → Add user → Create new user**: email sy mot de passe ho anao (tsindrio "Auto Confirm User").
-5. **Authentication → Sign In / Providers**: esory ny "Allow new users to sign up" mba tsy hisy olon-kafa hisoratra anarana.
-6. **Project Settings → API**: adikao ny **Project URL** sy ny **anon public** key.
+### 1. Supabase (efa vita)
+Projet `sakafo` (Frankfurt) efa voaforona: tables, fiarovana (table `admins`), ingrédients 36, sokajy 5, toerana sary `sary`. Efa ao amin'ny `config.js` ny URL sy ny publishable key.
 
-### 2. Ampifandraisina ny application
-1. Ao amin'ny GitHub, sokafy ny fichier `config.js` → tsindrio ny pensilihazo (Edit).
-2. Apetaho ny Project URL sy ny anon key:
-   ```js
-   export const SUPABASE_URL = 'https://xxxx.supabase.co';
-   export const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
-   ```
-3. **Commit changes**. Aorian'ny 1–2 minitra dia miova ny site.
-
-> Ny anon key dia natao hiseho ao amin'ny navigateur; ny fiarovana dia ataon'ny "Row Level Security" (izay tafiditra ihany no mahita ny données). **Aza** apetraka mihitsy ny `service_role` key.
+Ataon'ny tompony ihany:
+1. **Authentication → Users → Add user → Create new user**: email ao amin'ny table `admins` + teny miafina, tsindrio "Auto Confirm User".
+2. **Authentication → Sign In / Providers**: esory ny "Allow new users to sign up".
+3. Admin vaovao: SQL Editor → `insert into admins (email) values ('...');`
 
 ### 3. GitHub Pages
 **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save.**
 Ny adiresy dia: `https://<username>.github.io/sakafo-backoffice/`
 
 ## Mode démo
-Raha mbola foana ny `config.js`, dia mandeha amin'ny "mode démo": voatahiry ao amin'ny navigateur ihany ny données. Mety amin'ny fanandramana, fa ataovy ny Backup Excel alohan'ny hamindrana amin'ny Supabase.
+Raha foana ny `config.js` (ohatra amin'ny fanandramana), dia mandeha amin'ny "mode démo": voatahiry ao amin'ny navigateur ihany ny données. Mety amin'ny fanandramana, fa ataovy ny Backup Excel alohan'ny hamindrana amin'ny Supabase.
 
 ## Fomba fiasa isan'andro
 1. **Plats → + Nouveau plat**: anarana (ohatra M1), fotoana, sokajy, composition amin'ny g / ml / isa, miaraka amin'ny **NB** (ohatra: atody "sans sel", café "sans sucre"). Ingrédient tsy ao? Soraty ny anarany → "Ajouter".

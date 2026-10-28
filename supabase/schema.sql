@@ -83,32 +83,43 @@ create table if not exists menus (
 );
 
 -- -------------------------------------------------------------
---  Fiarovana: ireo olona tafiditra (login) ihany no mahita sy
---  manova ny données.
+--  Fiarovana: ireo email ao amin'ny table "admins" ihany no
+--  mahita sy manova ny données (na dia misy olona hafa misoratra aza).
 -- -------------------------------------------------------------
+create table if not exists admins (email text primary key, created_at timestamptz not null default now());
+alter table admins enable row level security;
+-- insert into admins (email) values ('email-nao@gmail.com');
+
+create schema if not exists private;
+grant usage on schema private to authenticated;
+create or replace function private.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.admins where lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')));
+$$;
+revoke all on function private.is_admin() from public, anon;
+grant execute on function private.is_admin() to authenticated;
+
 do $$
 declare t text;
 begin
   foreach t in array array['ingredients','categories','plats','composition','menus'] loop
     execute format('alter table %I enable row level security', t);
     execute format('drop policy if exists "admin_all" on %I', t);
-    execute format('create policy "admin_all" on %I for all to authenticated using (true) with check (true)', t);
+    execute format('create policy "admin_all" on %I for all to authenticated using ((select private.is_admin())) with check ((select private.is_admin()))', t);
   end loop;
 end $$;
 
 -- -------------------------------------------------------------
---  Sary (Storage): bucket "sary", hitan'ny rehetra (ho an'ny
---  application client), fa ny tafiditra ihany no mampakatra.
+--  Sary (Storage): bucket "sary" public (lien hitan'ny client),
+--  fa ny admin ihany no mampakatra / manova / mamafa.
 -- -------------------------------------------------------------
-insert into storage.buckets (id, name, public)
-values ('sary', 'sary', true)
+insert into storage.buckets (id, name, public) values ('sary', 'sary', true)
 on conflict (id) do update set public = true;
-
-drop policy if exists "sary_read" on storage.objects;
-create policy "sary_read" on storage.objects for select using (bucket_id = 'sary');
+drop policy if exists "sary_select_admin" on storage.objects;
+create policy "sary_select_admin" on storage.objects for select to authenticated using (bucket_id = 'sary' and (select private.is_admin()));
 drop policy if exists "sary_insert" on storage.objects;
-create policy "sary_insert" on storage.objects for insert to authenticated with check (bucket_id = 'sary');
+create policy "sary_insert" on storage.objects for insert to authenticated with check (bucket_id = 'sary' and (select private.is_admin()));
 drop policy if exists "sary_update" on storage.objects;
-create policy "sary_update" on storage.objects for update to authenticated using (bucket_id = 'sary');
+create policy "sary_update" on storage.objects for update to authenticated using (bucket_id = 'sary' and (select private.is_admin()));
 drop policy if exists "sary_delete" on storage.objects;
-create policy "sary_delete" on storage.objects for delete to authenticated using (bucket_id = 'sary');
+create policy "sary_delete" on storage.objects for delete to authenticated using (bucket_id = 'sary' and (select private.is_admin()));
