@@ -13,7 +13,7 @@ import { Propositions } from './pages/propositions.js';
 import { Categories } from './pages/categories.js';
 import { Backup } from './pages/backup.js';
 
-export const VERSION = '2026-10-28 19:25';
+export const VERSION = '2026-10-28 19:40';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],

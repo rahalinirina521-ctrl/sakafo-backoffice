@@ -91,7 +91,7 @@ ${DETAILS_SPEC}
 
 FORMAT DE RÉPONSE
 Si je t'ai joint un fichier Excel « hameno_${plat.id}.xlsx », remplis uniquement les cellules vides des onglets "Plat" et "Ingredients" (ne change ni les ID ni les en-têtes) et renvoie-moi le fichier complété.
-Dans tous les cas, termine ta réponse par ce bloc JSON (et rien après) :
+Dans tous les cas, donne ensuite ce bloc JSON :
 
 \`\`\`json
 {
@@ -104,8 +104,24 @@ Dans tous les cas, termine ta réponse par ce bloc JSON (et rien après) :
     { "id": "", "nom_fr": "", "nom_en": "", "nom_mg": "", "categorie": "${ING_CATS}", "etat": "Masaka | Manta | Vonona", "kcal": 0, "proteines": 0, "glucides": 0, "lipides": 0, "fibres": 0, "sucres": 0, "sodium": 0, "ig": 0, "poids_piece": null, "densite": null, "source": "" }
   ]
 }
-\`\`\``;
+\`\`\`
+
+4. IMAGE — après le JSON, si tu sais générer des images (ChatGPT, Gemini…), génère UNE photo de ce plat selon cette description (sinon, ignore cette étape) :
+${photoBrief(plat, lines, ingMap)}`;
 }
+
+// Famaritana sary tsotra: sary tena izy, mazava, mampaniry, habetsahana marina
+export function photoBrief(plat, lines = [], ingMap = new Map()) {
+  const meal = MEAL_EN[plat.fotoana] || 'meal';
+  const items = ingredientsForPhoto(lines, ingMap);
+  return [
+    `Realistic, appetising photo of a ${meal} plate${plat.nom_commercial ? ' "' + plat.nom_commercial + '"' : ''}.`,
+    items.length ? `Exactly these foods and portions, nothing more (true serving size): ${items.join(', ')}.` : '',
+    'Simple and clear: one plate (and the cup or glass if there is a drink) on a light wooden table, soft natural daylight, 45-degree angle, sharp focus, true-to-life colours, clean background.',
+    'Photorealistic like a real photo taken by a good photographer, square 1:1, no text, no logo, no hands.',
+  ].filter(Boolean).join('\n');
+}
+
 
 // ---------- Prompt 2: soso-kevitra sakafo vaovao ----------
 export function promptPropositions(opts, plats, ingredients, category) {

@@ -1,9 +1,9 @@
-import { html, useState, useMemo } from '../lib.js';
-import { useApp, Card, Badge, Field, CopyBox, navigate, pctBadge, SelectOrAdd } from '../ui.js';
+import { html, useState, useMemo, useEffect } from '../lib.js';
+import { useApp, Card, Badge, Field, CopyBox, Modal, navigate, pctBadge, SelectOrAdd } from '../ui.js';
 import {
   FOTOANA, UNITES, lineValues, lineGrams, sumLines, slotTarget, fitStatus, nextId, uid, fmt, pct, toNum, kcalCheck, NUTR,
 } from '../calc.js';
-import { promptHameno, promptSary, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js';
+import { promptHameno, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js';
 import { exportHameno, importHameno } from '../excel.js';
 import { uploadPlatImage, removePlatImage, MODE, callAI } from '../db.js';
 import { tr, fotLabel, unitLabel, ingName, catName, PLAT_TEXT_FIELDS, LANG_SHORT, getLang } from '../i18n.js';
@@ -52,6 +52,17 @@ export function PlatEdit({ id }) {
   const [txtLang, setTxtLang] = useState(getLang());
 
   const totals = useMemo(() => sumLines(lines, ingMap), [lines, ingMap]);
+
+  // Brouillon: tehirizina ao amin'ny navigateur isaky ny fanovana, mba tsy ho very ny composition
+  const draftKey = 'sakafo_draft_' + (isNew ? 'vaovao' : id);
+  const [draft, setDraft] = useState(() => {
+    try { const d = JSON.parse(localStorage.getItem(draftKey)); return d && d.lines ? d : null; } catch (e) { return null; }
+  });
+  useEffect(() => {
+    if (!dirty || draft || (!lines.length && !(form.nom || '').trim())) return;
+    try { localStorage.setItem(draftKey, JSON.stringify({ form, lines, at: Date.now() })); } catch (e) { /* tsy maninona */ }
+  }, [form, lines, dirty, draft]);
+  const clearDraft = () => { try { localStorage.removeItem(draftKey); localStorage.removeItem('sakafo_draft_vaovao'); } catch (e) { /* */ } };
   if (!isNew && !existing) return html`<div class="page"><p>${tr('Plat introuvable', 'Dish not found', 'Tsy hita ny sakafo')} ${id}.</p><a href="#/plats">← ${tr('Retour', 'Back', 'Hiverina')}</a></div>`;
 
   const set = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setDirty(true); };
@@ -119,6 +130,7 @@ export function PlatEdit({ id }) {
     await app.setComposition(row.id, compRows(lines, mapArg));
     setForm(row);
     setDirty(false);
+    clearDraft();
     return row;
   }
 
@@ -148,6 +160,10 @@ export function PlatEdit({ id }) {
         <button class="btn primary" disabled=${busy || !dirty} onClick=${save}>${busy ? tr('Enregistrement…', 'Saving…', 'Mitahiry…') : dirty ? tr('Enregistrer', 'Save', 'Tehirizo') : tr('Enregistré ✓', 'Saved ✓', 'Voatahiry ✓')}</button>
       </div>
     </div>
+
+    ${draft && html`<p class="warn-box row gap wrap between"><span>${tr('Brouillon non enregistré retrouvé (composition et saisie du', 'Unsaved draft found (composition and entries from', 'Misy brouillon tsy voatahiry hita (composition sy fanoratana tamin\'ny')} ${new Date(draft.at).toLocaleString()}).</span>
+      <span class="row gap"><button class="btn small primary" onClick=${() => { setForm({ ...EMPTY_PLAT, ...draft.form, id: draft.form.id || form.id }); setLines(draft.lines); setDirty(true); setDraft(null); }}>${tr('Restaurer', 'Restore', 'Avereno')}</button>
+      <button class="btn small ghost" onClick=${() => { clearDraft(); setDraft(null); }}>${tr('Ignorer', 'Discard', 'Aoka ihany')}</button></span></p>`}
 
     <div class="edit-grid">
       <div class="col">
@@ -268,7 +284,7 @@ export function PlatEdit({ id }) {
       </div>
     <//>
 
-    <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} lines=${lines} kcal=${totals.missing ? null : totals.kcal} />
+    <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} persistAll=${persist} />
   </div>`;
 }
 
@@ -411,26 +427,28 @@ function AiPanel({ form, lines, isNew, persist }) {
 }
 
 // ---------------------------------------------------------------
-function PhotoCard({ form, setForm, isNew, lines, kcal }) {
+function PhotoCard({ form, setForm, isNew, persistAll }) {
   const app = useApp();
-  const { data, ingMap, toast } = app;
-  const [kind, setKind] = useState('retouch');
+  const { data, toast } = app;
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
+  const [zoom, setZoom] = useState(false);
 
   async function persist(patch) {
-    const cur = data.plats.find((p) => p.id === form.id);
-    if (cur) await app.save('plats', { ...cur, ...patch });
+    const cur = data.plats.find((p) => p.id === form.id) || form;
+    await app.save('plats', { ...cur, ...patch });
     setForm((f) => ({ ...f, ...patch }));
   }
   async function onFile(file) {
     if (!file) return;
-    if (isNew) { toast(tr('Enregistrez d\'abord le plat.', 'Save the dish first.', 'Tehirizo aloha ny sakafo.'), 'bad'); return; }
     setBusy(true);
     try {
+      let saved = null;
+      if (isNew) { saved = await persistAll(); if (!saved) return; }
       const url = await uploadPlatImage(form.id, file);
-      await persist({ image_url: url });
+      await persist({ ...(saved || {}), image_url: url });
       toast(tr('Photo enregistrée', 'Photo saved', 'Voatahiry ny sary'));
+      if (isNew) navigate('/plats/' + form.id);
     } catch (e) { toast(tr('Envoi impossible : ', 'Upload failed: ', 'Tsy lasa ny sary: ') + (e.message || e), 'bad'); } finally { setBusy(false); }
   }
   async function onRemove() {
@@ -438,34 +456,34 @@ function PhotoCard({ form, setForm, isNew, lines, kcal }) {
     setBusy(true);
     try { await removePlatImage(form.id); await persist({ image_url: null }); } catch (e) { toast(e.message, 'bad'); } finally { setBusy(false); }
   }
+  const pick = (e) => { onFile(e.target.files[0]); e.target.value = ''; };
 
   return html`<${Card} title=${tr('Photo', 'Photo', 'Sary')}>
     <div class="photo-row">
-      <label class=${'photo drop' + (over ? ' over' : '') + (busy ? ' busy' : '')}
-        onDragOver=${(e) => { e.preventDefault(); setOver(true); }}
-        onDragLeave=${() => setOver(false)}
-        onDrop=${(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files[0]); }}>
-        ${form.image_url ? html`<img src=${form.image_url} alt=${form.nom} />` : html`<span class="muted">${busy ? tr('Envoi…', 'Uploading…', 'Mampakatra…') : tr('Cliquez ou glissez une photo ici', 'Click or drop a photo here', 'Tsindrio na apetraho eto ny sary')}</span>`}
-        <input type="file" accept="image/*" hidden disabled=${busy} onChange=${(e) => { onFile(e.target.files[0]); e.target.value = ''; }} />
-      </label>
+      ${form.image_url
+        ? html`<button class="photo zoomable" title=${tr('Agrandir', 'Enlarge', 'Hitarina')} onClick=${() => setZoom(true)}><img src=${form.image_url} alt=${form.nom} /><span class="zoom-hint">⤢</span></button>`
+        : html`<label class=${'photo drop' + (over ? ' over' : '') + (busy ? ' busy' : '')}
+            onDragOver=${(e) => { e.preventDefault(); setOver(true); }}
+            onDragLeave=${() => setOver(false)}
+            onDrop=${(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files[0]); }}>
+            <span class="muted">${busy ? tr('Envoi…', 'Uploading…', 'Mampakatra…') : tr('Cliquez ou glissez une photo ici', 'Click or drop a photo here', 'Tsindrio na apetraho eto ny sary')}</span>
+            <input type="file" accept="image/*" hidden disabled=${busy} onChange=${pick} />
+          </label>`}
       <div class="col grow">
+        <p class="small">${tr('La photo est générée par l\'IA avec le même prompt que les textes (« Compléter avec l\'IA » ci-dessus, dans ChatGPT ou Gemini). Enregistrez l\'image puis ajoutez-la ici. Pas satisfait ? Remplacez-la par votre propre photo.', 'The photo is generated by the AI with the same prompt as the texts ("Complete with AI" above, in ChatGPT or Gemini). Save the image, then add it here. Not happy? Replace it with your own photo.', 'Ny sary dia vokarin\'ny IA amin\'ny prompt iray ihany amin\'ny texte ("Compléter avec l\'IA" eo ambony, ao amin\'ny ChatGPT na Gemini). Tehirizo ny sary dia ampidiro eto. Tsy mahafapo? Soloy amin\'ny sarinao manokana.')}</p>
         <div class="row gap wrap">
-          <label class=${'btn primary' + (busy ? ' disabled' : '')}>${form.image_url ? tr('Changer la photo', 'Change photo', 'Ovay ny sary') : tr('Choisir une photo', 'Choose a photo', 'Misafidiana sary')}<input type="file" accept="image/*" hidden disabled=${busy} onChange=${(e) => { onFile(e.target.files[0]); e.target.value = ''; }} /></label>
+          <label class=${'btn primary' + (busy ? ' disabled' : '')}>${busy ? tr('Envoi…', 'Uploading…', 'Mampakatra…') : form.image_url ? tr('Remplacer la photo', 'Replace photo', 'Soloy ny sary') : tr('Ajouter une photo', 'Add a photo', 'Ampidiro sary')}<input type="file" accept="image/*" hidden disabled=${busy} onChange=${pick} /></label>
+          ${form.image_url && html`<button class="btn" onClick=${() => setZoom(true)}>${tr('Agrandir', 'Enlarge', 'Hitarina')}</button>`}
           ${form.image_url && html`<button class="btn ghost danger" disabled=${busy} onClick=${onRemove}>${tr('Retirer', 'Remove', 'Esory')}</button>`}
         </div>
         <p class="hint">${MODE === 'supabase'
           ? tr('La photo est réduite automatiquement et enregistrée dans Supabase.', 'The photo is resized automatically and stored in Supabase.', 'Hakelezina ho azy ny sary ary tehirizina ao amin\'ny Supabase.')
           : tr('Mode démo : photo gardée dans ce navigateur uniquement.', 'Demo mode: photo kept in this browser only.', 'Mode démo: ao amin\'ity navigateur ity ihany ny sary.')}</p>
-        <h3>${tr('Pas encore de photo ? Générez-la avec l\'IA', 'No photo yet? Generate it with AI', 'Tsy mbola misy sary? Ampiasao ny IA')}</h3>
-        <p class="small muted">${tr('Le prompt reprend la composition, les quantités, les NB, l\'objectif et le texte marketing. Copiez-le dans ChatGPT (image), Gemini ou Midjourney, enregistrez l\'image puis choisissez-la ci-dessus. Complétez d\'abord les textes avec l\'IA pour un meilleur résultat.', 'The prompt uses the composition, quantities, NB, goal and marketing text. Copy it into ChatGPT (image), Gemini or Midjourney, save the image, then choose it above. Complete the texts with AI first for a better result.', 'Ao anatin\'ny prompt ny composition, ny habetsahana, ny NB, ny tanjona ary ny texte marketing. Adikao ao amin\'ny ChatGPT (image), Gemini na Midjourney, tehirizo ny sary dia safidio eo ambony. Fenoy amin\'ny IA aloha ny texte mba ho tsara kokoa ny vokatra.')}</p>
-        <div class="tabs mini wrap">
-          <button class=${'tab' + (kind === 'retouch' ? ' on' : '')} onClick=${() => setKind('retouch')}>${tr('Embellir ma vraie photo', 'Enhance my real photo', 'Hatsarao ny sariko tena izy')}</button>
-          <button class=${'tab' + (kind === 'photo' ? ' on' : '')} onClick=${() => setKind('photo')}>${tr('Créer une photo (sans texte)', 'Create a photo (no text)', 'Mamorona sary (tsy misy soratra)')}</button>
-          <button class=${'tab' + (kind === 'pub' ? ' on' : '')} onClick=${() => setKind('pub')}>${tr('Visuel pub Facebook / Instagram', 'Facebook / Instagram ad visual', 'Sary dokam-barotra Facebook / Instagram')}</button>
-        </div>
-        ${kind === 'retouch' && html`<p class="small ok-box">${tr('Prenez la photo du vrai plat, envoyez-la dans ChatGPT (ou Gemini) AVEC ce prompt : l\'IA améliore la lumière et la présentation sans changer la nourriture ni les portions.', 'Take a photo of the real dish and send it to ChatGPT (or Gemini) WITH this prompt: the AI improves light and presentation without changing the food or portions.', 'Alaivo sary ny sakafo tena izy, alefaso any amin\'ny ChatGPT (na Gemini) MIARAKA amin\'ity prompt ity: hatsarain\'ny IA ny hazavana sy ny fandaminana, tsy ovainy ny sakafo na ny habetsahany.')}</p>`}
-        <${CopyBox} text=${promptSary(form, lines, ingMap, data.categories, kind, kcal)} label=${tr('Copier le prompt photo', 'Copy the photo prompt', 'Adikao ny prompt sary')} rows="9" />
       </div>
     </div>
+    ${zoom && form.image_url && html`<div class="lightbox" onClick=${() => setZoom(false)} role="dialog" aria-modal="true">
+      <img src=${form.image_url} alt=${form.nom} />
+      <button class="btn lightbox-close" onClick=${() => setZoom(false)} aria-label=${tr('Fermer', 'Close', 'Hidio')}>✕</button>
+    </div>`}
   <//>`;
 }

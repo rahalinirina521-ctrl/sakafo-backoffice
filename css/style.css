@@ -180,3 +180,8 @@ details.manual { margin-top: 8px; } details.manual > summary { cursor: pointer; 
 .pre { white-space: pre-line; }
 .add-opt { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .add-opt input:not(.num-input) { min-width: 120px; width: auto; padding: 5px 8px; }
+.photo.zoomable { position: relative; border: 0; cursor: zoom-in; padding: 0; }
+.zoom-hint { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; border-radius: 6px; padding: 2px 7px; font-size: 14px; }
+.lightbox { position: fixed; inset: 0; background: rgba(10,15,10,.88); z-index: 70; display: grid; place-items: center; padding: 16px; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: 92vh; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.lightbox-close { position: fixed; top: 14px; right: 14px; }
