@@ -64,7 +64,7 @@ export function Ingredients() {
         ${optionList('categorie_ingredient', CATS, data.options).map((c) => html`<option value=${c}>${catLabel(c)}</option>`)}
       </select>
     </div>
-    <div class="table-wrap"><table class="table">
+    <div class="table-wrap"><table class="table resp">
       <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th>${tr('Catégorie', 'Category', 'Sokajy')}</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">${tr('Fibres', 'Fibre', 'Fibres')}</th><th class="num">IG</th><th class="num">${tr('g/pièce', 'g/piece', 'g/isa')}</th><th class="num">Ar/kg</th><th>${tr('Statut', 'Status', 'Sata')}</th></tr></thead>
       <tbody>${rows.map((i) => {
         const chk = kcalCheck(i);

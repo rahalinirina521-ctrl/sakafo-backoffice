@@ -46,7 +46,7 @@ export function Menus() {
     <div class="tabs">${cats.map((c) => html`<button class=${'tab' + (c.id === cat ? ' on' : '')} onClick=${() => setCat(c.id)}>${catName(c)}</button>`)}</div>
     ${category && html`<p class="muted small">${tr('Cible', 'Target', 'Tanjona')} : <b>${fmt(category.kcal_cible)} kcal</b>/${tr('jour', 'day', 'andro')} (±${Math.round((category.tolerance ?? 0.1) * 100)} %)${category.cg_max ? ', CG ≤ ' + category.cg_max : ''}. ${fotLabel('Maraina')} 25 % · ${fotLabel('Atoandro')} 35 % · ${fotLabel('Hariva')} 30 % · ${fotLabel('Goûter')} 10 %.</p>`}
     ${menus.length === 0 ? html`<${Empty}>${tr('Aucun menu pour cette catégorie. Cliquez sur « + Jour ».', 'No menu for this category yet. Click "+ Day".', 'Mbola tsy misy menu ho an\'ity sokajy ity. Tsindrio "+ Andro".')}<//>` : html`
-    <div class="table-wrap"><table class="table">
+    <div class="table-wrap"><table class="table resp menus-t">
       <thead><tr><th>${tr('Jour', 'Day', 'Andro')}</th>${FOTOANA.map((f) => html`<th>${fotLabel(f)}</th>`)}<th class="num">Kcal</th><th class="num">Prot.</th><th class="num">CG</th><th class="num">${tr('Coût', 'Cost', 'Coût')}</th><th>${tr('Statut', 'Status', 'Sata')}</th><th></th></tr></thead>
       <tbody>${menus.map((m) => {
         const t = menuTotals(m, data.plats, data.composition, ingMap);

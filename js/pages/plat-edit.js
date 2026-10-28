@@ -156,7 +156,7 @@ export function PlatEdit({ id }) {
   return html`<div class="page">
     <div class="page-head">
       <div><a href="#/plats" class="muted">← ${tr('Plats', 'Dishes', 'Sakafo')}</a><h1>${isNew ? tr('Nouveau plat', 'New dish', 'Sakafo vaovao') : (getText(getLang(), 'nom_commercial') || form.nom)}<span class="muted mono small"> ${form.id}</span></h1></div>
-      <div class="row gap">
+      <div class="row gap save-bar">
         ${!isNew && html`<button class="btn danger ghost" onClick=${del}>${tr('Supprimer', 'Delete', 'Fafao')}</button>`}
         <button class="btn primary" disabled=${busy || !dirty} onClick=${save}>${busy ? tr('Enregistrement…', 'Saving…', 'Mitahiry…') : dirty ? tr('Enregistrer', 'Save', 'Tehirizo') : tr('Enregistré ✓', 'Saved ✓', 'Voatahiry ✓')}</button>
       </div>
@@ -190,7 +190,7 @@ export function PlatEdit({ id }) {
         <//>
 
         <${Card} title=${tr('Composition', 'Composition', 'Composition')} actions=${lines.length ? html`<button class="btn ghost small danger" onClick=${clearLines}>${tr('Tout supprimer', 'Delete all', 'Fafao daholo')}</button>` : null}>
-          <div class="table-wrap"><table class="table compact">
+          <div class="table-wrap"><table class="table compact resp comp">
             <thead><tr><th>${tr('Ingrédient', 'Ingredient', 'Ingrédient')}</th><th>${tr('Quantité', 'Quantity', 'Habetsahana')}</th><th>NB</th><th class="num">≈ g</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th></th></tr></thead>
             <tbody>
               ${lines.map((l, i) => {
@@ -406,7 +406,7 @@ function AiPanel({ form, setForm, lines, isNew, persist }) {
         ${result.plat.details?.allergenes && html`<tr><td>${tr('Allergènes', 'Allergens', 'Allergènes')}</td><td>${result.plat.details.allergenes.join(', ') || '—'}</td></tr>`}
         ${result.plat.details?.regimes?.length ? html`<tr><td>${tr('Régimes', 'Diets', 'Régimes')}</td><td>${result.plat.details.regimes.join(', ')}</td></tr>` : null}
       </table>`}
-      ${result.ingredients.length > 0 && html`<div class="table-wrap"><table class="table compact">
+      ${result.ingredients.length > 0 && html`<div class="table-wrap"><table class="table compact resp">
         <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">${tr('Fibres', 'Fibre', 'Fibres')}</th><th class="num">IG</th><th class="num">${tr('g / pièce', 'g / piece', 'g / isa')}</th><th>${tr('Contrôle', 'Check', 'Fanamarinana')}</th><th>Source</th></tr></thead>
         <tbody>${result.ingredients.map((i) => {
           const cur = ingMap.get(i.id);

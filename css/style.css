@@ -194,3 +194,79 @@ details.manual { margin-top: 8px; } details.manual > summary { cursor: pointer; 
 .ed-slider input { padding: 0; }
 @media (max-width: 760px) { .editor .editor-grid { grid-template-columns: 1fr; } }
 .update-banner { position: sticky; top: 0; z-index: 30; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff4e0; border: 1px solid #f2c27a; color: #6b4300; padding: 10px 14px; border-radius: 10px; margin: 0 0 14px; box-shadow: var(--shadow); }
+
+/* ===================== Téléphone / tablette ===================== */
+html { -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; }
+@media (max-width: 1100px) {
+  main { padding: 18px 18px 60px; }
+}
+@media (max-width: 760px) {
+  body { font-size: 15px; }
+  h1 { font-size: 21px; margin: 2px 0 10px; }
+  input, select, textarea { font-size: 16px; }              /* tsy mi-zoom ny iPhone */
+  .btn { min-height: 42px; padding: 9px 14px; }
+  .btn.small { min-height: 36px; padding: 6px 10px; }
+  .card { padding: 14px; border-radius: 12px; margin-bottom: 12px; }
+  .card-head { flex-wrap: wrap; }
+  .form-grid { grid-template-columns: 1fr; gap: 10px; }
+  .page-head { align-items: flex-start; }
+  .topbar { position: sticky; top: 0; z-index: 35; background: var(--bg); margin: 0 -16px 6px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  .update-banner { top: 54px; }
+
+  /* Bokotra Enregistrer: mijanona eo ambany foana */
+  .save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(255,255,255,.97); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); justify-content: flex-end; box-shadow: 0 -4px 14px rgba(0,0,0,.06); }
+  .save-bar .btn.primary { flex: 1; }
+  main { padding-bottom: 96px; }
+
+  /* Tableaux → cartes */
+  .table-wrap { overflow: visible; border: 0; background: transparent; }
+  .card .table-wrap { border-radius: 0; }
+  .table.resp thead { display: none; }
+  .table.resp, .table.resp tbody, .table.resp tr, .table.resp td { display: block; width: 100%; }
+  .table.resp tr { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; }
+  .table.resp td { border: 0; padding: 5px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: right; }
+  .table.resp td::before { content: attr(data-label); font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; flex: none; }
+  .table.resp td[data-label=""]::before { content: none; }
+  .table.resp td:first-child { font-size: 15px; }
+  .clickable:hover td { background: transparent; }
+  .table.resp select, .table.resp .slot { flex: 1; min-width: 0; max-width: 70%; }
+
+  /* Composition: karatra iray isaky ny ingrédient */
+  .table.comp tr { display: grid; grid-template-columns: repeat(5, 1fr); column-gap: 6px; }
+  .table.comp td { grid-column: span 1; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; gap: 2px; font-size: 14px; }
+  .table.comp td:nth-child(1), .table.comp td:nth-child(2), .table.comp td:nth-child(3) { grid-column: 1 / -1; align-items: stretch; text-align: left; }
+  .table.comp td:nth-child(1)::before, .table.comp td:nth-child(2)::before, .table.comp td:nth-child(3)::before { margin-bottom: 2px; }
+  .table.comp td:last-child { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; }
+  .table.comp .ing-input, .table.comp .note-input { width: 100%; min-width: 0; }
+  .table.comp .qty { width: 100%; } .table.comp .qty .num-input { flex: 1; width: auto; }
+  .table.comp .total-row { background: var(--green-l); }
+  .table.comp .total-row td:nth-child(2), .table.comp .total-row td:nth-child(3), .table.comp .total-row td:last-child { display: none; }
+  .table.comp .total-row td:first-child { font-weight: 700; }
+  .line-actions .btn { min-height: 34px; min-width: 40px; }
+
+  .add-line { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .add-line > :first-child, .add-line .note-input, .add-line > .btn { grid-column: 1 / -1; }
+  .add-line .num-input, .add-line .unit, .add-line .add-opt { width: 100%; }
+
+  .ai-step { padding: 10px; }
+  .copybox .row .btn { flex: 1; }
+  .tabs .tab { flex: 1; text-align: center; }
+  .chips .chip { padding: 8px 14px; }
+  .modal-back { padding: 0; place-items: stretch; }
+  .modal, .modal.wide { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; }
+  .prop-grid { grid-template-columns: 1fr; }
+  .big-kcal { font-size: 34px; }
+  .sticky { position: static; }
+  .side-foot .btn { width: 100%; }
+}
+@media (min-width: 1500px) {
+  .page { max-width: 1400px; }
+}
+.backdrop { display: none; }
+@media (max-width: 760px) {
+  .backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
+  .sidebar { z-index: 45; }
+  .topbar .lang-switch { margin-left: auto; border-color: var(--line); }
+  .topbar-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

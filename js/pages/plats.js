@@ -45,7 +45,7 @@ export function PlatsList() {
       </select>
     </div>
     ${rows.length === 0 ? html`<${Empty}>${tr('Aucun plat pour l\'instant. Cliquez sur « + Nouveau plat ».', 'No dishes yet. Click "+ New dish".', 'Mbola tsy misy sakafo. Tsindrio "+ Sakafo vaovao".')}<//>` : html`
-    <div class="table-wrap"><table class="table">
+    <div class="table-wrap"><table class="table resp">
       <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th>${tr('Moment', 'Meal', 'Fotoana')}</th><th class="num">Kcal</th><th class="num">${tr('Prot.', 'Prot.', 'Prot.')}</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">% prot</th>${catObj && html`<th>${tr('Adapté à', 'Fits', 'Mety amin\'ny')} ${catName(catObj)} ?</th>`}<th>${tr('Statut', 'Status', 'Sata')}</th></tr></thead>
       <tbody>${rows.map(({ p, t }) => {
         const fit = catObj ? fitStatus(t.kcal, slotTarget(catObj, p.fotoana), catObj.tolerance) : null;

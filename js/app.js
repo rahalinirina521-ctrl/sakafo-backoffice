@@ -13,7 +13,7 @@ import { Propositions } from './pages/propositions.js';
 import { Categories } from './pages/categories.js';
 import { Backup } from './pages/backup.js';
 
-export const VERSION = '2026-10-28 19:45';
+export const VERSION = '2026-10-28 20:06';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -216,9 +216,10 @@ export function App() {
             : html`<div class="muted small">${session.user?.email}</div><button class="btn ghost small" onClick=${async () => { await signOut(); setSession(null); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button>`}
         </div>
       </aside>
+      ${menuOpen && html`<div class="backdrop" onClick=${() => setMenuOpen(false)}></div>`}
       <main>
         <${UpdateBanner} />
-        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button><span>${BRAND}</span></div>
+        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button><span class="topbar-title">${BRAND}</span><${LangSwitch} lang=${lang} onChange=${changeLang} /></div>
         ${error && html`<p class="error banner">${error}</p>`}
         ${page}
       </main>
@@ -227,4 +228,18 @@ export function App() {
   <//>`;
 }
 
-if (typeof document !== 'undefined' && document.getElementById('app')) render(html`<${App} />`, document.getElementById('app'));
+// Ho an'ny finday: ny lohatenin'ny tsanganana dia apetaka amin'ny sela tsirairay (data-label)
+function labelTables() {
+  document.querySelectorAll('table.resp').forEach((t) => {
+    const heads = [...t.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+    t.querySelectorAll('tbody tr').forEach((tr) => {
+      [...tr.children].forEach((td, i) => { const l = heads[i] || ''; if (td.getAttribute('data-label') !== l) td.setAttribute('data-label', l); });
+    });
+  });
+}
+if (typeof document !== 'undefined' && document.getElementById('app')) {
+  render(html`<${App} />`, document.getElementById('app'));
+  let pending = false;
+  new MutationObserver(() => { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; labelTables(); }); } })
+    .observe(document.getElementById('app'), { childList: true, subtree: true });
+}
