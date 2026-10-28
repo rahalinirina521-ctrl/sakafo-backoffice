@@ -821,11 +821,22 @@ export const CATEGORIES = [
  }
 ];
 
+export const OFFRES = [
+  { id: 'OF-1J', nom: '1 jour', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 1 },
+  { id: 'OF-3J', nom: '3 jours', nb_jours: 3, prix: null, categorie_id: null, description: null, actif: true, ordre: 2 },
+  { id: 'OF-1S', nom: '1 semaine', nb_jours: 7, prix: null, categorie_id: null, description: null, actif: true, ordre: 3 },
+  { id: 'OF-2S', nom: '2 semaines', nb_jours: 14, prix: null, categorie_id: null, description: null, actif: true, ordre: 4 },
+  { id: 'OF-1M', nom: '1 mois', nb_jours: 30, prix: null, categorie_id: null, description: null, actif: true, ordre: 5 },
+];
+
 export const DEMO = {
   options: [],
+  clients: [],
+  calendrier: [],
+  offres: OFFRES,
   ingredients: INGREDIENTS,
   categories: CATEGORIES,
   plats: [{"id": "SK0001", "nom": "A1 – Poulet légumes riz rouge", "nom_commercial": "Poulet grillé & riz rouge", "marketing": "Un poulet grillé tendre, des légumes de saison et du riz rouge plein de fibres : un déjeuner qui cale vraiment, sans lourdeur.", "nom_en": "Grilled skinless chicken breast with mixed vegetables and red rice", "fotoana": "Atoandro", "categories": ["perte-de-poids", "diabete"], "description": "Poulet sans peau grillé, légumes mélangés et riz rouge.", "avantages": "Riche en protéines, calories modérées, fibres du riz rouge et des légumes.", "effets": "Rassasie longtemps sans faire grimper vite la glycémie.", "nb": "Grillé, sans peau", "traductions": {"mg": {"nom_commercial": "Akoho natono sy vary mena", "marketing": "Akoho natono malemy, legioma vaovao ary vary mena be fibres: sakafo atoandro mahavoky tsara nefa tsy mavesatra.", "description": "Akoho tsy misy hoditra natono, legioma mifangaro, vary mena.", "avantages": "Proteine avo, kcal antonony, fibres avy amin'ny vary mena sy legioma.", "effets": "Mahavoky ela, tsy mampiakatra haingana ny siramamy anaty ra."}, "en": {"nom_commercial": "Grilled chicken & red rice", "marketing": "Tender grilled chicken, seasonal vegetables and fibre-rich red rice: a lunch that truly fills you up without weighing you down.", "description": "Grilled skinless chicken, mixed vegetables and red rice.", "avantages": "High in protein, moderate calories, fibre from red rice and vegetables.", "effets": "Keeps you full for long without spiking blood sugar."}}, "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}, {"id": "SK0002", "nom": "M0 – Avoine lait banane", "nom_commercial": "", "marketing": "", "nom_en": "Oatmeal porridge with milk and sliced banana", "fotoana": "Maraina", "categories": ["perte-de-poids"], "description": "", "avantages": "", "effets": "", "nb": "", "traductions": {}, "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}],
   composition: [{"id": "c1", "plat_id": "SK0001", "ingredient_id": "I012", "grammes": 120, "ordre": 0, "quantite": 120, "unite": "g", "note": "grillé sans peau"}, {"id": "c2", "plat_id": "SK0001", "ingredient_id": "I022", "grammes": 150, "ordre": 1, "quantite": 150, "unite": "g", "note": null}, {"id": "c3", "plat_id": "SK0001", "ingredient_id": "I002", "grammes": 120, "ordre": 2, "quantite": 120, "unite": "g", "note": null}, {"id": "c4", "plat_id": "SK0001", "ingredient_id": "I050", "grammes": 5, "ordre": 3, "quantite": 5, "unite": "g", "note": null}, {"id": "c5", "plat_id": "SK0002", "ingredient_id": "I008", "grammes": 50, "ordre": 4, "quantite": 50, "unite": "g", "note": null}, {"id": "c6", "plat_id": "SK0002", "ingredient_id": "I040", "grammes": 200, "ordre": 5, "quantite": 200, "unite": "g", "note": null}, {"id": "c7", "plat_id": "SK0002", "ingredient_id": "I030", "grammes": 100, "ordre": 6, "quantite": 100, "unite": "g", "note": null}],
-  menus: [{"id": "MN0001", "categorie_id": "perte-de-poids", "andro": "Jour 1", "maraina": "SK0002", "atoandro": "SK0001", "hariva": null, "gouter": null, "notes": ""}],
+  menus: [{"id": "MN0001", "nom": "Menu 1", "categorie_id": "perte-de-poids", "repas": [{"id": "r1", "fotoana": "Maraina", "plat_id": "SK0002"}, {"id": "r2", "fotoana": "Atoandro", "plat_id": "SK0001"}], "notes": ""}],
 };

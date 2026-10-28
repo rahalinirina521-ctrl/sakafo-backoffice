@@ -123,8 +123,11 @@ export async function exportAll(data, ingMap) {
   add('Plats', platRows);
   add('Composition', data.composition);
   add('Ingredients', data.ingredients);
-  add('Menus', data.menus);
+  add('Menus', data.menus.map((m) => ({ ...m, repas: (m.repas || []).map((r) => `${r.fotoana}:${r.plat_id || ''}`).join(' | ') })));
   add('Categories', data.categories);
+  add('Clients', (data.clients || []).map((c) => ({ ...c, profil: JSON.stringify(c.profil || {}) })));
+  add('Planning', data.calendrier || []);
+  add('Offres', data.offres || []);
   const d = new Date().toISOString().slice(0, 10);
   X.writeFile(wb, `backup_sakafo_${d}.xlsx`);
 }

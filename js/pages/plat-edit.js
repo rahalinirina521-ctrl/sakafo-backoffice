@@ -181,7 +181,14 @@ export function PlatEdit({ id }) {
               <div class="chips">${sortedCats.map((c) => {
                 const on = (form.categories || []).includes(c.id);
                 return html`<button type="button" class=${'chip' + (on ? ' on' : '')} onClick=${() => set('categories', on ? form.categories.filter((x) => x !== c.id) : [...(form.categories || []), c.id])}>${catName(c)}</button>`;
-              })}</div>
+              })}<button type="button" class="chip add" onClick=${async () => {
+                const nom = (prompt(tr('Nom du nouvel objectif (ex. Grossesse, Sportif, Senior…)', 'Name of the new goal (e.g. Pregnancy, Athlete, Senior…)', 'Anaran\'ny tanjona vaovao (ohatra: Bevohoka, Mpanao fanatanjahantena…)')) || '').trim();
+                if (!nom) return;
+                const cid = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'objectif-' + Date.now();
+                if (!data.categories.some((c) => c.id === cid)) await app.save('categories', { id: cid, nom, kcal_cible: 2000, tolerance: 0.1, ordre: data.categories.length + 1, regles: '' });
+                set('categories', [...(form.categories || []).filter((x) => x !== cid), cid]);
+                toast(tr('Objectif ajouté : réglez ses calories dans « Objectifs ».', 'Goal added: set its calories in "Goals".', 'Tafiditra ny tanjona: amboary ny kcal ao amin\'ny "Tanjona".'));
+              }}>+ ${tr('Objectif', 'Goal', 'Tanjona')}</button></div>
             <//>
             <${Field} label=${tr('NB / points forts du plat', 'NB / highlights of the dish', 'NB / tombony manokana')} wide hint=${tr('Utilisé par l\'IA pour le texte marketing (ex. sans gluten, fait maison, livré chaud)', 'Used by the AI for the marketing text (e.g. gluten-free, homemade, delivered hot)', 'Ampiasain\'ny IA amin\'ny texte marketing (ohatra: tsy misy gluten, vita an-trano)')}><input value=${form.nb || ''} onInput=${(e) => set('nb', e.target.value)} /><//>
             <${Field} label=${tr('Prix de vente (Ar)', 'Selling price (Ar)', 'Vidiny amidy (Ar)')}><input type="number" min="0" value=${form.prix_vente ?? ''} onInput=${(e) => set('prix_vente', e.target.value)} /><//>

@@ -8,20 +8,26 @@ import { Dashboard } from './pages/dashboard.js';
 import { PlatsList } from './pages/plats.js';
 import { PlatEdit } from './pages/plat-edit.js';
 import { Ingredients } from './pages/ingredients.js';
-import { Menus } from './pages/menus.js';
+import { Menus, MenuEdit } from './pages/menus.js';
+import { Planning } from './pages/planning.js';
+import { Clients } from './pages/clients.js';
+import { Tarifs } from './pages/tarifs.js';
 import { Propositions } from './pages/propositions.js';
 import { Categories } from './pages/categories.js';
 import { Backup } from './pages/backup.js';
 
-export const VERSION = '2026-10-28 20:06';
+export const VERSION = '2026-10-28 22:16';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
   ['/plats', tr('Plats', 'Dishes', 'Sakafo')],
-  ['/ingredients', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
   ['/menus', tr('Menus', 'Menus', 'Menus')],
+  ['/planning', tr('Planning', 'Planning', 'Planning')],
+  ['/clients', tr('Clients', 'Customers', 'Clients')],
+  ['/tarifs', tr('Tarifs', 'Prices', 'Vidiny')],
+  ['/ingredients', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
   ['/propositions', tr('Suggestions IA', 'AI suggestions', 'Soso-kevitra IA')],
-  ['/categories', tr('Catégories', 'Categories', 'Sokajy')],
+  ['/categories', tr('Objectifs', 'Goals', 'Tanjona')],
   ['/backup', tr('Sauvegarde Excel', 'Excel backup', 'Backup Excel')],
 ];
 
@@ -162,11 +168,13 @@ export function App() {
         if (table === 'plats') {
           n.composition = d.composition.filter((c) => !ids.includes(c.plat_id));
           n.menus = d.menus.map((m) => {
-            const m2 = { ...m };
+            const m2 = { ...m, repas: Array.isArray(m.repas) ? m.repas.map((r) => (ids.includes(r.plat_id) ? { ...r, plat_id: null } : r)) : m.repas };
             ['maraina', 'atoandro', 'hariva', 'gouter'].forEach((k) => { if (ids.includes(m2[k])) m2[k] = null; });
             return m2;
           });
         }
+        if (table === 'menus') n.calendrier = (d.calendrier || []).filter((c) => !ids.includes(c.menu_id));
+        if (table === 'clients') n.calendrier = (d.calendrier || []).filter((c) => !ids.includes(c.client_id));
         return n;
       });
     },
@@ -190,13 +198,17 @@ export function App() {
   }
   if (!data) return html`<div class="center muted">${tr('Chargement des données…', 'Loading data…', 'Maka ny données…')}</div>`;
 
-  const parts = route.split('/').filter(Boolean);
+  const parts = route.split('?')[0].split('/').filter(Boolean);
   let page;
   if (!parts.length) page = html`<${Dashboard} />`;
   else if (parts[0] === 'plats' && parts[1]) page = html`<${PlatEdit} id=${decodeURIComponent(parts[1])} key=${parts[1]} />`;
   else if (parts[0] === 'plats') page = html`<${PlatsList} />`;
   else if (parts[0] === 'ingredients') page = html`<${Ingredients} />`;
+  else if (parts[0] === 'menus' && parts[1]) page = html`<${MenuEdit} id=${decodeURIComponent(parts[1])} key=${parts[1]} />`;
   else if (parts[0] === 'menus') page = html`<${Menus} />`;
+  else if (parts[0] === 'planning') page = html`<${Planning} key=${route} />`;
+  else if (parts[0] === 'clients') page = html`<${Clients} />`;
+  else if (parts[0] === 'tarifs') page = html`<${Tarifs} />`;
   else if (parts[0] === 'propositions') page = html`<${Propositions} />`;
   else if (parts[0] === 'categories') page = html`<${Categories} />`;
   else if (parts[0] === 'backup') page = html`<${Backup} />`;

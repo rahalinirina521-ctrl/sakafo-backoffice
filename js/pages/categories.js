@@ -19,7 +19,7 @@ export function Categories() {
   const s = (k) => (e) => setEdit({ ...edit, [k]: e.target.value });
 
   return html`<div class="page">
-    <div class="page-head"><h1>${tr('Catégories (objectifs)', 'Categories (goals)', 'Sokajy (tanjona)')}</h1><button class="btn primary" onClick=${() => setEdit({ nom: '', nom_en: '', nom_mg: '', kcal_cible: 2000, tolerance_pct: 10, ordre: cats.length + 1, regles: '' })}>+ ${tr('Catégorie', 'Category', 'Sokajy')}</button></div>
+    <div class="page-head"><h1>${tr('Objectifs', 'Goals', 'Tanjona')}</h1><button class="btn primary" onClick=${() => setEdit({ nom: '', nom_en: '', nom_mg: '', kcal_cible: 2000, tolerance_pct: 10, ordre: cats.length + 1, regles: '' })}>+ ${tr('Objectif', 'Goal', 'Tanjona')}</button></div>
     <div class="table-wrap"><table class="table resp">
       <thead><tr><th>${tr('Nom', 'Name', 'Anarana')}</th><th class="num">Kcal/${tr('jour', 'day', 'andro')}</th><th class="num">±</th><th class="num">${tr('Prot. g/kg', 'Prot. g/kg', 'Prot. g/kg')}</th><th class="num">CG max</th><th>${tr('Règles', 'Rules', 'Fitsipika')}</th></tr></thead>
       <tbody>${cats.map((c) => html`<tr class="clickable" onClick=${() => setEdit({ ...c, tolerance_pct: Math.round((c.tolerance ?? 0.1) * 100) })}>

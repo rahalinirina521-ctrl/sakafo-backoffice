@@ -4,8 +4,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { DEMO } from './seed.js';
 import { resizeImage, blobToDataUrl } from './image.js';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options'];
-const OPTIONAL_TABLES = ['options'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres'];
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
 let client = null;
@@ -24,7 +24,7 @@ function demoLoad() {
   if (memory) return memory;
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY));
-    if (saved && saved.ingredients) { memory = saved; if (!memory.options) memory.options = []; return memory; }
+    if (saved && saved.ingredients) { memory = saved; for (const t of ['options', 'clients', 'calendrier', 'offres']) if (!memory[t]) memory[t] = t === 'offres' ? JSON.parse(JSON.stringify(DEMO.offres)) : []; return memory; }
   } catch (e) { /* tsy misy localStorage */ }
   memory = JSON.parse(JSON.stringify(DEMO));
   demoSave();
@@ -45,7 +45,10 @@ const COLS = {
   plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, conseil: null, conservation: null, post_reseaux: null, details: {}, image_url: null, prix_vente: null, statut: 'Draft', notes: null },
   composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
   options: { id: null, type: '', valeur: '', base: null, facteur: null, ordre: 0 },
-  menus: { id: null, categorie_id: null, andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
+  menus: { id: null, nom: '', categorie_id: null, repas: [], andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
+  clients: { id: null, nom: '', telephone: null, adresse: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true },
+  calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
+  offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0 },
 };
 export function normalizeRow(table, r) {
   const def = COLS[table];

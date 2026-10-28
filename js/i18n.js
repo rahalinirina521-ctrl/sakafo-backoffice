@@ -19,9 +19,10 @@ export const tr = (fr, en, mg) => (lang === 'en' ? (en ?? fr) : lang === 'mg' ? 
 
 const FOT = {
   Maraina: ['Petit-déjeuner', 'Breakfast', 'Maraina'],
+  Collation: ['Collation du matin', 'Morning snack', 'Tsakitsaky maraina'],
   Atoandro: ['Déjeuner', 'Lunch', 'Atoandro'],
   Hariva: ['Dîner', 'Dinner', 'Hariva'],
-  'Goûter': ['Goûter', 'Snack', 'Goûter'],
+  'Goûter': ['Goûter', 'Afternoon snack', 'Goûter'],
 };
 export const fotLabel = (f) => (FOT[f] ? tr(...FOT[f]) : (f || '—'));
 

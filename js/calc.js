@@ -5,10 +5,10 @@ export const NUTR_LABEL = {
   kcal: 'Kcal', proteines: 'Protéines (g)', glucides: 'Glucides (g)', lipides: 'Lipides (g)',
   fibres: 'Fibres (g)', sucres: 'Sucres (g)', sodium: 'Sodium (mg)',
 };
-export const FOTOANA = ['Maraina', 'Atoandro', 'Hariva', 'Goûter'];
+export const FOTOANA = ['Maraina', 'Collation', 'Atoandro', 'Goûter', 'Hariva'];
 export const SLOT_KEYS = { Maraina: 'maraina', Atoandro: 'atoandro', Hariva: 'hariva', 'Goûter': 'gouter' };
 // Zaraina amin'ny sakafo isan'andro ny kcal tanjona
-export const SLOT_SHARE = { Maraina: 0.25, Atoandro: 0.35, Hariva: 0.30, 'Goûter': 0.10 };
+export const SLOT_SHARE = { Maraina: 0.25, Collation: 0.10, Atoandro: 0.35, 'Goûter': 0.10, Hariva: 0.30 };
 
 const num = (v) => (v === null || v === undefined || v === '' || isNaN(+v) ? null : +v);
 
@@ -120,22 +120,34 @@ export function kcalCheck(ing) {
   return { ok: diff <= 0.15, est, diff };
 }
 
+// Ny sakafo ao anatin'ny menu (endrika vaovao: repas[]; endrika taloha: tsanganana 4)
+export function menuRepas(menu) {
+  if (Array.isArray(menu?.repas) && menu.repas.length) return menu.repas;
+  const out = [];
+  for (const [f, k] of [['Maraina', 'maraina'], ['Atoandro', 'atoandro'], ['Goûter', 'gouter'], ['Hariva', 'hariva']]) if (menu?.[k]) out.push({ id: k, fotoana: f, plat_id: menu[k] });
+  return out;
+}
+
 export function menuTotals(menu, plats, composition, ingMap) {
-  const t = { kcal: 0, proteines: 0, glucides: 0, lipides: 0, cg: 0, cout: 0, missing: 0 };
-  for (const slot of Object.values(SLOT_KEYS)) {
-    const id = menu[slot];
-    if (!id) continue;
-    const p = platTotals(id, composition, ingMap);
-    for (const k of Object.keys(t)) t[k] += p[k] || 0;
+  const t = { kcal: 0, proteines: 0, glucides: 0, lipides: 0, cg: 0, cout: 0, missing: 0, prix: 0, prixManquant: 0, nb: 0 };
+  for (const r of menuRepas(menu)) {
+    if (!r.plat_id) continue;
+    const plat = plats.find((p) => p.id === r.plat_id);
+    if (!plat) continue;
+    const p = platTotals(r.plat_id, composition, ingMap);
+    for (const k of ['kcal', 'proteines', 'glucides', 'lipides', 'cg', 'cout', 'missing']) t[k] += p[k] || 0;
+    if (num(plat.prix_vente)) t.prix += num(plat.prix_vente); else t.prixManquant += 1;
+    t.nb += 1;
   }
   return t;
 }
 
-export function menuStatus(menu, totals, category) {
-  if (!category || !num(category.kcal_cible)) return { label: 'Tsy misy tanjona', tone: 'muted', ecart: null };
-  const ecart = (totals.kcal - category.kcal_cible) / category.kcal_cible;
-  if (num(category.cg_max) && totals.cg > num(category.cg_max)) return { label: 'CG ambony loatra', tone: 'bad', ecart };
-  if (Math.abs(ecart) <= (num(category.tolerance) ?? 0.1)) return { label: 'OK', tone: 'ok', ecart };
+export function menuStatus(menu, totals, category, kcalCible = null) {
+  const cible = num(kcalCible) || num(category?.kcal_cible);
+  if (!cible) return { label: 'Tsy misy tanjona', tone: 'muted', ecart: null };
+  const ecart = (totals.kcal - cible) / cible;
+  if (num(category?.cg_max) && totals.cg > num(category.cg_max)) return { label: 'CG ambony loatra', tone: 'bad', ecart };
+  if (Math.abs(ecart) <= (num(category?.tolerance) ?? 0.1)) return { label: 'OK', tone: 'ok', ecart };
   return { label: 'Amboary ny kcal', tone: 'warn', ecart };
 }
 
@@ -163,3 +175,17 @@ export function pct(v, dec = 0) {
   return (v * 100).toFixed(dec) + ' %';
 }
 export const toNum = num;
+
+// Daty (ISO yyyy-mm-dd, ora eo an-toerana)
+export function isoDate(d) { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); }
+export function addDays(iso, n) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDate(d); }
+export function mondayOf(iso) { const d = new Date(iso + 'T12:00:00'); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return isoDate(d); }
+
+// Kajy kcal ilain'ny client (Mifflin-St Jeor)
+export const ACTIVITES = [['sedentaire', 1.2], ['leger', 1.375], ['modere', 1.55], ['intense', 1.725]];
+export function besoinKcal({ sexe, age, poids, taille, activite }, ajustement = 0) {
+  if (!num(age) || !num(poids) || !num(taille)) return null;
+  const bmr = 10 * num(poids) + 6.25 * num(taille) - 5 * num(age) + (sexe === 'H' ? 5 : -161);
+  const f = (ACTIVITES.find((a) => a[0] === activite) || ACTIVITES[0])[1];
+  return Math.round((bmr * f * (1 + ajustement)) / 10) * 10;
+}
