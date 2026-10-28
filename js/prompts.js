@@ -104,21 +104,24 @@ Dans tous les cas, donne ensuite ce bloc JSON :
     { "id": "", "nom_fr": "", "nom_en": "", "nom_mg": "", "categorie": "${ING_CATS}", "etat": "Masaka | Manta | Vonona", "kcal": 0, "proteines": 0, "glucides": 0, "lipides": 0, "fibres": 0, "sucres": 0, "sodium": 0, "ig": 0, "poids_piece": null, "densite": null, "source": "" }
   ]
 }
-\`\`\`
-
-4. IMAGE — si tu sais générer des images (ChatGPT, Gemini…), génère UNE photo de ce plat selon cette description, puis insère-la dans l'onglet "Photo" du fichier Excel complété (cellule A3). Si tu ne peux pas l'insérer, donne-la séparément : je l'importerai avec l'Excel. (Si tu ne sais pas générer d'images, ignore cette étape.)
-${photoBrief(plat, lines, ingMap)}`;
+\`\`\``;
 }
 
 // Famaritana sary tsotra: sary tena izy, mazava, mampaniry, habetsahana marina
 export function photoBrief(plat, lines = [], ingMap = new Map()) {
   const meal = MEAL_EN[plat.fotoana] || 'meal';
   const items = ingredientsForPhoto(lines, ingMap);
+  const name = plat.traductions?.en?.nom_commercial || plat.nom_commercial || '';
+  const pitch = plat.traductions?.en?.marketing || '';
+  const goal = (plat.categories || []).map((id) => GOAL_MOOD[id]).filter(Boolean)[0];
   return [
-    `Realistic, appetising photo of a ${meal} plate${plat.nom_commercial ? ' "' + plat.nom_commercial + '"' : ''}.`,
-    items.length ? `Exactly these foods and portions, nothing more (true serving size): ${items.join(', ')}.` : '',
-    'Simple and clear: one plate (and the cup or glass if there is a drink) on a light wooden table, soft natural daylight, 45-degree angle, sharp focus, true-to-life colours, clean background.',
-    'Photorealistic like a real photo taken by a good photographer, square 1:1, no text, no logo, no hands.',
+    `Create a realistic, mouth-watering photo of this ${meal}${name ? ' "' + name + '"' : ''} from a healthy meal-delivery service in Antananarivo, Madagascar.`,
+    items.length ? `On the plate, exactly these foods and portions, nothing more (true serving size): ${items.join(', ')}.` : '',
+    plat.nb ? `Details to show: ${plat.nb}.` : '',
+    pitch ? `Feeling to convey: ${pitch}` : '',
+    goal ? `It must look ${goal}.` : '',
+    `Simple and clear composition: one plate${items.some((x) => /coffee|tea|juice|milk|water|café|thé|jus|lait/i.test(x)) ? ' with the cup or glass beside it' : ''} on a light wooden table, ${MEAL_MOOD[plat.fotoana] || 'soft natural light'}, 45-degree angle, sharp focus on the food, true-to-life colours, clean uncluttered background.`,
+    'Photorealistic, like a real photo taken by a professional food photographer. Square 1:1. No text, no logo, no watermark, no hands.',
   ].filter(Boolean).join('\n');
 }
 

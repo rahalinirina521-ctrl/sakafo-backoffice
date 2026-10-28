@@ -25,7 +25,6 @@ export async function exportHameno(plat, lines, ingMap) {
     ['1. Onglet "Plat" : remplir les cellules vides : photo_en ; fr_..., en_..., mg_... (nom_commercial, marketing, avantages = 3 points) ; allergenes et regimes (séparés par ;).'],
     ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, noms fr/en/mg, poids_piece (g d\'une pièce), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
     ['3. Onglet "Composition" : information seulement (avec les NB), ne pas modifier.'],
-    ['4. Onglet "Photo" : insérez la photo du plat (Insertion > Image), si vous pouvez la générer.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
   ];
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
@@ -41,7 +40,6 @@ export async function exportHameno(plat, lines, ingMap) {
   });
   X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'quantite', 'unite', 'grammes_estimes', 'nb'], comp), 'Composition');
   if (plat.nb) X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['NB / points forts du plat'], [plat.nb]]), 'NB');
-  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['PHOTO DU PLAT : insérez ici l\'image générée (Insertion > Image).'], ['Réaliste, simple, appétissante, portions exactes, sans texte.']]), 'Photo');
   X.writeFile(wb, `hameno_${plat.id}.xlsx`);
 }
 
