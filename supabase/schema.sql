@@ -52,6 +52,10 @@ create table if not exists plats (
   description text,
   avantages   text,
   effets      text,
+  conseil     text,                          -- conseil de consommation
+  conservation text,                         -- conservation / réchauffage
+  post_reseaux text,                         -- post Facebook / Instagram
+  details     jsonb not null default '{}',   -- allergenes, regimes, preparation, temps_preparation, hashtags
   image_url   text,
   prix_vente  numeric,
   statut      text not null default 'Draft', -- Draft / Voamarina

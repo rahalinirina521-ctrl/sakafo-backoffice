@@ -13,7 +13,7 @@ const NEW_ING = { nom_fr: null, nom_en: null, categorie: null, etat: null, kcal:
 
 const EMPTY_PLAT = {
   nom: '', nom_commercial: '', marketing: '', nom_en: '', fotoana: 'Maraina', categories: [], description: '', avantages: '', effets: '',
-  nb: '', traductions: {}, image_url: '', prix_vente: null, statut: 'Draft', notes: '',
+  nb: '', traductions: {}, details: {}, conseil: '', conservation: '', post_reseaux: '', image_url: '', prix_vente: null, statut: 'Draft', notes: '',
 };
 
 const textLabel = (f) => ({
@@ -22,7 +22,12 @@ const textLabel = (f) => ({
   description: tr('Description', 'Description', 'Famaritana'),
   avantages: tr('Avantages', 'Benefits', 'Tombony'),
   effets: tr('Effets attendus', 'Expected effects', 'Vokatra'),
+  conseil: tr('Conseil de consommation', 'Eating tip', 'Torohevitra fihinanana'),
+  conservation: tr('Conservation et réchauffage', 'Storage and reheating', 'Fitehirizana sy fanafanana'),
+  post_reseaux: tr('Post Facebook / Instagram', 'Facebook / Instagram post', 'Post Facebook / Instagram'),
 }[f]);
+
+const splitList = (v) => String(v || '').split(/[;\n]/).map((x) => x.trim()).filter(Boolean);
 
 export function ingLabel(i) { return `${ingName(i)} (${i.id})`; }
 export function findIngredient(text, ingredients) {
@@ -57,6 +62,7 @@ export function PlatEdit({ id }) {
     setForm((p) => (l === 'fr' ? { ...p, [f]: v } : { ...p, traductions: { ...p.traductions, [l]: { ...(p.traductions?.[l] || {}), [f]: v } } }));
     setDirty(true);
   };
+  const setDetail = (k, v) => { setForm((p) => ({ ...p, details: { ...(p.details || {}), [k]: v } })); setDirty(true); };
   const getText = (l, f) => (l === 'fr' ? form[f] || '' : form.traductions?.[l]?.[f] || '');
   const setLine = (i, patch) => { setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l))); setDirty(true); };
   const sortedCats = [...data.categories].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
@@ -209,18 +215,6 @@ export function PlatEdit({ id }) {
             'Azo ovaina daholo: tsindrio ny ingrédient raha hanolo azy, ovay ny habetsahana, unité na NB, ✕ hamafana andalana, dia "Tehirizo". Habetsahana amin\'ny g, ml na isa (ohatra: atody 2, café 150 ml). Fenoin\'ny IA ny lanjan\'ny isa sy ny valeur tsy misy. Ny NB (tsy misy sira, tsy misy siramamy…) dia ampiasain\'ny IA amin\'ny kajy sy ny texte marketing.')}</p>
         <//>
 
-        <${Card} title=${tr('Textes (vente et marketing)', 'Texts (sales and marketing)', 'Texte (fivarotana sy marketing)')} actions=${html`<div class="tabs mini">${TEXT_LANGS.map((l) => html`<button class=${'tab' + (l === txtLang ? ' on' : '')} onClick=${() => setTxtLang(l)}>${LANG_SHORT[l]}</button>`)}</div>`}>
-          <p class="hint">${tr('Remplis par l\'IA en français, anglais et malgache. Vous pouvez les corriger.', 'Filled by the AI in French, English and Malagasy. You can edit them.', 'Fenoin\'ny IA amin\'ny frantsay, anglisy ary malagasy. Azonao ahitsy.')}</p>
-          ${!form.marketing && !form.nom_commercial && html`<p class="ok-box row gap wrap between"><span>${tr('Encore vides : lancez l\'analyse IA de la composition pour tout remplir.', 'Still empty: run the AI analysis of the composition to fill everything.', 'Mbola foana: ampandehano ny famakafakana IA ny composition mba ho feno daholo.')}</span>
-            <button class="btn small primary" onClick=${() => document.querySelector('.ai-auto')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>${tr('Aller à l\'analyse IA', 'Go to AI analysis', 'Mankany amin\'ny famakafakana IA')} ↓</button></p>`}
-          <div class="form-grid">
-            ${PLAT_TEXT_FIELDS.map((f) => html`<${Field} label=${textLabel(f) + ' (' + LANG_SHORT[txtLang] + ')'} wide>
-              ${f === 'nom_commercial'
-                ? html`<input value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)} />`
-                : html`<textarea rows=${f === 'marketing' ? 3 : 2} value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)}></textarea>`}
-            <//>`)}
-          </div>
-        <//>
       </div>
 
       <div class="col side">
@@ -256,6 +250,29 @@ export function PlatEdit({ id }) {
     </div>
 
     <${AiPanel} form=${form} lines=${lines} isNew=${isNew} persist=${persist} />
+
+        <${Card} title=${tr('Textes (vente et marketing)', 'Texts (sales and marketing)', 'Texte (fivarotana sy marketing)')} actions=${html`<div class="tabs mini">${TEXT_LANGS.map((l) => html`<button class=${'tab' + (l === txtLang ? ' on' : '')} onClick=${() => setTxtLang(l)}>${LANG_SHORT[l]}</button>`)}</div>`}>
+      <p class="hint">${tr('Remplis par l\'IA en français, anglais et malgache. Vous pouvez les corriger.', 'Filled by the AI in French, English and Malagasy. You can edit them.', 'Fenoin\'ny IA amin\'ny frantsay, anglisy ary malagasy. Azonao ahitsy.')}</p>
+      ${!form.marketing && !form.nom_commercial && html`<p class="ok-box row gap wrap between"><span>${tr('Encore vides : lancez l\'analyse IA de la composition pour tout remplir.', 'Still empty: run the AI analysis of the composition to fill everything.', 'Mbola foana: ampandehano ny famakafakana IA ny composition mba ho feno daholo.')}</span>
+        <button class="btn small primary" onClick=${() => document.querySelector('.ai-auto')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>${tr('Aller à l\'analyse IA', 'Go to AI analysis', 'Mankany amin\'ny famakafakana IA')} ↓</button></p>`}
+      <div class="form-grid">
+        ${PLAT_TEXT_FIELDS.map((f) => html`<${Field} label=${textLabel(f) + ' (' + LANG_SHORT[txtLang] + ')'} wide>
+          ${f === 'nom_commercial'
+            ? html`<input value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)} />`
+            : html`<textarea rows=${f === 'post_reseaux' ? 5 : f === 'marketing' ? 3 : 2} value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)}></textarea>`}
+        <//>`)}
+      </div>
+    <//>
+    <${Card} title=${tr('Informations pratiques (remplies par l\'IA)', 'Practical information (filled by AI)', 'Fampahalalana ilaina (fenoin\'ny IA)')}>
+      <div class="form-grid">
+        <${Field} label=${tr('Allergènes', 'Allergens', 'Allergènes')} wide hint=${tr('Séparés par ;', 'Separated by ;', 'Sarahana amin\'ny ;')}><input value=${(form.details?.allergenes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('allergenes', splitList(e.target.value))} /><//>
+        <${Field} label=${tr('Régimes / étiquettes', 'Diets / labels', 'Régimes / marika')} wide hint=${tr('Séparés par ;', 'Separated by ;', 'Sarahana amin\'ny ;')}><input value=${(form.details?.regimes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('regimes', splitList(e.target.value))} /><//>
+        <${Field} label=${tr('Temps de préparation (min)', 'Preparation time (min)', 'Fotoana fanomanana (min)')}><input type="number" min="0" value=${form.details?.temps_preparation ?? ''} onInput=${(e) => setDetail('temps_preparation', toNum(e.target.value))} /><//>
+        <${Field} label="Hashtags" wide><input value=${(form.details?.hashtags || []).join(' ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('hashtags', splitList(e.target.value.replace(/\s+/g, ';')))} /><//>
+        <${Field} label=${tr('Recette pour la cuisine', 'Kitchen recipe', 'Fomba fanamboarana ho an\'ny lakozia')} wide><textarea rows="6" value=${form.details?.preparation || ''} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setDetail('preparation', e.target.value)}></textarea><//>
+      </div>
+    <//>
+
 
     <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} lines=${lines} kcal=${totals.missing ? null : totals.kcal} />
   </div>`;
@@ -332,7 +349,7 @@ function AiPanel({ form, lines, isNew, persist }) {
     } catch (e) { toast(tr('Erreur : ', 'Error: ', 'Nisy olana: ') + (e.message || e), 'bad'); } finally { setBusy(false); }
   }
 
-  const textRows = result ? TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.filter((f) => result.plat.texts[l][f]).map((f) => ({ l, f, v: result.plat.texts[l][f] }))) : [];
+  const textRows = result && (result.plat.texts) ? TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.filter((f) => result.plat.texts[l][f]).map((f) => ({ l, f, v: result.plat.texts[l][f] }))) : [];
 
   return html`<${Card} title=${tr('Compléter avec l\'IA', 'Complete with AI', 'Hameno amin\'ny IA')}>
     ${!lines.length && html`<p class="warn-box">${tr('Ajoutez d\'abord la composition (ingrédients et quantités) : le prompt l\'utilise.', 'Add the composition first (ingredients and quantities): the prompt uses it.', 'Ampidiro aloha ny composition (ingrédients sy habetsahana): ampiasain\'ny prompt izany.')}</p>`}
@@ -340,7 +357,7 @@ function AiPanel({ form, lines, isNew, persist }) {
     <div class="ai-auto">
       <div>
         <h3>${tr('Analyse automatique', 'Automatic analysis', 'Famakafakana ho azy')}</h3>
-        <p class="small muted">${tr('L\'IA analyse la composition et remplit tout : valeurs nutritionnelles, poids des pièces, nom commercial, résumé marketing, description, avantages et effets (FR / EN / MG).', 'The AI analyses the composition and fills everything: nutrition values, piece weights, commercial name, marketing summary, description, benefits and effects (FR / EN / MG).', 'Famakafakan\'ny IA ny composition ary fenoiny daholo: valeur nutritionnelle, lanjan\'ny isa, anarana commercial, résumé marketing, famaritana, tombony ary vokatra (FR / EN / MG).')}</p>
+        <p class="small muted">${tr('L\'IA analyse la composition et remplit tout : valeurs nutritionnelles, poids des pièces, nom commercial, résumé marketing, description, avantages, effets, conseil, conservation, post réseaux (FR / EN / MG), allergènes, régimes, recette et hashtags.', 'The AI analyses the composition and fills everything: nutrition values, piece weights, commercial name, marketing summary, description, benefits, effects, eating tip, storage, social post (FR / EN / MG), allergens, diets, recipe and hashtags.', 'Famakafakan\'ny IA ny composition ary fenoiny daholo: valeur nutritionnelle, lanjan\'ny isa, anarana commercial, résumé marketing, famaritana, tombony, vokatra, torohevitra, fitehirizana, post (FR / EN / MG), allergènes, régimes, fomba fanamboarana ary hashtags.')}</p>
       </div>
       <button class="btn primary big" disabled=${auto || !lines.length} onClick=${autoFill}>${auto ? tr('Analyse en cours… (30 s environ)', 'Analysing… (about 30 s)', 'Mamakafaka… (30 s eo ho eo)') : tr('Analyser et remplir avec l\'IA', 'Analyse and fill with AI', 'Famakafakao sy fenoy amin\'ny IA')}</button>
     </div>
@@ -375,9 +392,14 @@ function AiPanel({ form, lines, isNew, persist }) {
 
     ${result && html`<div class="preview">
       <h3>${tr('Vérifiez avant d\'enregistrer', 'Check before saving', 'Hamarino alohan\'ny hitahirizana')}</h3>
-      ${textRows.length > 0 && html`<table class="kv wide">
+      ${(textRows.length > 0 || Object.keys(result.plat.details || {}).length > 0) && html`<table class="kv wide">
         ${textRows.map((r) => html`<tr><td>${textLabel(r.f)} <span class="badge muted">${LANG_SHORT[r.l]}</span></td><td>${r.v}</td></tr>`)}
         ${result.plat.photo_en && html`<tr><td>Photo (EN)</td><td>${result.plat.photo_en}</td></tr>`}
+        ${result.plat.details?.allergenes && html`<tr><td>${tr('Allergènes', 'Allergens', 'Allergènes')}</td><td>${result.plat.details.allergenes.join(', ') || '—'}</td></tr>`}
+        ${result.plat.details?.regimes?.length ? html`<tr><td>${tr('Régimes', 'Diets', 'Régimes')}</td><td>${result.plat.details.regimes.join(', ')}</td></tr>` : null}
+        ${result.plat.details?.temps_preparation ? html`<tr><td>${tr('Préparation', 'Preparation', 'Fanomanana')}</td><td>${result.plat.details.temps_preparation} min</td></tr>` : null}
+        ${result.plat.details?.preparation && html`<tr><td>${tr('Recette', 'Recipe', 'Fomba fanamboarana')}</td><td class="pre">${result.plat.details.preparation}</td></tr>`}
+        ${result.plat.details?.hashtags?.length ? html`<tr><td>Hashtags</td><td>${result.plat.details.hashtags.join(' ')}</td></tr>` : null}
       </table>`}
       ${result.ingredients.length > 0 && html`<div class="table-wrap"><table class="table compact">
         <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">${tr('Fibres', 'Fibre', 'Fibres')}</th><th class="num">IG</th><th class="num">${tr('g / pièce', 'g / piece', 'g / isa')}</th><th>${tr('Contrôle', 'Check', 'Fanamarinana')}</th><th>Source</th></tr></thead>

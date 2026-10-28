@@ -1,5 +1,5 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
-import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, ingredientsToFill } from './prompts.js';
+import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js';
 import { NUTR, sumLines, lineGrams } from './calc.js';
 
 let XLSX = null;
@@ -22,7 +22,7 @@ export async function exportHameno(plat, lines, ingMap) {
   const guide = [
     ['FICHIER À COMPLÉTER — ' + plat.id + ' — ' + plat.nom],
     [''],
-    ['1. Onglet "Plat" : remplir les cellules vides : photo_en, puis fr_..., en_..., mg_... (nom_commercial, marketing, description, avantages, effets) en français, anglais et malgache.'],
+    ['1. Onglet "Plat" : remplir les cellules vides : photo_en ; fr_..., en_..., mg_... (nom_commercial, marketing, description, avantages, effets, conseil, conservation, post_reseaux) ; allergenes, regimes, hashtags (séparés par ;), preparation (étapes), temps_preparation (minutes).'],
     ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, noms fr/en/mg, poids_piece (g d\'une pièce), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
     ['3. Onglet "Composition" : information seulement (avec les NB), ne pas modifier.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
@@ -30,6 +30,7 @@ export async function exportHameno(plat, lines, ingMap) {
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
   const platRow = { id: plat.id, nom: plat.nom, photo_en: plat.nom_en || null };
   for (const l of TEXT_LANGS) for (const f of PLAT_TEXT_FIELDS) platRow[`${l}_${f}`] = (l === 'fr' ? plat[f] : plat.traductions?.[l]?.[f]) || null;
+  for (const f of DETAIL_FIELDS) { const v = plat.details?.[f]; platRow[f] = Array.isArray(v) ? (v.length ? v.join('; ') : null) : (v ?? null); }
   X.utils.book_append_sheet(wb, sheetFromRows(X, PLAT_SHEET_FIELDS, [platRow]), 'Plat');
   const toFill = ingredientsToFill(lines, ingMap).map((x) => x.ing);
   X.utils.book_append_sheet(wb, sheetFromRows(X, ING_FIELDS, toFill), 'Ingredients');
@@ -89,7 +90,7 @@ export async function exportAll(data, ingMap) {
   const wb = X.utils.book_new();
   const platRows = data.plats.map((p) => {
     const t = sumLines(data.composition.filter((c) => c.plat_id === p.id), ingMap);
-    const o = { ...p, categories: (p.categories || []).join(';'), traductions: JSON.stringify(p.traductions || {}) };
+    const o = { ...p, categories: (p.categories || []).join(';'), traductions: JSON.stringify(p.traductions || {}), details: JSON.stringify(p.details || {}) };
     for (const k of NUTR) o[k] = Math.round(t[k] * 10) / 10;
     o.charge_glycemique = Math.round(t.cg * 10) / 10;
     o.cout_ar = Math.round(t.cout);

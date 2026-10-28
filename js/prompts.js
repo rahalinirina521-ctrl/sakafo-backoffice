@@ -7,7 +7,8 @@ export { PLAT_TEXT_FIELDS };
 export const ING_FIELDS = ['id', 'nom_mg', 'nom_fr', 'nom_en', 'categorie', 'etat', 'kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'poids_piece', 'densite', 'source'];
 export const TEXT_LANGS = ['fr', 'en', 'mg'];
 // Onglet "Plat" ao amin'ny Excel: fr_marketing, en_marketing, mg_marketing...
-export const PLAT_SHEET_FIELDS = ['id', 'nom', 'photo_en', ...TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.map((f) => `${l}_${f}`))];
+export const DETAIL_FIELDS = ['allergenes', 'regimes', 'preparation', 'temps_preparation', 'hashtags'];
+export const PLAT_SHEET_FIELDS = ['id', 'nom', 'photo_en', ...TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.map((f) => `${l}_${f}`)), ...DETAIL_FIELDS];
 const ING_CATS = 'Féculent / Protéine / Légumineuse / Légume / Fruit / Boisson / Laitier / Matière grasse / Condiment';
 
 function catNamesFr(plat, categories) {
@@ -36,13 +37,25 @@ const TEXTS_SPEC = `   - "nom_commercial" : un nom court et appétissant pour la
    - "marketing" : un résumé marketing de 2 à 3 phrases qui donne envie de choisir ce menu : le goût, ce que le client y gagne pour son objectif, et ce qui le rend spécial (utilise les NB / points forts : sans sel, sans sucre ajouté, fait maison…). Ton chaleureux et positif, sans exagération ;
    - "description" : 1 phrase qui décrit le plat ;
    - "avantages" : les bénéfices nutritionnels (1 à 2 phrases) ;
-   - "effets" : l'effet attendu sur l'objectif du client (1 à 2 phrases).
-   Écris ces 5 textes en TROIS langues : "fr" (français), "en" (anglais), "mg" (malgache courant, naturel, comme on parle à Antananarivo).
+   - "effets" : l'effet attendu sur l'objectif du client (1 à 2 phrases) ;
+   - "conseil" : conseil de consommation (moment idéal, comment le manger, boisson conseillée) en 1 à 2 phrases ;
+   - "conservation" : conservation et réchauffage (ex. 24 h au réfrigérateur, réchauffer 2 min au micro-ondes ; « à consommer frais » si besoin) ;
+   - "post_reseaux" : un post Facebook / Instagram prêt à publier (3 à 5 phrases courtes, 2 à 4 emojis, appel à l'action « Commandez sur WhatsApp ou dans l'application »), sans prix ni chiffre de calories.
+   Écris ces 8 textes en TROIS langues : "fr" (français), "en" (anglais), "mg" (malgache courant, naturel, comme on parle à Antananarivo).
    Aucune promesse médicale (interdit : "guérit", "fait perdre X kg"). Ne cite pas de chiffres de calories : mon logiciel les calcule.`;
 
-const TEXTS_JSON = `"fr": { "nom_commercial": "", "marketing": "", "description": "", "avantages": "", "effets": "" },
-    "en": { "nom_commercial": "", "marketing": "", "description": "", "avantages": "", "effets": "" },
-    "mg": { "nom_commercial": "", "marketing": "", "description": "", "avantages": "", "effets": "" }`;
+const DETAILS_SPEC = `   - "details" (en français) :
+     - "allergenes" : liste des allergènes présents parmi : gluten, crustacés, œuf, poisson, arachide, soja, lait, fruits à coque, céleri, moutarde, sésame, sulfites, lupin, mollusques ([] si aucun) ;
+     - "regimes" : étiquettes qui s'appliquent vraiment parmi : végétarien, végan, sans gluten, sans lactose, sans porc, riche en protéines, riche en fibres, faible IG, sans sucre ajouté, faible en sel ;
+     - "preparation" : la recette pour la cuisine, en étapes numérotées courtes (quantités pour 1 portion) ;
+     - "temps_preparation" : temps total en minutes (nombre) ;
+     - "hashtags" : 6 à 10 hashtags pour Facebook / Instagram (malgaches et français).`;
+
+const TEXT_OBJ = '{ "nom_commercial": "", "marketing": "", "description": "", "avantages": "", "effets": "", "conseil": "", "conservation": "", "post_reseaux": "" }';
+const TEXTS_JSON = `"fr": ${TEXT_OBJ},
+    "en": ${TEXT_OBJ},
+    "mg": ${TEXT_OBJ},
+    "details": { "allergenes": [], "regimes": [], "preparation": "1. …\\n2. …", "temps_preparation": 0, "hashtags": [] }`;
 
 // ---------- Prompt 1: hameno ny données momba ny sakafo iray ----------
 export function promptHameno(plat, lines, ingMap, categories) {
@@ -79,6 +92,7 @@ TA MISSION
    - source exacte (USDA FoodData Central ou Ciqual + nom de l'aliment). Si tu n'es pas sûr d'une valeur, mets null et écris "À VÉRIFIER" dans la source : n'invente jamais.
 2. Pour le plat :
 ${TEXTS_SPEC}
+${DETAILS_SPEC}
    - "photo_en" : en anglais, une description visuelle précise du plat pour générer une photo.
 3. NE CALCULE PAS les calories totales du plat.
 
@@ -125,6 +139,7 @@ Pour chaque ingrédient, tu peux ajouter un "note" court (ex : "sans sel", "sans
 
 Textes de chaque plat :
 ${TEXTS_SPEC}
+${DETAILS_SPEC}
 
 Réponds UNIQUEMENT avec ce JSON (aucun texte avant ni après) :
 
@@ -238,8 +253,15 @@ export function extractJson(text) {
 
 // Mamadika ny "plat" avy amin'ny IA (JSON na Excel) ho { photo_en, texts: { fr:{}, en:{}, mg:{} } }
 export function normalizePlatTexts(p) {
-  const out = { photo_en: p?.photo_en || p?.nom_en || '', texts: { fr: {}, en: {}, mg: {} } };
+  const out = { photo_en: p?.photo_en || p?.nom_en || '', texts: { fr: {}, en: {}, mg: {} }, details: {} };
   if (!p) return out;
+  const d = (p.details && typeof p.details === 'object') ? p.details : p;
+  const list = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? v.split(/[;,\n]/) : []).map((x) => String(x).trim()).filter(Boolean);
+  if (d.allergenes !== undefined && d.allergenes !== null) out.details.allergenes = list(d.allergenes);
+  if (d.regimes !== undefined && d.regimes !== null) out.details.regimes = list(d.regimes);
+  if (d.hashtags !== undefined && d.hashtags !== null) out.details.hashtags = list(d.hashtags).map((h) => (h.startsWith('#') ? h : '#' + h.replace(/\s+/g, '')));
+  if (d.preparation) out.details.preparation = String(d.preparation);
+  if (d.temps_preparation !== undefined && d.temps_preparation !== null && d.temps_preparation !== '' && !isNaN(+d.temps_preparation)) out.details.temps_preparation = +d.temps_preparation;
   for (const l of TEXT_LANGS) {
     for (const f of PLAT_TEXT_FIELDS) {
       const v = p[l]?.[f] ?? p[`${l}_${f}`];
@@ -255,6 +277,7 @@ export function normalizePlatTexts(p) {
 export function applyPlatTexts(plat, norm) {
   const next = { ...plat, traductions: { en: { ...(plat.traductions?.en || {}) }, mg: { ...(plat.traductions?.mg || {}) } } };
   if (norm.photo_en) next.nom_en = norm.photo_en;
+  next.details = { ...(plat.details || {}), ...(norm.details || {}) };
   for (const f of PLAT_TEXT_FIELDS) {
     if (norm.texts.fr[f]) next[f] = norm.texts.fr[f];
     if (norm.texts.en[f]) next.traductions.en[f] = norm.texts.en[f];

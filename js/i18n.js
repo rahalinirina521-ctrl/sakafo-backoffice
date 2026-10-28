@@ -48,7 +48,7 @@ export function catName(c) {
 }
 
 // Textes ny sakafo: FR = colonnes fototra; EN/MG = plat.traductions[l]
-export const PLAT_TEXT_FIELDS = ['nom_commercial', 'marketing', 'description', 'avantages', 'effets'];
+export const PLAT_TEXT_FIELDS = ['nom_commercial', 'marketing', 'description', 'avantages', 'effets', 'conseil', 'conservation', 'post_reseaux'];
 export function platText(p, field, l = lang) {
   if (!p) return '';
   if (l === 'fr') return p[field] || '';
