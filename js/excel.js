@@ -25,6 +25,7 @@ export async function exportHameno(plat, lines, ingMap) {
     ['1. Onglet "Plat" : remplir les cellules vides : photo_en ; fr_..., en_..., mg_... (nom_commercial, marketing, avantages = 3 points) ; allergenes et regimes (séparés par ;).'],
     ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, noms fr/en/mg, poids_piece (g d\'une pièce), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
     ['3. Onglet "Composition" : information seulement (avec les NB), ne pas modifier.'],
+    ['4. Onglet "Photo" : insérez la photo du plat (Insertion > Image), si vous pouvez la générer.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
   ];
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
@@ -40,6 +41,7 @@ export async function exportHameno(plat, lines, ingMap) {
   });
   X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'quantite', 'unite', 'grammes_estimes', 'nb'], comp), 'Composition');
   if (plat.nb) X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['NB / points forts du plat'], [plat.nb]]), 'NB');
+  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['PHOTO DU PLAT : insérez ici l\'image générée (Insertion > Image).'], ['Réaliste, simple, appétissante, portions exactes, sans texte.']]), 'Photo');
   X.writeFile(wb, `hameno_${plat.id}.xlsx`);
 }
 
@@ -73,15 +75,35 @@ function readSheet(X, ws) {
 }
 
 // Mamerina { plat, ingredients } mitovy amin'ny JSON
+// Maka ny sary voalohany ao anatin'ny fichier .xlsx (xl/media/...)
+const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
+export async function extractXlsxImage(buf) {
+  try {
+    const { default: JSZip } = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm');
+    const zip = await JSZip.loadAsync(buf);
+    const files = Object.keys(zip.files).filter((n) => /^xl\/media\/.+\.(png|jpe?g|webp|gif)$/i.test(n));
+    if (!files.length) return null;
+    // ny lehibe indrindra no raisina (matetika ny sary tena izy)
+    let best = null;
+    for (const n of files) {
+      const data = await zip.file(n).async('uint8array');
+      if (!best || data.length > best.data.length) best = { n, data };
+    }
+    const ext = best.n.split('.').pop().toLowerCase();
+    return new Blob([best.data], { type: MIME[ext] || 'image/png' });
+  } catch (e) { return null; }
+}
+
 export async function importHameno(file) {
   const X = await lib();
   const buf = await file.arrayBuffer();
   const wb = X.read(buf, { type: 'array' });
+  const image = /\.xlsx$/i.test(file.name || '') ? await extractXlsxImage(buf) : null;
   const find = (name) => wb.Sheets[wb.SheetNames.find((n) => n.toLowerCase() === name.toLowerCase())];
   const plats = readSheet(X, find('Plat'));
   const ingredients = readSheet(X, find('Ingredients'));
   if (!plats.length && !ingredients.length) throw new Error('Onglets "Plat" / "Ingredients" introuvables');
-  return { plat: plats[0] || null, ingredients };
+  return { plat: plats[0] || null, ingredients, image };
 }
 
 // ---------- Backup feno ----------

@@ -263,7 +263,7 @@ export function PlatEdit({ id }) {
       </div>
     </div>
 
-    <${AiPanel} form=${form} lines=${lines} isNew=${isNew} persist=${persist} />
+    <${AiPanel} form=${form} setForm=${setForm} lines=${lines} isNew=${isNew} persist=${persist} />
 
         <${Card} title=${tr('Textes (vente et marketing)', 'Texts (sales and marketing)', 'Texte (fivarotana sy marketing)')} actions=${html`<div class="tabs mini">${TEXT_LANGS.map((l) => html`<button class=${'tab' + (l === txtLang ? ' on' : '')} onClick=${() => setTxtLang(l)}>${LANG_SHORT[l]}</button>`)}</div>`}>
       <p class="hint">${tr('Remplis par l\'IA en français, anglais et malgache. Vous pouvez les corriger.', 'Filled by the AI in French, English and Malagasy. You can edit them.', 'Fenoin\'ny IA amin\'ny frantsay, anglisy ary malagasy. Azonao ahitsy.')}</p>
@@ -289,7 +289,7 @@ export function PlatEdit({ id }) {
 }
 
 // ---------------------------------------------------------------
-function AiPanel({ form, lines, isNew, persist }) {
+function AiPanel({ form, setForm, lines, isNew, persist }) {
   const app = useApp();
   const { data, ingMap, toast } = app;
   const [text, setText] = useState('');
@@ -315,11 +315,23 @@ function AiPanel({ form, lines, isNew, persist }) {
   function parseText() {
     try { setResult(normalize(extractJson(text))); } catch (e) { toast(tr('JSON illisible : ', 'Unreadable JSON: ', 'Tsy voavaky ny JSON: ') + e.message, 'bad'); }
   }
+  // Excel (misy sary na tsia) sy/na sary misaraka: azo safidiana miaraka
   async function onFile(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    try { setResult(normalize(await importHameno(f))); } catch (x) { toast(tr('Excel illisible : ', 'Unreadable Excel: ', 'Tsy voavaky ny Excel: ') + x.message, 'bad'); }
+    const files = [...(e.target.files || [])];
     e.target.value = '';
+    if (!files.length) return;
+    const xls = files.find((f) => /\.(xlsx|xls|csv)$/i.test(f.name));
+    const img = files.find((f) => (f.type || '').startsWith('image/'));
+    try {
+      if (xls) {
+        const r = normalize(await importHameno(xls));
+        if (img) r.image = img;
+        setResult(r);
+        if (r.image) toast(tr('Photo trouvée : elle sera enregistrée avec le plat.', 'Photo found: it will be saved with the dish.', 'Hita ny sary: hotehirizina miaraka amin\'ny sakafo.'));
+      } else if (img) {
+        setResult((cur) => (cur ? { ...cur, image: img } : { plat: normalizePlatTexts({}), ingredients: [], image: img }));
+      }
+    } catch (x) { toast(tr('Excel illisible : ', 'Unreadable Excel: ', 'Tsy voavaky ny Excel: ') + x.message, 'bad'); }
   }
   function normalize(r) {
     const ings = (r.ingredients || []).filter((i) => i && (i.id || i.nom_mg || i.nom_fr)).map((i) => {
@@ -327,7 +339,7 @@ function AiPanel({ form, lines, isNew, persist }) {
       for (const k of [...NUTR, 'ig', 'poids_piece', 'densite']) o[k] = toNum(o[k]);
       return o;
     });
-    return { plat: normalizePlatTexts(r.plat || {}), ingredients: ings };
+    return { plat: normalizePlatTexts(r.plat || {}), ingredients: ings, image: r.image || null };
   }
 
   async function apply() {
@@ -353,6 +365,14 @@ function AiPanel({ form, lines, isNew, persist }) {
       const newMap = new Map(ingMap); rows.forEach((r) => newMap.set(r.id, r));
       const saved = await persist(next, newMap);
       if (!saved) return;
+      if (result.image) {
+        try {
+          const url = await uploadPlatImage(saved.id, result.image);
+          const withImg = { ...saved, image_url: url };
+          await app.save('plats', withImg);
+          setForm(withImg);
+        } catch (e) { toast(tr('Photo non envoyée : ', 'Photo not uploaded: ', 'Tsy lasa ny sary: ') + (e.message || e), 'bad'); }
+      }
       toast(tr(`Enregistré : ${rows.length} ingrédient(s) et les textes du plat`, `Saved: ${rows.length} ingredient(s) and the dish texts`, `Voatahiry: ingrédient ${rows.length} sy ny texte`));
       setResult(null); setText('');
       if (isNew) navigate('/plats/' + saved.id);
@@ -394,7 +414,7 @@ function AiPanel({ form, lines, isNew, persist }) {
         <textarea rows="5" class="mono" placeholder=${tr('Collez ici la réponse (avec le bloc JSON)…', 'Paste the answer here (with the JSON block)…', 'Apetaho eto ny valiny (misy ny bloc JSON)…')} value=${text} onInput=${(e) => setText(e.target.value)}></textarea>
         <div class="row gap wrap">
           <button class="btn primary" disabled=${!text.trim()} onClick=${parseText}>${tr('Lire le JSON', 'Read the JSON', 'Vakio ny JSON')}</button>
-          <label class="btn">${tr('Importer l\'Excel rempli', 'Import the filled Excel', 'Ampidiro Excel voafeno')}<input type="file" accept=".xlsx,.xls,.csv" hidden onChange=${onFile} /></label>
+          <label class="btn">${tr('Importer l\'Excel rempli (+ photo)', 'Import the filled Excel (+ photo)', 'Ampidiro Excel voafeno (+ sary)')}<input type="file" accept=".xlsx,.xls,.csv,image/*" multiple hidden onChange=${onFile} /></label>
         </div>
       </div>
     </div>
@@ -402,6 +422,10 @@ function AiPanel({ form, lines, isNew, persist }) {
 
     ${result && html`<div class="preview">
       <h3>${tr('Vérifiez avant d\'enregistrer', 'Check before saving', 'Hamarino alohan\'ny hitahirizana')}</h3>
+      <div class="row gap wrap">
+        ${result.image ? html`<img class="preview-photo" src=${URL.createObjectURL(result.image)} alt="" />` : html`<span class="muted small">${tr('Pas de photo dans le fichier.', 'No photo in the file.', 'Tsy misy sary ao amin\'ny fichier.')}</span>`}
+        <label class="btn small">${result.image ? tr('Changer la photo', 'Change photo', 'Ovay ny sary') : tr('Ajouter la photo de l\'IA', 'Add the AI photo', 'Ampidiro ny sary navoakan\'ny IA')}<input type="file" accept="image/*" hidden onChange=${(e) => { const f = e.target.files[0]; e.target.value = ''; if (f) setResult((cur) => ({ ...cur, image: f })); }} /></label>
+      </div>
       ${(textRows.length > 0 || Object.keys(result.plat.details || {}).length > 0) && html`<table class="kv wide">
         ${textRows.map((r) => html`<tr><td>${textLabel(r.f)} <span class="badge muted">${LANG_SHORT[r.l]}</span></td><td>${r.v}</td></tr>`)}
         ${result.plat.photo_en && html`<tr><td>Photo (EN)</td><td>${result.plat.photo_en}</td></tr>`}

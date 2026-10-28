@@ -106,7 +106,7 @@ Dans tous les cas, donne ensuite ce bloc JSON :
 }
 \`\`\`
 
-4. IMAGE — après le JSON, si tu sais générer des images (ChatGPT, Gemini…), génère UNE photo de ce plat selon cette description (sinon, ignore cette étape) :
+4. IMAGE — si tu sais générer des images (ChatGPT, Gemini…), génère UNE photo de ce plat selon cette description, puis insère-la dans l'onglet "Photo" du fichier Excel complété (cellule A3). Si tu ne peux pas l'insérer, donne-la séparément : je l'importerai avec l'Excel. (Si tu ne sais pas générer d'images, ignore cette étape.)
 ${photoBrief(plat, lines, ingMap)}`;
 }
 
