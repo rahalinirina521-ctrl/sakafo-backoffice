@@ -147,10 +147,79 @@ Réponds UNIQUEMENT avec ce JSON (aucun texte avant ni après) :
 \`\`\``;
 }
 
-// ---------- Prompt sary ----------
-export function promptSary(plat) {
-  const what = plat.nom_en || plat.nom_commercial || plat.nom;
-  return `Professional food photography of ${what}, served in a white ceramic plate on a rustic light wooden table, natural soft daylight from the left, 45-degree angle, vibrant colors, realistic textures, fresh and appetizing, high detail, shallow depth of field, clean background, no text, no logo, no hands, square format 1:1.`;
+// ---------- Prompts sary ----------
+const MEAL_EN = { Maraina: 'breakfast', Atoandro: 'lunch', Hariva: 'dinner', 'Goûter': 'snack' };
+const MEAL_MOOD = {
+  Maraina: 'bright fresh morning light, a cozy breakfast table, a cup or glass next to the plate when there is a drink',
+  Atoandro: 'warm natural midday light, generous lunch plate',
+  Hariva: 'soft warm evening light, calm and elegant dinner setting',
+  'Goûter': 'soft afternoon light, light and casual snack setting',
+};
+const GOAL_MOOD = {
+  'perte-de-poids': 'light, fresh, colourful and healthy, no greasy look',
+  'prise-de-masse': 'hearty, generous and energising, abundant protein',
+  'diabete': 'balanced and wholesome, natural ingredients, no sugary elements',
+  'economique': 'homely, simple and generous, local market ingredients',
+  'normal': 'balanced, homemade and inviting',
+};
+const unitEn = (u, q) => ({ isa: '', ml: ' ml of', cas: q > 1 ? ' tablespoons of' : ' tablespoon of', cac: q > 1 ? ' teaspoons of' : ' teaspoon of', g: ' g of' }[u || 'g'] ?? ' g of');
+
+function ingredientsForPhoto(lines, ingMap) {
+  return lines.map((l) => {
+    const i = ingMap.get(l.ingredient_id);
+    const name = (i && (i.nom_en || i.nom_fr || i.nom_mg)) || '?';
+    const q = l.quantite ?? l.grammes;
+    const nm = String(name).toLowerCase();
+    const qty = (l.unite || 'g') === 'isa' ? `${q} × ${nm}` : `${q}${unitEn(l.unite, q)} ${nm}`;
+    return l.note ? `${qty} (${l.note})` : qty;
+  });
+}
+
+// mode 'photo' = sary tena izy ho an'ny vente (tsy misy soratra); mode 'pub' = visuel publicitaire misy titre
+export function promptSary(plat, lines = [], ingMap = new Map(), categories = [], mode = 'photo', kcal = null) {
+  if (mode === 'retouch') return promptRetouche(plat, lines, ingMap);
+  const meal = MEAL_EN[plat.fotoana] || 'meal';
+  const items = ingredientsForPhoto(lines, ingMap);
+  const goals = (plat.categories || []).map((id) => GOAL_MOOD[id]).filter(Boolean);
+  const goalNames = (plat.categories || []).map((id) => categories.find((c) => c.id === id)?.nom_en || categories.find((c) => c.id === id)?.nom).filter(Boolean);
+  const title = plat.traductions?.en?.nom_commercial || plat.nom_commercial || '';
+  const desc = plat.nom_en || plat.traductions?.en?.description || '';
+  const story = plat.traductions?.en?.marketing || '';
+
+  const lines1 = [
+    `Ultra-realistic professional food photograph for a healthy meal-delivery brand in Antananarivo, Madagascar: a ${meal} called "${title || plat.nom}".`,
+    desc ? `Dish: ${desc}.` : '',
+    items.length ? `Show exactly these portions (nothing more, true serving size), clearly visible and appetising: ${items.join(', ')}.` : '',
+    plat.nb ? `Key selling points to suggest visually: ${plat.nb}.` : '',
+    goalNames.length ? `Target customers: ${goalNames.join(', ')} — the dish must look ${goals.join('; ') || 'balanced and inviting'}.` : '',
+    story ? `Mood and story: ${story}` : '',
+    `Styling: ${MEAL_MOOD[plat.fotoana] || 'natural light'}; beautiful plating on a matte ceramic plate, rustic light wooden table, natural linen napkin, a few fresh raw ingredients scattered around as props, fresh herbs, subtle steam on hot food, droplets of freshness on fruit.`,
+    'Camera: 45-degree angle (or top-down if it shows the portions better), 50 mm lens, shallow depth of field, crisp focus on the food, true-to-life colours, real textures, no artificial look, natural shadows.',
+  ];
+  const tail = mode === 'pub'
+    ? [
+      `Advertising layout for Instagram / Facebook (square 1:1, also works in 4:5): the plate on one side, clean empty space on the other side for text.`,
+      `Add a short bold headline in French: "${plat.nom_commercial || title || plat.nom}"${kcal ? ` and a small rounded badge "${Math.round(kcal)} kcal"` : ''}${plat.nb ? `, plus 2 small icons/labels for: ${plat.nb}` : ''}.`,
+      'Modern, fresh, premium healthy-food branding, soft green and warm natural tones, easy to read on a phone. Spell the French text exactly, no other text, no watermark.',
+    ]
+    : ['Square format 1:1, high resolution, photorealistic, no text, no logo, no watermark, no hands, no people.'];
+  return [...lines1, ...tail].filter(Boolean).join('\n');
+}
+
+// mode 'retouch': hanatsara ny sary TENA IZY nalain'ny mpampiasa (ampiarahina amin'ny prompt ilay sary)
+export function promptRetouche(plat, lines = [], ingMap = new Map()) {
+  const meal = MEAL_EN[plat.fotoana] || 'meal';
+  const items = ingredientsForPhoto(lines, ingMap);
+  const title = plat.traductions?.en?.nom_commercial || plat.nom_commercial || plat.nom;
+  return [
+    `I attached a REAL photo of our ${meal} "${title}" from our healthy meal-delivery service in Antananarivo, Madagascar. Turn it into a professional, appetising marketing photo.`,
+    items.length ? `The dish contains: ${items.join(', ')}.` : '',
+    plat.nb ? `Selling points: ${plat.nb}.` : '',
+    'KEEP exactly the same food, the same quantities, the same plate and the same arrangement: do not add, remove or enlarge any food (the customer must receive what the photo shows).',
+    'Improve only: lighting (soft natural daylight), white balance and true-to-life colours, sharpness and texture of the food, gentle depth of field, clean the background and table (remove clutter, stains, crumbs, fingers), straighten and crop to a square 1:1 with the plate well centred.',
+    `Background: ${MEAL_MOOD[plat.fotoana] || 'natural light'}, light wooden table or clean neutral surface.`,
+    'Photorealistic, no text, no logo, no watermark, no cartoon or artificial look.',
+  ].filter(Boolean).join('\n');
 }
 
 // ---------- Mamaky ny JSON avy amin'ny IA ----------

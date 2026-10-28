@@ -105,16 +105,24 @@ export function PlatEdit({ id }) {
     setLines([]); setDirty(true);
   }
 
+  // Mitahiry ny sakafo + composition (ampiasain'ny "Enregistrer" sy ny IA)
+  async function persist(formArg = form, mapArg = ingMap) {
+    if (!(formArg.nom || '').trim()) { toast(tr('Indiquez le nom du plat', 'Enter the dish name', 'Soraty ny anaran\'ny sakafo'), 'bad'); return false; }
+    const row = { ...EMPTY_PLAT, ...formArg, nom: formArg.nom.trim(), prix_vente: toNum(formArg.prix_vente) };
+    delete row.created_at;
+    if (existing?.created_at) row.created_at = existing.created_at;
+    await app.save('plats', row);
+    await app.setComposition(row.id, compRows(lines, mapArg));
+    setForm(row);
+    setDirty(false);
+    return row;
+  }
+
   async function save() {
-    if (!form.nom.trim()) { toast(tr('Indiquez le nom du plat', 'Enter the dish name', 'Soraty ny anaran\'ny sakafo'), 'bad'); return false; }
     setBusy(true);
     try {
-      const row = { ...EMPTY_PLAT, ...form, nom: form.nom.trim(), prix_vente: toNum(form.prix_vente) };
-      delete row.created_at;
-      if (existing?.created_at) row.created_at = existing.created_at;
-      await app.save('plats', row);
-      await app.setComposition(row.id, compRows(lines, ingMap));
-      setDirty(false);
+      const row = await persist();
+      if (!row) return false;
       toast(tr('Enregistré', 'Saved', 'Voatahiry'));
       if (isNew) navigate('/plats/' + row.id);
       return true;
@@ -245,16 +253,14 @@ export function PlatEdit({ id }) {
       </div>
     </div>
 
-    ${isNew
-      ? html`<${Card} title=${tr('Compléter avec l\'IA', 'Complete with AI', 'Hameno amin\'ny IA')}><p class="muted">${tr('Enregistrez d\'abord le plat : le prompt apparaîtra ici.', 'Save the dish first: the prompt will appear here.', 'Tehirizo aloha ny sakafo dia hiseho eto ny prompt.')}</p><//>`
-      : html`<${AiPanel} form=${form} setForm=${setForm} lines=${lines} dirty=${dirty} save=${save} compRows=${compRows} />`}
+    <${AiPanel} form=${form} lines=${lines} isNew=${isNew} persist=${persist} />
 
-    <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} dirty=${dirty} />
+    <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} lines=${lines} kcal=${totals.missing ? null : totals.kcal} />
   </div>`;
 }
 
 // ---------------------------------------------------------------
-function AiPanel({ form, setForm, lines, dirty, save, compRows }) {
+function AiPanel({ form, lines, isNew, persist }) {
   const app = useApp();
   const { data, ingMap, toast } = app;
   const [text, setText] = useState('');
@@ -301,19 +307,20 @@ function AiPanel({ form, setForm, lines, dirty, save, compRows }) {
       }
       if (rows.length) await app.save('ingredients', rows);
       const next = applyPlatTexts(form, result.plat);
-      setForm(next);
-      await app.save('plats', { ...next, prix_vente: toNum(next.prix_vente) });
       const newMap = new Map(ingMap); rows.forEach((r) => newMap.set(r.id, r));
-      await app.setComposition(form.id, compRows(lines, newMap));
+      const saved = await persist(next, newMap);
+      if (!saved) return;
       toast(tr(`Enregistré : ${rows.length} ingrédient(s) et les textes du plat`, `Saved: ${rows.length} ingredient(s) and the dish texts`, `Voatahiry: ingrédient ${rows.length} sy ny texte`));
       setResult(null); setText('');
+      if (isNew) navigate('/plats/' + saved.id);
     } catch (e) { toast(tr('Erreur : ', 'Error: ', 'Nisy olana: ') + (e.message || e), 'bad'); } finally { setBusy(false); }
   }
 
   const textRows = result ? TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.filter((f) => result.plat.texts[l][f]).map((f) => ({ l, f, v: result.plat.texts[l][f] }))) : [];
 
   return html`<${Card} title=${tr('Compléter avec l\'IA', 'Complete with AI', 'Hameno amin\'ny IA')}>
-    ${dirty && html`<p class="warn-box">${tr('Modifications non enregistrées.', 'Unsaved changes.', 'Misy fanovana tsy voatahiry.')} <button class="btn small" onClick=${save}>${tr('Enregistrer d\'abord', 'Save first', 'Tehirizo aloha')}</button></p>`}
+    ${!lines.length && html`<p class="warn-box">${tr('Ajoutez d\'abord la composition (ingrédients et quantités) : le prompt l\'utilise.', 'Add the composition first (ingredients and quantities): the prompt uses it.', 'Ampidiro aloha ny composition (ingrédients sy habetsahana): ampiasain\'ny prompt izany.')}</p>`}
+    <p class="muted small">${tr('« Valider et enregistrer » enregistre aussi le plat et sa composition.', '"Accept and save" also saves the dish and its composition.', '"Ekena sy tehirizo" dia mitahiry koa ny sakafo sy ny composition.')}</p>
     <div class="ai-steps">
       <div class="ai-step">
         <h3><span class="num-circle">1</span> ${tr('Copier le prompt', 'Copy the prompt', 'Adikao ny prompt')}</h3>
@@ -360,9 +367,10 @@ function AiPanel({ form, setForm, lines, dirty, save, compRows }) {
 }
 
 // ---------------------------------------------------------------
-function PhotoCard({ form, setForm, isNew }) {
+function PhotoCard({ form, setForm, isNew, lines, kcal }) {
   const app = useApp();
-  const { data, toast } = app;
+  const { data, ingMap, toast } = app;
+  const [kind, setKind] = useState('retouch');
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
 
@@ -405,8 +413,14 @@ function PhotoCard({ form, setForm, isNew }) {
           ? tr('La photo est réduite automatiquement et enregistrée dans Supabase.', 'The photo is resized automatically and stored in Supabase.', 'Hakelezina ho azy ny sary ary tehirizina ao amin\'ny Supabase.')
           : tr('Mode démo : photo gardée dans ce navigateur uniquement.', 'Demo mode: photo kept in this browser only.', 'Mode démo: ao amin\'ity navigateur ity ihany ny sary.')}</p>
         <h3>${tr('Pas encore de photo ? Générez-la avec l\'IA', 'No photo yet? Generate it with AI', 'Tsy mbola misy sary? Ampiasao ny IA')}</h3>
-        <p class="small muted">${tr('Copiez ce prompt dans ChatGPT (image), Gemini ou Midjourney, enregistrez l\'image puis choisissez-la ci-dessus.', 'Copy this prompt into ChatGPT (image), Gemini or Midjourney, save the image, then choose it above.', 'Adikao ao amin\'ny ChatGPT (image), Gemini na Midjourney ity prompt ity, tehirizo ny sary dia safidio eo ambony.')}</p>
-        <${CopyBox} text=${promptSary(form)} label=${tr('Copier le prompt photo', 'Copy the photo prompt', 'Adikao ny prompt sary')} rows="5" />
+        <p class="small muted">${tr('Le prompt reprend la composition, les quantités, les NB, l\'objectif et le texte marketing. Copiez-le dans ChatGPT (image), Gemini ou Midjourney, enregistrez l\'image puis choisissez-la ci-dessus. Complétez d\'abord les textes avec l\'IA pour un meilleur résultat.', 'The prompt uses the composition, quantities, NB, goal and marketing text. Copy it into ChatGPT (image), Gemini or Midjourney, save the image, then choose it above. Complete the texts with AI first for a better result.', 'Ao anatin\'ny prompt ny composition, ny habetsahana, ny NB, ny tanjona ary ny texte marketing. Adikao ao amin\'ny ChatGPT (image), Gemini na Midjourney, tehirizo ny sary dia safidio eo ambony. Fenoy amin\'ny IA aloha ny texte mba ho tsara kokoa ny vokatra.')}</p>
+        <div class="tabs mini wrap">
+          <button class=${'tab' + (kind === 'retouch' ? ' on' : '')} onClick=${() => setKind('retouch')}>${tr('Embellir ma vraie photo', 'Enhance my real photo', 'Hatsarao ny sariko tena izy')}</button>
+          <button class=${'tab' + (kind === 'photo' ? ' on' : '')} onClick=${() => setKind('photo')}>${tr('Créer une photo (sans texte)', 'Create a photo (no text)', 'Mamorona sary (tsy misy soratra)')}</button>
+          <button class=${'tab' + (kind === 'pub' ? ' on' : '')} onClick=${() => setKind('pub')}>${tr('Visuel pub Facebook / Instagram', 'Facebook / Instagram ad visual', 'Sary dokam-barotra Facebook / Instagram')}</button>
+        </div>
+        ${kind === 'retouch' && html`<p class="small ok-box">${tr('Prenez la photo du vrai plat, envoyez-la dans ChatGPT (ou Gemini) AVEC ce prompt : l\'IA améliore la lumière et la présentation sans changer la nourriture ni les portions.', 'Take a photo of the real dish and send it to ChatGPT (or Gemini) WITH this prompt: the AI improves light and presentation without changing the food or portions.', 'Alaivo sary ny sakafo tena izy, alefaso any amin\'ny ChatGPT (na Gemini) MIARAKA amin\'ity prompt ity: hatsarain\'ny IA ny hazavana sy ny fandaminana, tsy ovainy ny sakafo na ny habetsahany.')}</p>`}
+        <${CopyBox} text=${promptSary(form, lines, ingMap, data.categories, kind, kcal)} label=${tr('Copier le prompt photo', 'Copy the photo prompt', 'Adikao ny prompt sary')} rows="9" />
       </div>
     </div>
   <//>`;
