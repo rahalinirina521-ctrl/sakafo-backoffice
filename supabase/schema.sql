@@ -7,6 +7,7 @@ create table if not exists ingredients (
   id          text primary key,              -- ohatra: I001
   nom_mg      text not null,
   nom_fr      text,
+  nom_en      text,
   categorie   text,                          -- Féculent, Protéine, Légume...
   etat        text,                          -- Masaka / Manta / Vonona
   kcal        numeric,                       -- isaky ny 100 g
@@ -27,7 +28,9 @@ create table if not exists ingredients (
 
 create table if not exists categories (
   id          text primary key,              -- ohatra: perte-de-poids
-  nom         text not null,
+  nom         text not null,                 -- français
+  nom_en      text,
+  nom_mg      text,
   kcal_cible  numeric,                       -- kcal tanjona isan'andro (antonony)
   tolerance   numeric default 0.10,          -- 0.10 = ±10 %
   prot_g_kg   numeric,
@@ -41,7 +44,9 @@ create table if not exists plats (
   nom         text not null,
   nom_commercial text,                       -- anarana hita amin'ny client
   marketing   text,                          -- résumé marketing
-  nom_en      text,
+  nom_en      text,                          -- description photo (anglais)
+  nb          text,                          -- NB / points forts
+  traductions jsonb not null default '{}',   -- {"en": {...}, "mg": {...}}
   fotoana     text,                          -- Maraina / Atoandro / Hariva / Goûter
   categories  text[] not null default '{}',
   description text,
@@ -60,7 +65,8 @@ create table if not exists composition (
   ingredient_id text not null references ingredients(id) on update cascade,
   quantite      numeric not null default 0,
   unite         text not null default 'g',   -- g / ml / isa / cas / cac
-  grammes       numeric not null default 0,  -- kajiana ho azy
+  grammes       numeric not null default 0,  -- calculé automatiquement
+  note          text,                        -- NB : sans sel, sans sucre…
   ordre         int default 0
 );
 create index if not exists composition_plat_idx on composition(plat_id);

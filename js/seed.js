@@ -18,7 +18,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked white rice"
  },
  {
   "id": "I002",
@@ -38,7 +39,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked red/brown rice"
  },
  {
   "id": "I003",
@@ -58,7 +60,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Boiled cassava"
  },
  {
   "id": "I004",
@@ -78,7 +81,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Boiled sweet potato"
  },
  {
   "id": "I005",
@@ -98,7 +102,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Boiled potato"
  },
  {
   "id": "I006",
@@ -118,7 +123,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked corn"
  },
  {
   "id": "I007",
@@ -138,7 +144,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Baguette bread"
  },
  {
   "id": "I008",
@@ -158,7 +165,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Rolled oats"
  },
  {
   "id": "I010",
@@ -178,7 +186,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked lean beef"
  },
  {
   "id": "I011",
@@ -198,7 +207,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked pork"
  },
  {
   "id": "I012",
@@ -218,7 +228,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked skinless chicken"
  },
  {
   "id": "I013",
@@ -238,7 +249,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked tilapia"
  },
  {
   "id": "I014",
@@ -258,7 +270,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 50,
-  "densite": null
+  "densite": null,
+  "nom_en": "Whole egg"
  },
  {
   "id": "I015",
@@ -278,7 +291,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked beans"
  },
  {
   "id": "I016",
@@ -298,7 +312,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked lima beans"
  },
  {
   "id": "I017",
@@ -318,7 +333,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked lentils"
  },
  {
   "id": "I020",
@@ -338,7 +354,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked leafy greens"
  },
  {
   "id": "I021",
@@ -358,7 +375,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked pounded cassava leaves"
  },
  {
   "id": "I022",
@@ -378,7 +396,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cooked mixed vegetables"
  },
  {
   "id": "I023",
@@ -398,7 +417,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 60,
-  "densite": null
+  "densite": null,
+  "nom_en": "Carrot"
  },
  {
   "id": "I024",
@@ -418,7 +438,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 100,
-  "densite": null
+  "densite": null,
+  "nom_en": "Tomato"
  },
  {
   "id": "I025",
@@ -438,7 +459,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 110,
-  "densite": null
+  "densite": null,
+  "nom_en": "Onion"
  },
  {
   "id": "I026",
@@ -458,7 +480,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Cabbage"
  },
  {
   "id": "I030",
@@ -478,7 +501,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 120,
-  "densite": null
+  "densite": null,
+  "nom_en": "Banana"
  },
  {
   "id": "I031",
@@ -498,7 +522,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 180,
-  "densite": null
+  "densite": null,
+  "nom_en": "Apple"
  },
  {
   "id": "I032",
@@ -518,7 +543,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 130,
-  "densite": null
+  "densite": null,
+  "nom_en": "Orange"
  },
  {
   "id": "I033",
@@ -538,7 +564,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 200,
-  "densite": null
+  "densite": null,
+  "nom_en": "Mango"
  },
  {
   "id": "I034",
@@ -558,7 +585,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": 150,
-  "densite": null
+  "densite": null,
+  "nom_en": "Avocado"
  },
  {
   "id": "I040",
@@ -578,7 +606,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": 1.03
+  "densite": 1.03,
+  "nom_en": "Whole milk"
  },
  {
   "id": "I041",
@@ -598,7 +627,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": 1.03
+  "densite": 1.03,
+  "nom_en": "Plain yogurt"
  },
  {
   "id": "I050",
@@ -618,7 +648,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": 0.92
+  "densite": 0.92,
+  "nom_en": "Vegetable oil"
  },
  {
   "id": "I051",
@@ -638,7 +669,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": 0.97
+  "densite": 0.97,
+  "nom_en": "Coconut milk"
  },
  {
   "id": "I052",
@@ -658,7 +690,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Roasted peanuts"
  },
  {
   "id": "I060",
@@ -678,7 +711,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Salt"
  },
  {
   "id": "I061",
@@ -698,7 +732,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Sugar"
  },
  {
   "id": "I062",
@@ -718,7 +753,8 @@ export const INGREDIENTS = [
   "source": "USDA FoodData Central / Ciqual (sanda antonony)",
   "a_verifier": true,
   "poids_piece": null,
-  "densite": null
+  "densite": null,
+  "nom_en": "Honey"
  }
 ];
 
@@ -726,59 +762,69 @@ export const CATEGORIES = [
  {
   "id": "perte-de-poids",
   "nom": "Perte de poids",
+  "nom_en": "Weight loss",
+  "nom_mg": "Fihenan'ny lanja",
   "kcal_cible": 1500,
   "tolerance": 0.1,
   "prot_g_kg": 1.6,
   "cg_max": null,
   "ordre": 1,
-  "regles": "Kcal ambany, protéines avo mba tsy ho very hozatra, legioma be, menaka ≤ 5 g isaky ny sakafo, siramamy kely, vary mena aleo noho vary fotsy."
+  "regles": "Kcal modérées, protéines élevées pour préserver les muscles, beaucoup de légumes, huile ≤ 5 g par plat, peu de sucre, riz rouge plutôt que riz blanc."
  },
  {
   "id": "prise-de-masse",
   "nom": "Prise de masse",
+  "nom_en": "Weight gain",
+  "nom_mg": "Fiangedan'ny vatana",
   "kcal_cible": 2800,
   "tolerance": 0.1,
   "prot_g_kg": 1.8,
   "cg_max": null,
   "ordre": 2,
-  "regles": "Kcal avo, protéines avo isaky ny sakafo, goûter 1–2, menaka tsara (voanjo, avokà)."
+  "regles": "Kcal élevées, protéines à chaque repas, 1 à 2 collations, bonnes graisses (arachide, avocat)."
  },
  {
   "id": "diabete",
   "nom": "Diabète",
+  "nom_en": "Diabetes",
+  "nom_mg": "Diabeta",
   "kcal_cible": 1800,
   "tolerance": 0.1,
   "prot_g_kg": 1.2,
   "cg_max": 100,
   "ordre": 3,
-  "regles": "IG ambany, glucides voafetra sy zaraina, tsy misy siramamy na tantely, fibres be. Hamarinin'ny dokotera/nutritionniste."
+  "regles": "Index glycémique bas, glucides limités et répartis, pas de sucre ni de miel, beaucoup de fibres. À valider par un médecin ou nutritionniste."
  },
  {
   "id": "economique",
   "nom": "Économique",
+  "nom_en": "Budget",
+  "nom_mg": "Mora vidy",
   "kcal_cible": 2000,
   "tolerance": 0.1,
   "prot_g_kg": 1.0,
   "cg_max": null,
   "ordre": 4,
-  "regles": "Vidiny ambany (légumineuses, mangahazo, vomanga, anana) nefa mahafeno ny filana."
+  "regles": "Prix bas (légumineuses, manioc, patate douce, brèdes) tout en couvrant les besoins."
  },
  {
   "id": "normal",
   "nom": "Normal",
+  "nom_en": "Standard",
+  "nom_mg": "Mahazatra",
   "kcal_cible": 2000,
   "tolerance": 0.1,
   "prot_g_kg": 1.0,
   "cg_max": null,
   "ordre": 5,
-  "regles": "Sakafo voalanjalanja, malagasy mahazatra."
+  "regles": "Repas équilibrés, cuisine malgache habituelle."
  }
 ];
 
 export const DEMO = {
   ingredients: INGREDIENTS,
   categories: CATEGORIES,
-  plats: [{"id": "SK0001", "nom": "Akoho sy legioma, vary mena", "nom_en": "Grilled skinless chicken breast with mixed vegetables and red rice", "fotoana": "Atoandro", "categories": ["perte-de-poids", "diabete"], "description": "Akoho tsy misy hoditra natono, legioma mifangaro, vary mena.", "avantages": "Proteine avo, kcal antonony, fibres avy amin'ny vary mena sy legioma.", "effets": "Mampihena hanoanana ela, tsy mampiakatra haingana ny siramamy anaty ra.", "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}, {"id": "SK0002", "nom": "Flocons d'avoine, ronono, akondro", "nom_en": "Oatmeal porridge with milk and sliced banana", "fotoana": "Maraina", "categories": ["perte-de-poids"], "description": "Avoine nandrahoina tamin'ny ronono, akondro.", "avantages": "Fibres (bêta-glucane), angovo maharitra.", "effets": "Mahavoky ela hatramin'ny atoandro.", "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}],
-  composition: [{"id": "c1", "plat_id": "SK0001", "ingredient_id": "I012", "grammes": 120, "ordre": 0, "quantite": 120, "unite": "g"}, {"id": "c2", "plat_id": "SK0001", "ingredient_id": "I022", "grammes": 150, "ordre": 1, "quantite": 150, "unite": "g"}, {"id": "c3", "plat_id": "SK0001", "ingredient_id": "I002", "grammes": 120, "ordre": 2, "quantite": 120, "unite": "g"}, {"id": "c4", "plat_id": "SK0001", "ingredient_id": "I050", "grammes": 5, "ordre": 3, "quantite": 5, "unite": "g"}, {"id": "c5", "plat_id": "SK0002", "ingredient_id": "I008", "grammes": 50, "ordre": 4, "quantite": 50, "unite": "g"}, {"id": "c6", "plat_id": "SK0002", "ingredient_id": "I040", "grammes": 200, "ordre": 5, "quantite": 200, "unite": "g"}, {"id": "c7", "plat_id": "SK0002", "ingredient_id": "I030", "grammes": 100, "ordre": 6, "quantite": 100, "unite": "g"}],
-  menus: [{"id": "MN0001", "categorie_id": "perte-de-poids", "andro": "Andro 1", "maraina": "SK0002", "atoandro": "SK0001", "hariva": null, "gouter": null, "notes": ""}],
+  plats: [{"id": "SK0001", "nom": "A1 – Poulet légumes riz rouge", "nom_commercial": "Poulet grillé & riz rouge", "marketing": "Un poulet grillé tendre, des légumes de saison et du riz rouge plein de fibres : un déjeuner qui cale vraiment, sans lourdeur.", "nom_en": "Grilled skinless chicken breast with mixed vegetables and red rice", "fotoana": "Atoandro", "categories": ["perte-de-poids", "diabete"], "description": "Poulet sans peau grillé, légumes mélangés et riz rouge.", "avantages": "Riche en protéines, calories modérées, fibres du riz rouge et des légumes.", "effets": "Rassasie longtemps sans faire grimper vite la glycémie.", "nb": "Grillé, sans peau", "traductions": {"mg": {"nom_commercial": "Akoho natono sy vary mena", "marketing": "Akoho natono malemy, legioma vaovao ary vary mena be fibres: sakafo atoandro mahavoky tsara nefa tsy mavesatra.", "description": "Akoho tsy misy hoditra natono, legioma mifangaro, vary mena.", "avantages": "Proteine avo, kcal antonony, fibres avy amin'ny vary mena sy legioma.", "effets": "Mahavoky ela, tsy mampiakatra haingana ny siramamy anaty ra."}, "en": {"nom_commercial": "Grilled chicken & red rice", "marketing": "Tender grilled chicken, seasonal vegetables and fibre-rich red rice: a lunch that truly fills you up without weighing you down.", "description": "Grilled skinless chicken, mixed vegetables and red rice.", "avantages": "High in protein, moderate calories, fibre from red rice and vegetables.", "effets": "Keeps you full for long without spiking blood sugar."}}, "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}, {"id": "SK0002", "nom": "M0 – Avoine lait banane", "nom_commercial": "", "marketing": "", "nom_en": "Oatmeal porridge with milk and sliced banana", "fotoana": "Maraina", "categories": ["perte-de-poids"], "description": "", "avantages": "", "effets": "", "nb": "", "traductions": {}, "image_url": "", "prix_vente": null, "statut": "Draft", "notes": ""}],
+  composition: [{"id": "c1", "plat_id": "SK0001", "ingredient_id": "I012", "grammes": 120, "ordre": 0, "quantite": 120, "unite": "g", "note": "grillé sans peau"}, {"id": "c2", "plat_id": "SK0001", "ingredient_id": "I022", "grammes": 150, "ordre": 1, "quantite": 150, "unite": "g", "note": null}, {"id": "c3", "plat_id": "SK0001", "ingredient_id": "I002", "grammes": 120, "ordre": 2, "quantite": 120, "unite": "g", "note": null}, {"id": "c4", "plat_id": "SK0001", "ingredient_id": "I050", "grammes": 5, "ordre": 3, "quantite": 5, "unite": "g", "note": null}, {"id": "c5", "plat_id": "SK0002", "ingredient_id": "I008", "grammes": 50, "ordre": 4, "quantite": 50, "unite": "g", "note": null}, {"id": "c6", "plat_id": "SK0002", "ingredient_id": "I040", "grammes": 200, "ordre": 5, "quantite": 200, "unite": "g", "note": null}, {"id": "c7", "plat_id": "SK0002", "ingredient_id": "I030", "grammes": 100, "ordre": 6, "quantite": 100, "unite": "g", "note": null}],
+  menus: [{"id": "MN0001", "categorie_id": "perte-de-poids", "andro": "Jour 1", "maraina": "SK0002", "atoandro": "SK0001", "hariva": null, "gouter": null, "notes": ""}],
 };

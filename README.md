@@ -4,6 +4,8 @@ Fitaovana hitantanana ny sakafo, ny valeur nutritionnelle (kcal, protéines, glu
 
 Tsy mila "build": pejy HTML + JavaScript mandeha mivantana amin'ny GitHub Pages.
 
+**Teny:** frantsay par défaut; azo ovaina ho English na Malagasy (bokotra FR / EN / MG). Ny texte marketing isaky ny sakafo dia soratan'ny IA amin'ny teny telo.
+
 ## Ny ao anatiny
 
 | Pejy | Ilaina amin'ny |
@@ -22,6 +24,7 @@ Tsy mila "build": pejy HTML + JavaScript mandeha mivantana amin'ny GitHub Pages.
 1. Midira ao amin'ny [supabase.com](https://supabase.com) → **New project** (anarana: `sakafo`, région akaiky: Europe).
 2. **SQL Editor** → New query → adikao ny ao amin'ny `supabase/schema.sql` → **Run**.
 3. New query indray → adikao ny ao amin'ny `supabase/seed.sql` → **Run** (ingrédients 36 sy sokajy 5).
+   *(Raha efa namorona ny tables ianao tamin'ny version taloha: ampandehano koa ny `supabase/migration_002.sql`.)*
 4. **Authentication → Users → Add user → Create new user**: email sy mot de passe ho anao (tsindrio "Auto Confirm User").
 5. **Authentication → Sign In / Providers**: esory ny "Allow new users to sign up" mba tsy hisy olon-kafa hisoratra anarana.
 6. **Project Settings → API**: adikao ny **Project URL** sy ny **anon public** key.
@@ -45,7 +48,7 @@ Ny adiresy dia: `https://<username>.github.io/sakafo-backoffice/`
 Raha mbola foana ny `config.js`, dia mandeha amin'ny "mode démo": voatahiry ao amin'ny navigateur ihany ny données. Mety amin'ny fanandramana, fa ataovy ny Backup Excel alohan'ny hamindrana amin'ny Supabase.
 
 ## Fomba fiasa isan'andro
-1. **Sakafo → + Sakafo vaovao**: anarana, fotoana, sokajy, composition. Ingrédient tsy ao? Soraty ny anarany → "Ampio".
+1. **Plats → + Nouveau plat**: anarana (ohatra M1), fotoana, sokajy, composition amin'ny g / ml / isa, miaraka amin'ny **NB** (ohatra: atody "sans sel", café "sans sucre"). Ingrédient tsy ao? Soraty ny anarany → "Ajouter".
 2. **Tehirizo**, dia **Adikao ny prompt** → apetaho ao amin'ny ChatGPT na Claude (miaraka amin'ny `hameno_SKxxxx.xlsx` raha tianao).
 3. Adikao ny valiny manontolo (misy ny bloc JSON) → apetaho ao amin'ny "Avereno ny valin'ny IA" → **Vakio** → hamarino → **Ekena**.
 4. Ovay ny grammes raha ilaina: miova avy hatrany ny kcal.

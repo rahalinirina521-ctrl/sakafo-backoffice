@@ -1,5 +1,5 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
-import { ING_FIELDS, PLAT_FIELDS, ingredientsToFill } from './prompts.js';
+import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, ingredientsToFill } from './prompts.js';
 import { NUTR, sumLines, lineGrams } from './calc.js';
 
 let XLSX = null;
@@ -22,20 +22,23 @@ export async function exportHameno(plat, lines, ingMap) {
   const guide = [
     ['FICHIER À COMPLÉTER — ' + plat.id + ' — ' + plat.nom],
     [''],
-    ['1. Onglet "Plat" : remplir nom_commercial, marketing, description, avantages, effets, nom_en (cellules vides).'],
-    ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, poids_piece (g d\'une pièce si utilisé en "isa"), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
-    ['3. Onglet "Composition" : information seulement, ne pas modifier.'],
+    ['1. Onglet "Plat" : remplir les cellules vides : photo_en, puis fr_..., en_..., mg_... (nom_commercial, marketing, description, avantages, effets) en français, anglais et malgache.'],
+    ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, noms fr/en/mg, poids_piece (g d\'une pièce), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
+    ['3. Onglet "Composition" : information seulement (avec les NB), ne pas modifier.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
   ];
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
-  X.utils.book_append_sheet(wb, sheetFromRows(X, PLAT_FIELDS, [plat]), 'Plat');
+  const platRow = { id: plat.id, nom: plat.nom, photo_en: plat.nom_en || null };
+  for (const l of TEXT_LANGS) for (const f of PLAT_TEXT_FIELDS) platRow[`${l}_${f}`] = (l === 'fr' ? plat[f] : plat.traductions?.[l]?.[f]) || null;
+  X.utils.book_append_sheet(wb, sheetFromRows(X, PLAT_SHEET_FIELDS, [platRow]), 'Plat');
   const toFill = ingredientsToFill(lines, ingMap).map((x) => x.ing);
   X.utils.book_append_sheet(wb, sheetFromRows(X, ING_FIELDS, toFill), 'Ingredients');
   const comp = lines.map((l) => {
     const ing = ingMap.get(l.ingredient_id);
-    return { ingredient_id: l.ingredient_id, nom: ing?.nom_mg || '', quantite: l.quantite ?? l.grammes, unite: l.unite || 'g', grammes_estimes: lineGrams(l, ing) };
+    return { ingredient_id: l.ingredient_id, nom: ing?.nom_fr || ing?.nom_mg || '', quantite: l.quantite ?? l.grammes, unite: l.unite || 'g', grammes_estimes: lineGrams(l, ing), nb: l.note || null };
   });
-  X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'quantite', 'unite', 'grammes_estimes'], comp), 'Composition');
+  X.utils.book_append_sheet(wb, sheetFromRows(X, ['ingredient_id', 'nom', 'quantite', 'unite', 'grammes_estimes', 'nb'], comp), 'Composition');
+  if (plat.nb) X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['NB / points forts du plat'], [plat.nb]]), 'NB');
   X.writeFile(wb, `hameno_${plat.id}.xlsx`);
 }
 
@@ -76,7 +79,7 @@ export async function importHameno(file) {
   const find = (name) => wb.Sheets[wb.SheetNames.find((n) => n.toLowerCase() === name.toLowerCase())];
   const plats = readSheet(X, find('Plat'));
   const ingredients = readSheet(X, find('Ingredients'));
-  if (!plats.length && !ingredients.length) throw new Error('Tsy hita ny onglet "Plat" na "Ingredients" ao amin\'ny fichier');
+  if (!plats.length && !ingredients.length) throw new Error('Onglets "Plat" / "Ingredients" introuvables');
   return { plat: plats[0] || null, ingredients };
 }
 
@@ -86,7 +89,7 @@ export async function exportAll(data, ingMap) {
   const wb = X.utils.book_new();
   const platRows = data.plats.map((p) => {
     const t = sumLines(data.composition.filter((c) => c.plat_id === p.id), ingMap);
-    const o = { ...p, categories: (p.categories || []).join(';') };
+    const o = { ...p, categories: (p.categories || []).join(';'), traductions: JSON.stringify(p.traductions || {}) };
     for (const k of NUTR) o[k] = Math.round(t[k] * 10) / 10;
     o.charge_glycemique = Math.round(t.cg * 10) / 10;
     o.cout_ar = Math.round(t.cout);

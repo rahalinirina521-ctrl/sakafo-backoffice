@@ -17,13 +17,7 @@ export function isComplete(ing) {
 }
 
 // Unités azo ampiasaina ao amin'ny composition
-export const UNITES = [
-  ['g', 'g'],
-  ['ml', 'ml'],
-  ['isa', 'isa (pièce)'],
-  ['cas', 'sotro lehibe (c. à soupe)'],
-  ['cac', 'sotro kely (c. à café)'],
-];
+export const UNITES = ['g', 'ml', 'isa', 'cas', 'cac'];
 const ML_PAR_UNITE = { ml: 1, cas: 15, cac: 5 };
 
 // Mamadika ny habetsahana ho grammes. null raha tsy fantatra (ohatra: isa nefa tsy misy poids_piece)
@@ -41,11 +35,13 @@ export function needsPieceWeight(line, ing) {
   return (line.unite || 'g') === 'isa' && !(ing && num(ing.poids_piece));
 }
 
+// Ho an'ny prompt IA (frantsay foana)
 export function qtyLabel(line) {
   const u = line.unite || 'g';
   const q = num(line.quantite ?? line.grammes);
   if (q === null) return '?';
-  return u === 'isa' ? `${q} isa` : u === 'cas' ? `${q} sotro lehibe` : u === 'cac' ? `${q} sotro kely` : `${q} ${u}`;
+  const lab = { isa: q > 1 ? 'pièces' : 'pièce', cas: 'c. à soupe', cac: 'c. à café' }[u] || u;
+  return `${q} ${lab}`;
 }
 
 export function lineValues(line, ing) {

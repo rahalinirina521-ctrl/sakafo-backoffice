@@ -1,13 +1,14 @@
 import { html, useMemo } from '../lib.js';
 import { useApp, Card, Badge } from '../ui.js';
-import { platTotals, isComplete, fmt } from '../calc.js';
+import { platTotals, isComplete } from '../calc.js';
+import { tr, ingName, platTitle } from '../i18n.js';
 
 export function Dashboard() {
   const { data, ingMap } = useApp();
   const stats = useMemo(() => {
     const platsIncomplets = data.plats.filter((p) => {
       const t = platTotals(p.id, data.composition, ingMap);
-      return t.missing > 0 || !p.avantages || !p.effets || !p.marketing || data.composition.every((c) => c.plat_id !== p.id);
+      return t.missing > 0 || !p.marketing || !p.avantages || data.composition.every((c) => c.plat_id !== p.id);
     });
     return {
       plats: data.plats.length,
@@ -21,29 +22,35 @@ export function Dashboard() {
   }, [data, ingMap]);
 
   return html`<div class="page">
-    <h1>Tableau de bord</h1>
+    <h1>${tr('Tableau de bord', 'Dashboard', 'Tableau de bord')}</h1>
     <div class="stats">
-      <a class="stat" href="#/plats"><b>${stats.plats}</b><span>Sakafo</span><small>${stats.voamarina} voamarina</small></a>
-      <a class="stat" href="#/ingredients"><b>${stats.ings}</b><span>Ingrédients</span><small>${stats.ingsVerif} mbola hamarinina</small></a>
-      <a class="stat" href="#/menus"><b>${stats.menus}</b><span>Menus</span><small>andro voarafitra</small></a>
+      <a class="stat" href="#/plats"><b>${stats.plats}</b><span>${tr('Plats', 'Dishes', 'Sakafo')}</span><small>${stats.voamarina} ${tr('validés', 'validated', 'voamarina')}</small></a>
+      <a class="stat" href="#/ingredients"><b>${stats.ings}</b><span>${tr('Ingrédients', 'Ingredients', 'Ingrédients')}</span><small>${stats.ingsVerif} ${tr('à vérifier', 'to check', 'mbola hamarinina')}</small></a>
+      <a class="stat" href="#/menus"><b>${stats.menus}</b><span>Menus</span><small>${tr('journées planifiées', 'planned days', 'andro voarafitra')}</small></a>
     </div>
 
-    <${Card} title="Fomba fiasa">
+    <${Card} title=${tr('Comment ça marche', 'How it works', 'Fomba fiasa')}>
       <ol class="steps">
-        <li><b>Ampidiro ny sakafonao</b>: <a href="#/plats/vaovao">Sakafo vaovao</a> → anarana (ohatra: M1), fotoana, sokajy, ary ny composition (g, ml na isa: fraise 50 g, atody 2 isa, café 150 ml). Raha tsy ao amin'ny lisitra ny ingrédient iray, soraty fotsiny ny anarany dia tsindrio "Ampio".</li>
-        <li><b>Hameno amin'ny IA</b>: ao amin'ny sakafo, tsindrio "Adikao ny prompt" dia apetaho ao amin'ny ChatGPT na Claude (miaraka amin'ny fichier Excel raha tianao).</li>
-        <li><b>Avereno ny valiny</b>: apetaho ny JSON na ampidiro ny Excel voafeno → feno ho azy ny valeur rehetra, ny lanjan'ny isa, ny anarana commercial sy ny résumé marketing.</li>
-        <li><b>Ovay ny grammes</b> raha ilaina: miova avy hatrany ny kcal sy ny macros.</li>
-        <li>Rehefa lany hevitra: <a href="#/propositions">Soso-kevitra IA</a> → safidio izay tianao ampidirina.</li>
+        <li>${tr(html`<b>Saisissez votre plat</b> : <a href="#/plats/vaovao">Nouveau plat</a> → nom (ex. M1), moment, catégorie et composition en g, ml ou pièces (fraise 50 g, œufs 2 pièces, café 150 ml). Ajoutez un <b>NB</b> si besoin : « sans sel », « sans sucre ».`,
+          html`<b>Enter your dish</b>: <a href="#/plats/vaovao">New dish</a> → name (e.g. M1), meal time, category and composition in g, ml or pieces (strawberries 50 g, 2 eggs, coffee 150 ml). Add a <b>NB</b> if needed: "no salt", "no sugar".`,
+          html`<b>Ampidiro ny sakafonao</b>: <a href="#/plats/vaovao">Sakafo vaovao</a> → anarana (ohatra M1), fotoana, sokajy ary composition amin'ny g, ml na isa (fraise 50 g, atody 2 isa, café 150 ml). Ampio <b>NB</b> raha ilaina: "tsy misy sira", "tsy misy siramamy".`)}</li>
+        <li>${tr(html`<b>Complétez avec l'IA</b> : « Copier le prompt » → collez dans ChatGPT ou Claude (avec le fichier Excel si vous voulez).`,
+          html`<b>Complete with AI</b>: "Copy the prompt" → paste into ChatGPT or Claude (with the Excel file if you like).`,
+          html`<b>Hameno amin'ny IA</b>: "Adikao ny prompt" → apetaho ao amin'ny ChatGPT na Claude (miaraka amin'ny Excel raha tianao).`)}</li>
+        <li>${tr(html`<b>Collez la réponse</b> (JSON ou Excel) → valeurs nutritionnelles, poids des pièces, nom commercial et résumé marketing en FR / EN / MG remplis automatiquement.`,
+          html`<b>Paste the answer</b> (JSON or Excel) → nutrition values, piece weights, commercial name and marketing summary in FR / EN / MG filled in automatically.`,
+          html`<b>Apetaho ny valiny</b> (JSON na Excel) → feno ho azy ny valeur, ny lanjan'ny isa, ny anarana commercial sy résumé marketing amin'ny FR / EN / MG.`)}</li>
+        <li>${tr('Modifiez les quantités : les calories se recalculent aussitôt.', 'Change quantities: calories update instantly.', 'Ovay ny habetsahana: miova avy hatrany ny kcal.')}</li>
+        <li>${tr(html`À court d'idées : <a href="#/propositions">Suggestions IA</a> → gardez seulement ce qui vous plaît.`, html`Out of ideas: <a href="#/propositions">AI suggestions</a> → keep only what you like.`, html`Rehefa lany hevitra: <a href="#/propositions">Soso-kevitra IA</a> → izay tianao ihany no ampidirina.`)}</li>
       </ol>
     <//>
 
     <div class="grid2">
-      <${Card} title="Sakafo mbola tsy feno">
-        ${stats.platsIncomplets.length ? html`<ul class="list">${stats.platsIncomplets.slice(0, 12).map((p) => html`<li><a href=${'#/plats/' + p.id}>${p.nom}</a> <${Badge} tone="warn">hamenoina<//></li>`)}</ul>` : html`<p class="muted">Feno daholo.</p>`}
+      <${Card} title=${tr('Plats à compléter', 'Dishes to complete', 'Sakafo mbola tsy feno')}>
+        ${stats.platsIncomplets.length ? html`<ul class="list">${stats.platsIncomplets.slice(0, 12).map((p) => html`<li><a href=${'#/plats/' + p.id}>${platTitle(p)}</a> <${Badge} tone="warn">${tr('à compléter', 'to complete', 'hamenoina')}<//></li>`)}</ul>` : html`<p class="muted">${tr('Tout est complet.', 'All complete.', 'Feno daholo.')}</p>`}
       <//>
-      <${Card} title="Ingrédients tsy misy valeur">
-        ${stats.ingsVide.length ? html`<ul class="list">${stats.ingsVide.slice(0, 12).map((i) => html`<li>${i.id} — ${i.nom_mg}</li>`)}</ul>` : html`<p class="muted">Tsy misy.</p>`}
+      <${Card} title=${tr('Ingrédients sans valeurs', 'Ingredients without values', 'Ingrédients tsy misy valeur')}>
+        ${stats.ingsVide.length ? html`<ul class="list">${stats.ingsVide.slice(0, 12).map((i) => html`<li>${i.id} — ${ingName(i)}</li>`)}</ul>` : html`<p class="muted">${tr('Aucun.', 'None.', 'Tsy misy.')}</p>`}
       <//>
     </div>
   </div>`;
