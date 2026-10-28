@@ -193,3 +193,4 @@ details.manual { margin-top: 8px; } details.manual > summary { cursor: pointer; 
 .ed-slider { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .ed-slider input { padding: 0; }
 @media (max-width: 760px) { .editor .editor-grid { grid-template-columns: 1fr; } }
+.update-banner { position: sticky; top: 0; z-index: 30; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff4e0; border: 1px solid #f2c27a; color: #6b4300; padding: 10px 14px; border-radius: 10px; margin: 0 0 14px; box-shadow: var(--shadow); }

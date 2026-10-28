@@ -13,7 +13,7 @@ import { Propositions } from './pages/propositions.js';
 import { Categories } from './pages/categories.js';
 import { Backup } from './pages/backup.js';
 
-export const VERSION = '2026-10-28 20:05';
+export const VERSION = '2026-10-28 19:39';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -60,6 +60,42 @@ function Login({ lang, onLang }) {
     ${err && html`<p class="error">${err}</p>`}
     <button class="btn primary" disabled=${busy}>${busy ? tr('Patientez…', 'Please wait…', 'Miandrasa…') : tr('Se connecter', 'Sign in', 'Hiditra')}</button>
   </form></div>`;
+}
+
+// ---------- Fanavaozana (mise à jour) ----------
+async function fetchVersion() {
+  const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+  if (!r.ok) throw new Error('version');
+  return r.json();
+}
+async function applyUpdate(v) {
+  // Avaozina ao amin'ny cache ny fichier rehetra, vao alaina indray ny pejy
+  const files = [...(v.files || []), 'index.html'];
+  await Promise.all(files.map((f) => fetch(f, { cache: 'reload' }).catch(() => null)));
+  location.reload();
+}
+const fmtDate = (iso) => {
+  try { const d = new Date(iso); return { day: d.toLocaleDateString('fr-FR'), time: d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }; } catch (e) { return { day: iso, time: '' }; }
+};
+
+function UpdateBanner() {
+  const [upd, setUpd] = useState(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const check = () => fetchVersion().then((v) => { if (alive && v.version && v.version !== VERSION) setUpd(v); }).catch(() => {});
+    check();
+    const t = setInterval(check, 60000);
+    const onVis = () => { if (document.visibilityState === 'visible') check(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { alive = false; clearInterval(t); document.removeEventListener('visibilitychange', onVis); };
+  }, []);
+  if (!upd) return null;
+  const d = fmtDate(upd.date);
+  return html`<div class="update-banner" role="status">
+    <span><b>${tr('Nouvelle version disponible', 'New version available', 'Misy version vaovao')}</b> — ${tr('mise à jour du', 'updated on', 'navaozina ny')} ${d.day} ${tr('à', 'at', 'tamin\'ny')} ${d.time}. ${tr('Enregistrez votre travail puis mettez à jour.', 'Save your work, then update.', 'Tehirizo aloha ny asanao dia avaozy.')}</span>
+    <button class="btn small primary" disabled=${busy} onClick=${() => { setBusy(true); applyUpdate(upd); }}>${busy ? tr('Mise à jour…', 'Updating…', 'Manavao…') : tr('Mettre à jour maintenant', 'Update now', 'Avaozy izao')}</button>
+  </div>`;
 }
 
 export function App() {
@@ -170,7 +206,7 @@ export function App() {
   return html`<${AppCtx.Provider} value=${api}>
     <div class="layout">
       <aside class=${'sidebar' + (menuOpen ? ' open' : '')}>
-        <div class="brand">${BRAND}<small>Back-office · v ${VERSION}</small></div>
+        <div class="brand">${BRAND}<small>Back-office · ${tr('mise à jour', 'updated', 'navaozina')} ${VERSION}</small></div>
         <${LangSwitch} lang=${lang} onChange=${changeLang} />
         <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}</a>`)}</nav>
         <div class="side-foot">
@@ -181,6 +217,7 @@ export function App() {
         </div>
       </aside>
       <main>
+        <${UpdateBanner} />
         <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button><span>${BRAND}</span></div>
         ${error && html`<p class="error banner">${error}</p>`}
         ${page}
