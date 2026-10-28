@@ -3,6 +3,7 @@ import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, 
 import { BRAND } from '../config.js';
 import { AppCtx } from './ui.js';
 import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js';
+import { registerCustomUnits } from './calc.js';
 import { Dashboard } from './pages/dashboard.js';
 import { PlatsList } from './pages/plats.js';
 import { PlatEdit } from './pages/plat-edit.js';
@@ -95,7 +96,10 @@ export function App() {
   }, []);
   useEffect(() => { if (session) reload(); }, [session]);
 
-  const ingMap = useMemo(() => new Map((data?.ingredients || []).map((i) => [i.id, i])), [data]);
+  const ingMap = useMemo(() => {
+    registerCustomUnits(data?.options || []);
+    return new Map((data?.ingredients || []).map((i) => [i.id, i]));
+  }, [data]);
 
   const api = useMemo(() => ({
     data, ingMap, toast, reload, lang,
@@ -104,7 +108,7 @@ export function App() {
       rows = Array.isArray(rows) ? rows : [rows];
       await upsert(table, rows);
       setData((d) => {
-        const list = [...d[table]];
+        const list = [...(d[table] || [])];
         for (const r of rows) {
           const i = list.findIndex((x) => x.id === r.id);
           if (i >= 0) list[i] = r; else list.push(r);
@@ -116,7 +120,7 @@ export function App() {
       ids = Array.isArray(ids) ? ids : [ids];
       await remove(table, ids);
       setData((d) => {
-        const n = { ...d, [table]: d[table].filter((x) => !ids.includes(x.id)) };
+        const n = { ...d, [table]: (d[table] || []).filter((x) => !ids.includes(x.id)) };
         if (table === 'plats') {
           n.composition = d.composition.filter((c) => !ids.includes(c.plat_id));
           n.menus = d.menus.map((m) => {

@@ -27,7 +27,11 @@ export const fotLabel = (f) => (FOT[f] ? tr(...FOT[f]) : (f || '—'));
 
 const UNIT = {
   g: ['g', 'g', 'g'],
+  kg: ['kg', 'kg', 'kg'],
   ml: ['ml', 'ml', 'ml'],
+  cl: ['cl', 'cl', 'cl'],
+  l: ['L', 'L', 'L'],
+  tasse: ['tasse', 'cup', 'kapoaka'],
   isa: ['pièce(s)', 'piece(s)', 'isa'],
   cas: ['c. à soupe', 'tbsp', 'sotro lehibe'],
   cac: ['c. à café', 'tsp', 'sotro kely'],

@@ -1,5 +1,5 @@
 import { html, useState, useMemo } from '../lib.js';
-import { useApp, Card, Badge, Field, CopyBox, navigate, pctBadge } from '../ui.js';
+import { useApp, Card, Badge, Field, CopyBox, navigate, pctBadge, SelectOrAdd } from '../ui.js';
 import {
   FOTOANA, UNITES, lineValues, lineGrams, sumLines, slotTarget, fitStatus, nextId, uid, fmt, pct, toNum, kcalCheck, NUTR,
 } from '../calc.js';
@@ -154,7 +154,7 @@ export function PlatEdit({ id }) {
           <div class="form-grid">
             <${Field} label=${tr('Nom / code interne', 'Name / internal code', 'Anarana / code anatiny')} wide hint=${tr('Pour vous uniquement (ex. M1 – Petit-déjeuner 1)', 'For you only (e.g. M1 – Breakfast 1)', 'Ho anao ihany (ohatra: M1 – Maraina 1)')}><input value=${form.nom} onInput=${(e) => set('nom', e.target.value)} placeholder="M1" /><//>
             <${Field} label=${tr('Moment', 'Meal time', 'Fotoana')}>
-              <select value=${form.fotoana} onChange=${(e) => set('fotoana', e.target.value)}>${FOTOANA.map((f) => html`<option value=${f}>${fotLabel(f)}</option>`)}</select>
+              <${SelectOrAdd} type="fotoana" value=${form.fotoana} defaults=${FOTOANA} labelFn=${fotLabel} onChange=${(v) => set('fotoana', v)} />
             <//>
             <${Field} label=${tr('Statut', 'Status', 'Sata')}>
               <select value=${form.statut} onChange=${(e) => set('statut', e.target.value)}><option value="Draft">${tr('Brouillon', 'Draft', 'Draft')}</option><option value="Voamarina">${tr('Validé', 'Validated', 'Voamarina')}</option></select>
@@ -181,7 +181,7 @@ export function PlatEdit({ id }) {
                 return html`<tr>
                   <td><input class="ing-input" list="ing-list" key=${l.id + ':' + l.ingredient_id} defaultValue=${ing ? ingLabel(ing) : l.ingredient_id} title=${tr('Changer l\'ingrédient', 'Change ingredient', 'Ovay ny ingrédient')}
                       onChange=${(e) => changeLineIngredient(i, e.target.value, e.target)} onKeyDown=${(e) => { if (e.key === 'Enter') e.target.blur(); }} />${v.grammesInconnus ? html` <${Badge} tone="warn">${tr('poids inconnu', 'unknown weight', 'lanjany tsy fantatra')}<//>` : v.missing && html` <${Badge} tone="warn">${tr('sans valeurs', 'no values', 'tsy misy valeur')}<//>`}</td>
-                  <td><div class="qty"><input class="num-input" type="number" min="0" step="any" value=${l.quantite} onInput=${(e) => setLine(i, { quantite: e.target.value })} /><select class="unit" value=${l.unite || 'g'} onChange=${(e) => setLine(i, { unite: e.target.value })}>${units}</select></div></td>
+                  <td><div class="qty"><input class="num-input" type="number" min="0" step="any" value=${l.quantite} onInput=${(e) => setLine(i, { quantite: e.target.value })} /><${SelectOrAdd} type="unite" unit cls="unit" value=${l.unite || 'g'} defaults=${UNITES} labelFn=${unitLabel} onChange=${(v) => setLine(i, { unite: v })} /></div></td>
                   <td><input class="note-input" value=${l.note || ''} placeholder=${tr('ex. sans sel', 'e.g. no salt', 'ohatra: tsy misy sira')} onInput=${(e) => setLine(i, { note: e.target.value })} /></td>
                   <td class="num muted">${v.grammesInconnus ? '?' : fmt(v.grammes)}</td>
                   <td class="num">${v.missing ? '?' : fmt(v.kcal)}</td>
@@ -202,7 +202,7 @@ export function PlatEdit({ id }) {
           <div class="add-line">
             <input list="ing-list" class="grow" placeholder=${tr('Ingrédient (tapez le nom)…', 'Ingredient (type the name)…', 'Ingrédient (soraty ny anarany)…')} value=${newIng} onInput=${(e) => setNewIng(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
             <input type="number" min="0" step="any" placeholder=${tr('qté', 'qty', 'isa')} class="num-input" value=${newG} onInput=${(e) => setNewG(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
-            <select class="unit" value=${newU} onChange=${(e) => setNewU(e.target.value)}>${units}</select>
+            <${SelectOrAdd} type="unite" unit cls="unit" value=${newU} defaults=${UNITES} labelFn=${unitLabel} onChange=${setNewU} />
             <input class="note-input" placeholder=${tr('NB (ex. sans sucre)', 'NB (e.g. no sugar)', 'NB (ohatra: tsy misy siramamy)')} value=${newNote} onInput=${(e) => setNewNote(e.target.value)} onKeyDown=${(e) => { if (e.key === 'Enter') addLine(); }} />
             <button class="btn" onClick=${addLine}>${tr('Ajouter', 'Add', 'Ampio')}</button>
           </div>

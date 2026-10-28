@@ -86,6 +86,17 @@ create table if not exists menus (
   notes         text
 );
 
+create table if not exists options (
+  id text primary key,
+  type text not null,              -- fotoana / unite / categorie_ingredient / etat
+  valeur text not null,
+  base text,                       -- unité: 'g' na 'ml'
+  facteur numeric,                 -- 1 unité = facteur × base
+  ordre int default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists options_type_idx on options(type);
+
 -- -------------------------------------------------------------
 --  Fiarovana: ireo email ao amin'ny table "admins" ihany no
 --  mahita sy manova ny données (na dia misy olona hafa misoratra aza).
@@ -106,7 +117,7 @@ grant execute on function private.is_admin() to authenticated;
 do $$
 declare t text;
 begin
-  foreach t in array array['ingredients','categories','plats','composition','menus'] loop
+  foreach t in array array['ingredients','categories','plats','composition','menus','options'] loop
     execute format('alter table %I enable row level security', t);
     execute format('drop policy if exists "admin_all" on %I', t);
     execute format('create policy "admin_all" on %I for all to authenticated using ((select private.is_admin())) with check ((select private.is_admin()))', t);

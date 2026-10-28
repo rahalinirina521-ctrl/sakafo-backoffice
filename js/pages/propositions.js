@@ -1,5 +1,5 @@
 import { html, useState } from '../lib.js';
-import { useApp, Card, Badge, Field, CopyBox } from '../ui.js';
+import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd } from '../ui.js';
 import { FOTOANA, SLOT_SHARE, sumLines, slotTarget, fitStatus, nextId, uid, fmt, toNum, NUTR } from '../calc.js';
 import { promptPropositions, extractJson, normalizePlatTexts, applyPlatTexts } from '../prompts.js';
 import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js';
@@ -59,7 +59,7 @@ export function Propositions() {
           return { id: uid(), ingredient_id: id, grammes: g, quantite: g, unite: 'g', note: c.note || '', nouvel };
         });
         const texts = normalizePlatTexts(p);
-        return { ...p, texts, fotoana: FOTOANA.includes(p.fotoana) ? p.fotoana : opts.fotoana, lines, totals: sumLines(lines, temp), selected: false };
+        return { ...p, texts, fotoana: p.fotoana || opts.fotoana, lines, totals: sumLines(lines, temp), selected: false };
       });
       if (!list.length) throw new Error('"propositions" ?');
       setProps(list);
@@ -115,7 +115,7 @@ export function Propositions() {
     <${Card} title=${'1. ' + tr('Que cherchez-vous ?', 'What are you looking for?', 'Inona no tadiavina?')}>
       <div class="form-grid">
         <${Field} label=${tr('Catégorie', 'Category', 'Sokajy')}><select value=${opts.categorie} onChange=${(e) => set('categorie', e.target.value)}>${cats.map((c) => html`<option value=${c.id}>${catName(c)}</option>`)}</select><//>
-        <${Field} label=${tr('Moment', 'Meal time', 'Fotoana')}><select value=${opts.fotoana} onChange=${(e) => set('fotoana', e.target.value)}>${FOTOANA.map((f) => html`<option value=${f}>${fotLabel(f)}</option>`)}</select><//>
+        <${Field} label=${tr('Moment', 'Meal time', 'Fotoana')}><${SelectOrAdd} type="fotoana" value=${opts.fotoana} defaults=${FOTOANA} labelFn=${fotLabel} onChange=${(v) => set('fotoana', v)} /><//>
         <${Field} label=${tr('Kcal par plat', 'Kcal per dish', 'Kcal isaky ny sakafo')}><input type="number" value=${opts.kcal} onInput=${(e) => set('kcal', e.target.value)} /><//>
         <${Field} label=${tr('Nombre', 'Number', 'Isa')}><input type="number" min="1" max="20" value=${opts.isa} onInput=${(e) => set('isa', e.target.value)} /><//>
         <${Field} label=${tr('Protéines minimum (g)', 'Minimum protein (g)', 'Protéines farafahakeliny (g)')}><input type="number" value=${opts.prot} onInput=${(e) => set('prot', e.target.value)} /><//>

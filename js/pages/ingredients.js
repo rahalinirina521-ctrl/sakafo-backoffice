@@ -1,6 +1,6 @@
 import { html, useState, useMemo } from '../lib.js';
-import { useApp, Badge, Field, Modal } from '../ui.js';
-import { isComplete, kcalCheck, nextId, fmt, toNum } from '../calc.js';
+import { useApp, Badge, Field, Modal, SelectOrAdd } from '../ui.js';
+import { isComplete, kcalCheck, nextId, fmt, toNum, optionList } from '../calc.js';
 import { tr, ingName } from '../i18n.js';
 
 const CATS = ['Féculent', 'Protéine', 'Légumineuse', 'Légume', 'Fruit', 'Boisson', 'Laitier', 'Matière grasse', 'Condiment', 'Autre'];
@@ -61,7 +61,7 @@ export function Ingredients() {
         <option value="vide">${tr('Sans valeurs', 'No values', 'Tsy misy valeur')}</option>
         <option value="verif">${tr('À vérifier', 'To check', 'Mbola hamarinina')}</option>
         <option value="prix">${tr('Sans prix', 'No price', 'Tsy misy vidiny')}</option>
-        ${CATS.map((c) => html`<option value=${c}>${catLabel(c)}</option>`)}
+        ${optionList('categorie_ingredient', CATS, data.options).map((c) => html`<option value=${c}>${catLabel(c)}</option>`)}
       </select>
     </div>
     <div class="table-wrap"><table class="table">
@@ -90,8 +90,8 @@ function IngForm({ row, onClose, onSave, onDelete, isNew }) {
       <${Field} label=${tr('Nom (FR)', 'Name (FR)', 'Anarana (FR)')}><input value=${f.nom_fr || ''} onInput=${(e) => set('nom_fr', e.target.value)} /><//>
       <${Field} label=${tr('Nom (MG)', 'Name (MG)', 'Anarana (MG)')}><input value=${f.nom_mg || ''} onInput=${(e) => set('nom_mg', e.target.value)} /><//>
       <${Field} label=${tr('Nom (EN)', 'Name (EN)', 'Anarana (EN)')}><input value=${f.nom_en || ''} onInput=${(e) => set('nom_en', e.target.value)} /><//>
-      <${Field} label=${tr('Catégorie', 'Category', 'Sokajy')}><select value=${f.categorie || ''} onChange=${(e) => set('categorie', e.target.value || null)}><option value="">—</option>${CATS.map((c) => html`<option value=${c}>${catLabel(c)}</option>`)}</select><//>
-      <${Field} label=${tr('État', 'State', 'Toetra')}><select value=${f.etat || ''} onChange=${(e) => set('etat', e.target.value || null)}><option value="">—</option>${['Masaka', 'Manta', 'Vonona'].map((x) => html`<option value=${x}>${etatLabel(x)}</option>`)}</select><//>
+      <${Field} label=${tr('Catégorie', 'Category', 'Sokajy')}><${SelectOrAdd} type="categorie_ingredient" allowEmpty value=${f.categorie || ''} defaults=${CATS} labelFn=${catLabel} onChange=${(v) => set('categorie', v || null)} /><//>
+      <${Field} label=${tr('État', 'State', 'Toetra')}><${SelectOrAdd} type="etat" allowEmpty value=${f.etat || ''} defaults=${['Masaka', 'Manta', 'Vonona']} labelFn=${etatLabel} onChange=${(v) => set('etat', v || null)} /><//>
       ${numFields().map(([k, l]) => html`<${Field} label=${l}><input type="number" step="any" value=${f[k] ?? ''} onInput=${(e) => set(k, e.target.value)} /><//>`)}
       <${Field} label="Source" wide><input value=${f.source || ''} onInput=${(e) => set('source', e.target.value)} placeholder="USDA FDC / Ciqual" /><//>
       <label class="check wide"><input type="checkbox" checked=${!f.a_verifier} onChange=${(e) => set('a_verifier', !e.target.checked)} /> ${tr('Vérifié avec la source', 'Verified against the source', 'Efa nohamarinina tamin\'ny loharano')}</label>

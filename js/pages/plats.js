@@ -1,6 +1,6 @@
 import { html, useState, useMemo } from '../lib.js';
 import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js';
-import { platTotals, slotTarget, fitStatus, FOTOANA, fmt, pct } from '../calc.js';
+import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js';
 import { tr, fotLabel, catName, platTitle } from '../i18n.js';
 
 export const fitLabel = (f) => ({
@@ -41,7 +41,7 @@ export function PlatsList() {
       </select>
       <select value=${fot} onChange=${(e) => setFot(e.target.value)}>
         <option value="">${tr('Tous les moments', 'All meal times', 'Fotoana rehetra')}</option>
-        ${FOTOANA.map((f) => html`<option value=${f}>${fotLabel(f)}</option>`)}
+        ${optionList('fotoana', FOTOANA, data.options).map((f) => html`<option value=${f}>${fotLabel(f)}</option>`)}
       </select>
     </div>
     ${rows.length === 0 ? html`<${Empty}>${tr('Aucun plat pour l\'instant. Cliquez sur « + Nouveau plat ».', 'No dishes yet. Click "+ New dish".', 'Mbola tsy misy sakafo. Tsindrio "+ Sakafo vaovao".')}<//>` : html`

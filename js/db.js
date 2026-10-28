@@ -4,7 +4,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { DEMO } from './seed.js';
 import { resizeImage, blobToDataUrl } from './image.js';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options'];
+const OPTIONAL_TABLES = ['options'];
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
 let client = null;
@@ -23,7 +24,7 @@ function demoLoad() {
   if (memory) return memory;
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY));
-    if (saved && saved.ingredients) { memory = saved; return memory; }
+    if (saved && saved.ingredients) { memory = saved; if (!memory.options) memory.options = []; return memory; }
   } catch (e) { /* tsy misy localStorage */ }
   memory = JSON.parse(JSON.stringify(DEMO));
   demoSave();
@@ -43,6 +44,7 @@ const COLS = {
   categories: { id: null, nom: '', nom_en: null, nom_mg: null, kcal_cible: null, tolerance: 0.1, prot_g_kg: null, cg_max: null, ordre: 0, regles: null },
   plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, conseil: null, conservation: null, post_reseaux: null, details: {}, image_url: null, prix_vente: null, statut: 'Draft', notes: null },
   composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
+  options: { id: null, type: '', valeur: '', base: null, facteur: null, ordre: 0 },
   menus: { id: null, categorie_id: null, andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
 };
 export function normalizeRow(table, r) {
@@ -62,7 +64,7 @@ export async function loadAll() {
   const out = {};
   await Promise.all(TABLES.map(async (t) => {
     const { data, error } = await c.from(t).select('*');
-    if (error) throw error;
+    if (error) { if (OPTIONAL_TABLES.includes(t)) { out[t] = []; return; } throw error; }
     out[t] = data || [];
   }));
   return out;
@@ -75,6 +77,7 @@ export async function upsert(table, rows) {
   if (MODE === 'demo') {
     const d = demoLoad();
     for (const r of rows) {
+      if (!d[table]) d[table] = [];
       const i = d[table].findIndex((x) => x.id === r.id);
       if (i >= 0) d[table][i] = { ...r }; else d[table].push({ ...r });
     }
@@ -91,7 +94,7 @@ export async function remove(table, ids) {
   if (!ids.length) return;
   if (MODE === 'demo') {
     const d = demoLoad();
-    d[table] = d[table].filter((x) => !ids.includes(x.id));
+    d[table] = (d[table] || []).filter((x) => !ids.includes(x.id));
     if (table === 'plats') {
       d.composition = d.composition.filter((x) => !ids.includes(x.plat_id));
       d.menus.forEach((m) => ['maraina', 'atoandro', 'hariva', 'gouter'].forEach((k) => { if (ids.includes(m[k])) m[k] = null; }));

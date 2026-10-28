@@ -178,3 +178,5 @@ details.manual { margin-top: 8px; } details.manual > summary { cursor: pointer; 
 .textes-empty { background: #fafbf8; }
 
 .pre { white-space: pre-line; }
+.add-opt { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.add-opt input:not(.num-input) { min-width: 120px; width: auto; padding: 5px 8px; }

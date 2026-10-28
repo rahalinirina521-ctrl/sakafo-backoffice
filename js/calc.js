@@ -16,19 +16,35 @@ export function isComplete(ing) {
   return !!ing && ['kcal', 'proteines', 'glucides', 'lipides'].every((k) => num(ing[k]) !== null);
 }
 
-// Unités azo ampiasaina ao amin'ny composition
-export const UNITES = ['g', 'ml', 'isa', 'cas', 'cac'];
-const ML_PAR_UNITE = { ml: 1, cas: 15, cac: 5 };
+// Unités azo ampiasaina ao amin'ny composition (+ izay nampidirin'ny mpampiasa)
+export const UNITES = ['g', 'kg', 'ml', 'cl', 'l', 'isa', 'cas', 'cac', 'tasse'];
+const ML_PAR_UNITE = { ml: 1, cl: 10, l: 1000, cas: 15, cac: 5, tasse: 250 };
+const G_PAR_UNITE = { g: 1, kg: 1000 };
+// Unités custom: { valeur: { base: 'g'|'ml', facteur } }
+let CUSTOM_UNITS = {};
+export function registerCustomUnits(options) {
+  CUSTOM_UNITS = {};
+  for (const o of options || []) if (o.type === 'unite' && num(o.facteur)) CUSTOM_UNITS[o.valeur] = { base: o.base === 'ml' ? 'ml' : 'g', facteur: num(o.facteur) };
+}
+export const customUnit = (u) => CUSTOM_UNITS[u] || null;
+
+// Safidy: lisitra fototra + izay nampidirina (options)
+export function optionList(type, defaults, options) {
+  const extra = (options || []).filter((o) => o.type === type).sort((a, b) => (a.ordre || 0) - (b.ordre || 0) || a.valeur.localeCompare(b.valeur)).map((o) => o.valeur);
+  return [...defaults, ...extra.filter((v) => !defaults.includes(v))];
+}
 
 // Mamadika ny habetsahana ho grammes. null raha tsy fantatra (ohatra: isa nefa tsy misy poids_piece)
 export function lineGrams(line, ing) {
   const unite = line.unite || 'g';
   const q = num(line.quantite ?? line.grammes);
   if (q === null) return 0;
-  if (unite === 'g') return q;
+  if (G_PAR_UNITE[unite]) return q * G_PAR_UNITE[unite];
   if (ML_PAR_UNITE[unite]) return q * ML_PAR_UNITE[unite] * (num(ing?.densite) || 1);
   if (unite === 'isa') return ing && num(ing.poids_piece) ? q * num(ing.poids_piece) : null;
-  return q;
+  const cu = CUSTOM_UNITS[unite];
+  if (cu) return q * cu.facteur * (cu.base === 'ml' ? (num(ing?.densite) || 1) : 1);
+  return null;
 }
 
 export function needsPieceWeight(line, ing) {
@@ -40,8 +56,9 @@ export function qtyLabel(line) {
   const u = line.unite || 'g';
   const q = num(line.quantite ?? line.grammes);
   if (q === null) return '?';
-  const lab = { isa: q > 1 ? 'pièces' : 'pièce', cas: 'c. à soupe', cac: 'c. à café' }[u] || u;
-  return `${q} ${lab}`;
+  const lab = { isa: q > 1 ? 'pièces' : 'pièce', cas: 'c. à soupe', cac: 'c. à café', l: 'L', tasse: q > 1 ? 'tasses' : 'tasse' }[u] || u;
+  const cu = CUSTOM_UNITS[u];
+  return `${q} ${lab}${cu ? ` (1 ${u} = ${cu.facteur} ${cu.base})` : ''}`;
 }
 
 export function lineValues(line, ing) {
