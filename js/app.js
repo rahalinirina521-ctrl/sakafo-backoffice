@@ -13,6 +13,8 @@ import { Propositions } from './pages/propositions.js';
 import { Categories } from './pages/categories.js';
 import { Backup } from './pages/backup.js';
 
+export const VERSION = '2026-10-28 19:25';
+
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
   ['/plats', tr('Plats', 'Dishes', 'Sakafo')],
@@ -168,7 +170,7 @@ export function App() {
   return html`<${AppCtx.Provider} value=${api}>
     <div class="layout">
       <aside class=${'sidebar' + (menuOpen ? ' open' : '')}>
-        <div class="brand">${BRAND}<small>Back-office</small></div>
+        <div class="brand">${BRAND}<small>Back-office · v ${VERSION}</small></div>
         <${LangSwitch} lang=${lang} onChange=${changeLang} />
         <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}</a>`)}</nav>
         <div class="side-foot">
