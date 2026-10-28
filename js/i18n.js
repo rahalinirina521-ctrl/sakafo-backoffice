@@ -48,7 +48,8 @@ export function catName(c) {
 }
 
 // Textes ny sakafo: FR = colonnes fototra; EN/MG = plat.traductions[l]
-export const PLAT_TEXT_FIELDS = ['nom_commercial', 'marketing', 'description', 'avantages', 'effets', 'conseil', 'conservation', 'post_reseaux'];
+// Ny tena ilain'ny client ihany (mandresy lahatra)
+export const PLAT_TEXT_FIELDS = ['nom_commercial', 'marketing', 'avantages'];
 export function platText(p, field, l = lang) {
   if (!p) return '';
   if (l === 'fr') return p[field] || '';

@@ -7,7 +7,7 @@ export { PLAT_TEXT_FIELDS };
 export const ING_FIELDS = ['id', 'nom_mg', 'nom_fr', 'nom_en', 'categorie', 'etat', 'kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'poids_piece', 'densite', 'source'];
 export const TEXT_LANGS = ['fr', 'en', 'mg'];
 // Onglet "Plat" ao amin'ny Excel: fr_marketing, en_marketing, mg_marketing...
-export const DETAIL_FIELDS = ['allergenes', 'regimes', 'preparation', 'temps_preparation', 'hashtags'];
+export const DETAIL_FIELDS = ['allergenes', 'regimes'];
 export const PLAT_SHEET_FIELDS = ['id', 'nom', 'photo_en', ...TEXT_LANGS.flatMap((l) => PLAT_TEXT_FIELDS.map((f) => `${l}_${f}`)), ...DETAIL_FIELDS];
 const ING_CATS = 'Féculent / Protéine / Légumineuse / Légume / Fruit / Boisson / Laitier / Matière grasse / Condiment';
 
@@ -33,29 +33,22 @@ export function ingredientsToFill(lines, ingMap) {
 
 const nameFr = (i) => (i ? (i.nom_fr || i.nom_mg) + (i.nom_fr && i.nom_mg && i.nom_fr !== i.nom_mg ? ` (${i.nom_mg})` : '') : '?');
 
-const TEXTS_SPEC = `   - "nom_commercial" : un nom court et appétissant pour la vente (6 mots maximum) ;
-   - "marketing" : un résumé marketing de 2 à 3 phrases qui donne envie de choisir ce menu : le goût, ce que le client y gagne pour son objectif, et ce qui le rend spécial (utilise les NB / points forts : sans sel, sans sucre ajouté, fait maison…). Ton chaleureux et positif, sans exagération ;
-   - "description" : 1 phrase qui décrit le plat ;
-   - "avantages" : les bénéfices nutritionnels (1 à 2 phrases) ;
-   - "effets" : l'effet attendu sur l'objectif du client (1 à 2 phrases) ;
-   - "conseil" : conseil de consommation (moment idéal, comment le manger, boisson conseillée) en 1 à 2 phrases ;
-   - "conservation" : conservation et réchauffage (ex. 24 h au réfrigérateur, réchauffer 2 min au micro-ondes ; « à consommer frais » si besoin) ;
-   - "post_reseaux" : un post Facebook / Instagram prêt à publier (3 à 5 phrases courtes, 2 à 4 emojis, appel à l'action « Commandez sur WhatsApp ou dans l'application »), sans prix ni chiffre de calories.
-   Écris ces 8 textes en TROIS langues : "fr" (français), "en" (anglais), "mg" (malgache courant, naturel, comme on parle à Antananarivo).
+const TEXTS_SPEC = `   Textes destinés au CLIENT, courts et convaincants (il doit avoir envie de choisir ce menu) :
+   - "nom_commercial" : un nom court et appétissant (5 mots maximum) ;
+   - "marketing" : 2 phrases maximum qui donnent envie : le goût + ce que le client y gagne pour son objectif, en s'appuyant sur les NB (sans sel, sans sucre ajouté, fait maison…). Ton chaleureux, positif, sans exagération ;
+   - "avantages" : exactement 3 points courts (un par ligne, commençant par « • »), concrets et liés à l'objectif du client (ex. « • Rassasie jusqu'au déjeuner »).
+   Écris ces 3 textes en TROIS langues : "fr" (français), "en" (anglais), "mg" (malgache courant, naturel, comme on parle à Antananarivo).
    Aucune promesse médicale (interdit : "guérit", "fait perdre X kg"). Ne cite pas de chiffres de calories : mon logiciel les calcule.`;
 
 const DETAILS_SPEC = `   - "details" (en français) :
-     - "allergenes" : liste des allergènes présents parmi : gluten, crustacés, œuf, poisson, arachide, soja, lait, fruits à coque, céleri, moutarde, sésame, sulfites, lupin, mollusques ([] si aucun) ;
-     - "regimes" : étiquettes qui s'appliquent vraiment parmi : végétarien, végan, sans gluten, sans lactose, sans porc, riche en protéines, riche en fibres, faible IG, sans sucre ajouté, faible en sel ;
-     - "preparation" : la recette pour la cuisine, en étapes numérotées courtes (quantités pour 1 portion) ;
-     - "temps_preparation" : temps total en minutes (nombre) ;
-     - "hashtags" : 6 à 10 hashtags pour Facebook / Instagram (malgaches et français).`;
+     - "allergenes" : allergènes présents parmi : gluten, crustacés, œuf, poisson, arachide, soja, lait, fruits à coque, céleri, moutarde, sésame, sulfites, lupin, mollusques ([] si aucun) ;
+     - "regimes" : 2 ou 3 étiquettes vraies et vendeuses parmi : végétarien, végan, sans gluten, sans lactose, sans porc, riche en protéines, riche en fibres, faible IG, sans sucre ajouté, faible en sel.`;
 
-const TEXT_OBJ = '{ "nom_commercial": "", "marketing": "", "description": "", "avantages": "", "effets": "", "conseil": "", "conservation": "", "post_reseaux": "" }';
+const TEXT_OBJ = '{ "nom_commercial": "", "marketing": "", "avantages": "• …\\n• …\\n• …" }';
 const TEXTS_JSON = `"fr": ${TEXT_OBJ},
     "en": ${TEXT_OBJ},
     "mg": ${TEXT_OBJ},
-    "details": { "allergenes": [], "regimes": [], "preparation": "1. …\\n2. …", "temps_preparation": 0, "hashtags": [] }`;
+    "details": { "allergenes": [], "regimes": [] }`;
 
 // ---------- Prompt 1: hameno ny données momba ny sakafo iray ----------
 export function promptHameno(plat, lines, ingMap, categories) {

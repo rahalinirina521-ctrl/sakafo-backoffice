@@ -19,12 +19,9 @@ const EMPTY_PLAT = {
 const textLabel = (f) => ({
   nom_commercial: tr('Nom commercial', 'Commercial name', 'Anarana commercial'),
   marketing: tr('Résumé marketing', 'Marketing summary', 'Résumé marketing'),
+  avantages: tr('Pourquoi ce menu ? (3 points)', 'Why this menu? (3 points)', 'Nahoana ity menu ity? (teboka 3)'),
   description: tr('Description', 'Description', 'Famaritana'),
-  avantages: tr('Avantages', 'Benefits', 'Tombony'),
   effets: tr('Effets attendus', 'Expected effects', 'Vokatra'),
-  conseil: tr('Conseil de consommation', 'Eating tip', 'Torohevitra fihinanana'),
-  conservation: tr('Conservation et réchauffage', 'Storage and reheating', 'Fitehirizana sy fanafanana'),
-  post_reseaux: tr('Post Facebook / Instagram', 'Facebook / Instagram post', 'Post Facebook / Instagram'),
 }[f]);
 
 const splitList = (v) => String(v || '').split(/[;\n]/).map((x) => x.trim()).filter(Boolean);
@@ -259,20 +256,16 @@ export function PlatEdit({ id }) {
         ${PLAT_TEXT_FIELDS.map((f) => html`<${Field} label=${textLabel(f) + ' (' + LANG_SHORT[txtLang] + ')'} wide>
           ${f === 'nom_commercial'
             ? html`<input value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)} />`
-            : html`<textarea rows=${f === 'post_reseaux' ? 5 : f === 'marketing' ? 3 : 2} value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)}></textarea>`}
+            : html`<textarea rows=${f === 'avantages' ? 3 : 2} value=${getText(txtLang, f)} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setText(txtLang, f, e.target.value)}></textarea>`}
         <//>`)}
       </div>
     <//>
-    <${Card} title=${tr('Informations pratiques (remplies par l\'IA)', 'Practical information (filled by AI)', 'Fampahalalana ilaina (fenoin\'ny IA)')}>
+    <${Card} title=${tr('Allergènes et étiquettes (remplis par l\'IA)', 'Allergens and labels (filled by AI)', 'Allergènes sy marika (fenoin\'ny IA)')}>
       <div class="form-grid">
-        <${Field} label=${tr('Allergènes', 'Allergens', 'Allergènes')} wide hint=${tr('Séparés par ;', 'Separated by ;', 'Sarahana amin\'ny ;')}><input value=${(form.details?.allergenes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('allergenes', splitList(e.target.value))} /><//>
-        <${Field} label=${tr('Régimes / étiquettes', 'Diets / labels', 'Régimes / marika')} wide hint=${tr('Séparés par ;', 'Separated by ;', 'Sarahana amin\'ny ;')}><input value=${(form.details?.regimes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('regimes', splitList(e.target.value))} /><//>
-        <${Field} label=${tr('Temps de préparation (min)', 'Preparation time (min)', 'Fotoana fanomanana (min)')}><input type="number" min="0" value=${form.details?.temps_preparation ?? ''} onInput=${(e) => setDetail('temps_preparation', toNum(e.target.value))} /><//>
-        <${Field} label="Hashtags" wide><input value=${(form.details?.hashtags || []).join(' ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('hashtags', splitList(e.target.value.replace(/\s+/g, ';')))} /><//>
-        <${Field} label=${tr('Recette pour la cuisine', 'Kitchen recipe', 'Fomba fanamboarana ho an\'ny lakozia')} wide><textarea rows="6" value=${form.details?.preparation || ''} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onInput=${(e) => setDetail('preparation', e.target.value)}></textarea><//>
+        <${Field} label=${tr('Allergènes', 'Allergens', 'Allergènes')} hint=${tr('Séparés par ;', 'Separated by ;', 'Sarahana amin\'ny ;')}><input value=${(form.details?.allergenes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('allergenes', splitList(e.target.value))} /><//>
+        <${Field} label=${tr('Étiquettes (2 ou 3)', 'Labels (2 or 3)', 'Marika (2 na 3)')} hint=${tr('ex. riche en protéines; sans sucre ajouté', 'e.g. high protein; no added sugar', 'ohatra: riche en protéines; sans sucre ajouté')}><input value=${(form.details?.regimes || []).join('; ')} placeholder=${tr('Rempli par l\'IA', 'Filled by AI', 'Fenoin\'ny IA')} onChange=${(e) => setDetail('regimes', splitList(e.target.value))} /><//>
       </div>
     <//>
-
 
     <${PhotoCard} form=${form} setForm=${setForm} isNew=${isNew} lines=${lines} kcal=${totals.missing ? null : totals.kcal} />
   </div>`;
@@ -357,7 +350,7 @@ function AiPanel({ form, lines, isNew, persist }) {
     <div class="ai-auto">
       <div>
         <h3>${tr('Analyse automatique', 'Automatic analysis', 'Famakafakana ho azy')}</h3>
-        <p class="small muted">${tr('L\'IA analyse la composition et remplit tout : valeurs nutritionnelles, poids des pièces, nom commercial, résumé marketing, description, avantages, effets, conseil, conservation, post réseaux (FR / EN / MG), allergènes, régimes, recette et hashtags.', 'The AI analyses the composition and fills everything: nutrition values, piece weights, commercial name, marketing summary, description, benefits, effects, eating tip, storage, social post (FR / EN / MG), allergens, diets, recipe and hashtags.', 'Famakafakan\'ny IA ny composition ary fenoiny daholo: valeur nutritionnelle, lanjan\'ny isa, anarana commercial, résumé marketing, famaritana, tombony, vokatra, torohevitra, fitehirizana, post (FR / EN / MG), allergènes, régimes, fomba fanamboarana ary hashtags.')}</p>
+        <p class="small muted">${tr('L\'IA analyse la composition et remplit tout : valeurs nutritionnelles et poids des pièces, puis ce qui convainc le client : nom commercial, résumé marketing, 3 avantages (FR / EN / MG), allergènes et étiquettes.', 'The AI analyses the composition and fills everything: nutrition values and piece weights, then what convinces the customer: commercial name, marketing summary, 3 benefits (FR / EN / MG), allergens and labels.', 'Famakafakan\'ny IA ny composition ary fenoiny daholo: valeur nutritionnelle sy lanjan\'ny isa, ary izay mandresy lahatra ny client: anarana commercial, résumé marketing, tombony 3 (FR / EN / MG), allergènes sy marika.')}</p>
       </div>
       <button class="btn primary big" disabled=${auto || !lines.length} onClick=${autoFill}>${auto ? tr('Analyse en cours… (30 s environ)', 'Analysing… (about 30 s)', 'Mamakafaka… (30 s eo ho eo)') : tr('Analyser et remplir avec l\'IA', 'Analyse and fill with AI', 'Famakafakao sy fenoy amin\'ny IA')}</button>
     </div>
@@ -371,7 +364,7 @@ function AiPanel({ form, lines, isNew, persist }) {
     <div class="ai-steps">
       <div class="ai-step">
         <h3><span class="num-circle">1</span> ${tr('Copier le prompt', 'Copy the prompt', 'Adikao ny prompt')}</h3>
-        <p class="muted small">${toFill.length} ${tr('ingrédient(s) à compléter', 'ingredient(s) to complete', 'ingrédient hofenoina')}${toFill.length ? ' : ' + toFill.map((x) => ingName(x.ing)).join(', ') : ''}. ${tr('L\'IA écrira aussi le nom commercial, le résumé marketing, la description, les avantages et les effets en FR, EN et MG.', 'The AI will also write the commercial name, marketing summary, description, benefits and effects in FR, EN and MG.', 'Hosoratan\'ny IA koa ny anarana commercial, résumé marketing, famaritana, tombony sy vokatra amin\'ny FR, EN ary MG.')}</p>
+        <p class="muted small">${toFill.length} ${tr('ingrédient(s) à compléter', 'ingredient(s) to complete', 'ingrédient hofenoina')}${toFill.length ? ' : ' + toFill.map((x) => ingName(x.ing)).join(', ') : ''}. ${tr('L\'IA écrira aussi le nom commercial, le résumé marketing et 3 avantages en FR, EN et MG, plus allergènes et étiquettes.', 'The AI will also write the commercial name, marketing summary and 3 benefits in FR, EN and MG, plus allergens and labels.', 'Hosoratan\'ny IA koa ny anarana commercial, résumé marketing ary tombony 3 amin\'ny FR, EN ary MG, miampy allergènes sy marika.')}</p>
         <${CopyBox} text=${prompt} rows="14" />
       </div>
       <div class="ai-step">
@@ -397,9 +390,6 @@ function AiPanel({ form, lines, isNew, persist }) {
         ${result.plat.photo_en && html`<tr><td>Photo (EN)</td><td>${result.plat.photo_en}</td></tr>`}
         ${result.plat.details?.allergenes && html`<tr><td>${tr('Allergènes', 'Allergens', 'Allergènes')}</td><td>${result.plat.details.allergenes.join(', ') || '—'}</td></tr>`}
         ${result.plat.details?.regimes?.length ? html`<tr><td>${tr('Régimes', 'Diets', 'Régimes')}</td><td>${result.plat.details.regimes.join(', ')}</td></tr>` : null}
-        ${result.plat.details?.temps_preparation ? html`<tr><td>${tr('Préparation', 'Preparation', 'Fanomanana')}</td><td>${result.plat.details.temps_preparation} min</td></tr>` : null}
-        ${result.plat.details?.preparation && html`<tr><td>${tr('Recette', 'Recipe', 'Fomba fanamboarana')}</td><td class="pre">${result.plat.details.preparation}</td></tr>`}
-        ${result.plat.details?.hashtags?.length ? html`<tr><td>Hashtags</td><td>${result.plat.details.hashtags.join(' ')}</td></tr>` : null}
       </table>`}
       ${result.ingredients.length > 0 && html`<div class="table-wrap"><table class="table compact">
         <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">${tr('Fibres', 'Fibre', 'Fibres')}</th><th class="num">IG</th><th class="num">${tr('g / pièce', 'g / piece', 'g / isa')}</th><th>${tr('Contrôle', 'Check', 'Fanamarinana')}</th><th>Source</th></tr></thead>

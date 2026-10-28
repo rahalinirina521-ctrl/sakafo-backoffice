@@ -22,7 +22,7 @@ export async function exportHameno(plat, lines, ingMap) {
   const guide = [
     ['FICHIER À COMPLÉTER — ' + plat.id + ' — ' + plat.nom],
     [''],
-    ['1. Onglet "Plat" : remplir les cellules vides : photo_en ; fr_..., en_..., mg_... (nom_commercial, marketing, description, avantages, effets, conseil, conservation, post_reseaux) ; allergenes, regimes, hashtags (séparés par ;), preparation (étapes), temps_preparation (minutes).'],
+    ['1. Onglet "Plat" : remplir les cellules vides : photo_en ; fr_..., en_..., mg_... (nom_commercial, marketing, avantages = 3 points) ; allergenes et regimes (séparés par ;).'],
     ['2. Onglet "Ingredients" : valeurs nutritionnelles POUR 100 g, noms fr/en/mg, poids_piece (g d\'une pièce), densite (g/ml pour un liquide) et la source (USDA / Ciqual).'],
     ['3. Onglet "Composition" : information seulement (avec les NB), ne pas modifier.'],
     ['Ne pas changer les ID ni les en-têtes (ligne 1). Ne pas calculer les calories totales.'],
