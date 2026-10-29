@@ -1,22 +1,22 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291423';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291423';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291423';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291423';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291423';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291423';
-import { analyse, typeObjectif } from '../conseil.js?v=202610291423';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291423';
-import { aboStatut } from '../metier.js?v=202610291423';
-import { nonLus } from '../chat.js?v=202610291423';
-import { param } from '../params.js?v=202610291423';
-import { Thumb } from '../pickers.js?v=202610291423';
-import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291423';
-import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291423';
-import { MessagesHub, Communaute } from './social.js?v=202610291423';
-import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291423';
-import { Logo } from '../logo.js?v=202610291423';
-import { ThemeToggle } from '../theme.js?v=202610291423';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291427';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291427';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291427';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291427';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291427';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291427';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291427';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291427';
+import { aboStatut } from '../metier.js?v=202610291427';
+import { nonLus } from '../chat.js?v=202610291427';
+import { param } from '../params.js?v=202610291427';
+import { Thumb } from '../pickers.js?v=202610291427';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291427';
+import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291427';
+import { MessagesHub, Communaute } from './social.js?v=202610291427';
+import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291427';
+import { Logo } from '../logo.js?v=202610291427';
+import { ThemeToggle } from '../theme.js?v=202610291427';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();
@@ -87,7 +87,7 @@ export function ClientApp() {
       : parts === '/livraison' && client.formule !== 'conseil' ? html`<${LivraisonLive} client=${client} />`
       : parts === '/suivi' ? html`<${Suivi} client=${client} onClient=${setClient} />`
       : parts === '/messages' ? html`<${MessagesHub} client=${client} key=${route} />`
-      : parts === '/communaute' ? html`<${Communaute} client=${client} />`
+      : parts === '/communaute' ? html`<${Communaute} client=${client} key=${route} />`
       : parts === '/profil' || parts === '/compte' ? profil()
       : parts === '/formules' ? formules()
       : html`<${Accueil} client=${client} go=${go} />`;
@@ -99,6 +99,7 @@ export function ClientApp() {
       : parts === '/formules' ? formules()
       : parts === '/plats' ? html`<${Vitrine} />`
       : parts === '/messages' ? html`<${MessagesHub} client=${client} key=${route} />`
+      : parts === '/communaute' ? html`<${Communaute} client=${client} key=${route} />`
       : parts === '/profil' || parts === '/compte' ? profil()
       : html`<${AccueilDecouverte} client=${client} />`;
   } else {
@@ -108,6 +109,7 @@ export function ClientApp() {
       : parts === '/plats' ? html`<${Vitrine} />`
       : parts === '/formules' ? formules()
       : parts === '/messages' && client ? html`<${MessagesHub} client=${client} key=${route} />`
+      : parts === '/communaute' && client ? html`<${Communaute} client=${client} key=${route} />`
       : parts === '/messages' && me ? html`<${MessagesClient} conversation=${conv} />`
       : (parts === '/compte' || parts === '/profil') && client ? profil()
       : parts === '/compte' ? html`<${CompteInvite} me=${me} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} quitter=${() => { location.href = 'connexion.html'; }} lang=${lang} onLang=${setLang} />`

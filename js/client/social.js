@@ -1,11 +1,11 @@
 // Communauté (amis, fil d'actualité, encouragements), avis, messagerie par interlocuteur, incidents de livraison.
-import { html, useState, useMemo } from '../lib.js?v=202610291423';
-import { useApp, Modal, Badge } from '../ui.js?v=202610291423';
-import { tr, platTitle } from '../i18n.js?v=202610291423';
-import { fmt, isoDate } from '../calc.js?v=202610291423';
-import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291423';
-import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291423';
-import { heure } from '../map.js?v=202610291423';
+import { html, useState, useMemo } from '../lib.js?v=202610291427';
+import { useApp, Modal, Badge } from '../ui.js?v=202610291427';
+import { tr, platTitle } from '../i18n.js?v=202610291427';
+import { fmt, isoDate } from '../calc.js?v=202610291427';
+import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291427';
+import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291427';
+import { heure } from '../map.js?v=202610291427';
 
 const EMOJIS = ['👏', '💪', '🔥', '❤️', '🎉'];
 const depuis = (iso) => {
@@ -103,15 +103,45 @@ export function MessagesHub({ client }) {
     : conv.startsWith('dm:') ? ['💪', '🔥 ' + tr('Bravo !', 'Well done!', 'Arahabaina!'), tr('On continue ensemble !', 'Let\'s keep going together!', 'Andeha hiara-mitohy!')]
     : [tr('Bonjour 👋', 'Hello 👋', 'Manao ahoana 👋'), tr('Je voudrais modifier mon menu', 'I\'d like to change my menu', 'Te hanova ny menu aho'), tr('Merci !', 'Thank you!', 'Misaotra!')];
   const demo = client.id === 'CL-DEMO';
+  const [nouveau, setNouveau] = useState(false);
+  const ouvrir = (c) => { setNouveau(false); setConv(c); history.replaceState(null, '', '#/messages?c=' + encodeURIComponent(c)); };
   if (conv) return html`<div class="c-page"><${Chat} conversation=${conv} messages=${msgs} me=${me} height="calc(100dvh - 190px)" titre=${convLabel(conv, data, client.id).replace(/^\S+\s/, '')}
     sousTitre=${conv.startsWith('livclient:') ? tr('Votre livreur du jour', 'Today\'s courier', 'Ny mpitondra androany') : conv.startsWith('dm:') ? tr('Ami de la communauté', 'Community friend', 'Namana') : tr('Répond en général en moins d\'1 h', 'Usually replies within 1 h', 'Mamaly ao anatin\'ny 1 ora')}
     onBack=${() => { setConv(''); history.replaceState(null, '', '#/messages'); }} quick=${quick} readOnly=${demo ? tr('Compte démo : lecture seule', 'Demo account: read only', 'Kaonty démo: jerena fotsiny') : null}
     onSend=${(t) => app.send(conv, t).catch(erreur(toast))} onRead=${app.markRead} /></div>`;
   return html`<div class="c-page">
-    <h1>💬 ${tr('Messages', 'Messages', 'Hafatra')}</h1>
-    <section class="c-card flush"><${ConvList} items=${items} messages=${msgs} me=${me} onOpen=${setConv} /></section>
-    <p class="small muted center-text">${tr('Ajoutez des amis dans « Communauté » pour discuter avec eux.', 'Add friends in "Community" to chat with them.', 'Manampia namana ao amin\'ny « Fiaraha-monina » hiresahana aminy.')} <a href="#/communaute">👥</a></p>
+    <div class="row between"><h1>💬 ${tr('Messages', 'Messages', 'Hafatra')}</h1><button class="btn primary small" onClick=${() => setNouveau(true)}>✏️ ${tr('Nouvelle discussion', 'New chat', 'Resaka vaovao')}</button></div>
+    <section class="c-card flush"><${ConvList} items=${items} messages=${msgs} me=${me} onOpen=${ouvrir} /></section>
+    ${nouveau && html`<${NouvelleDiscussion} client=${client} amis=${amis} onOpen=${ouvrir} onClose=${() => setNouveau(false)} />`}
   </div>`;
+}
+
+// Choisir avec qui discuter : équipe, livreur, amis (ou en trouver)
+function NouvelleDiscussion({ client, amis, onOpen, onClose }) {
+  const { data } = useApp();
+  const [q, setQ] = useState('');
+  const auj = isoDate(new Date());
+  const membre = (data.communaute || []).some((c) => c.client_id === client.id);
+  const prochaine = (data.livraisons || []).filter((l) => l.client_id === client.id && l.date >= auj && l.livreur_id).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const lv = prochaine && (data.livreurs || []).find((x) => x.id === prochaine.livreur_id);
+  const pseudo = (id) => (data.communaute || []).find((c) => c.client_id === id)?.pseudo || tr('Ami', 'Friend', 'Namana');
+  const f = (t) => !q || t.toLowerCase().includes(q.toLowerCase());
+  const Ligne = ({ icone, couleur, titre, sous, onClick }) => html`<button class="wa-item" onClick=${onClick}><span class=${'wa-av ' + (couleur || '')}>${icone}</span><span class="wa-mid"><b>${titre}</b><small>${sous}</small></span><span class="chev">›</span></button>`;
+  const amisF = amis.filter((id) => f(pseudo(id)));
+  return html`<${Modal} title=${'✏️ ' + tr('Nouvelle discussion', 'New chat', 'Resaka vaovao')} onClose=${onClose}>
+    <input type="search" placeholder=${tr('Rechercher un ami…', 'Search a friend…', 'Hitady namana…')} value=${q} onInput=${(e) => setQ(e.target.value)} />
+    <h3 class="nd-titre">${tr('Sakafo', 'Sakafo', 'Sakafo')}</h3>
+    <div class="wa-list">
+      <${Ligne} icone="🧑‍🍳" couleur="equipe" titre=${tr('Équipe Sakafo (administration)', 'Sakafo team (admin)', 'Ekipa Sakafo (fitantanana)')} sous=${tr('Abonnement, menus, paiement, question…', 'Subscription, menus, payment, questions…', 'Abonnement, menu, fandoavana, fanontaniana…')} onClick=${() => onOpen('client:' + client.id)} />
+      ${client.formule !== 'conseil' && html`<${Ligne} icone="🛵" couleur="livreur" titre=${lv ? tr('Mon livreur', 'My courier', 'Ny mpitondra') + ' · ' + lv.nom : tr('Mon livreur', 'My courier', 'Ny mpitondra')}
+        sous=${lv ? tr('Livraison du', 'Delivery on', 'Fanaterana ny') + ' ' + new Date(prochaine.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' }) : tr('Transmis au livreur de votre prochaine livraison (l\'équipe le voit aussi)', 'Passed on to your next delivery\'s courier (the team sees it too)', 'Halefa amin\'ny mpitondra manaraka (hitan\'ny ekipa koa)')}
+        onClick=${() => onOpen('livclient:' + client.id)} />`}
+    </div>
+    <h3 class="nd-titre">${tr('Mes amis', 'My friends', 'Ny namako')} ${amis.length ? html`<small class="muted">(${amis.length})</small>` : null}</h3>
+    ${amisF.length ? html`<div class="wa-list">${amisF.map((id) => html`<${Ligne} icone=${html`<${Avatar} nom=${pseudo(id)} size=${40} />`} titre=${pseudo(id)} sous=${tr('Ami de la communauté', 'Community friend', 'Namana')} onClick=${() => onOpen(dmId(client.id, id))} />`)}</div>`
+      : html`<p class="small muted">${amis.length ? tr('Aucun ami ne correspond.', 'No matching friend.', 'Tsy misy namana mifanaraka.') : membre ? tr('Vous n\'avez pas encore d\'amis : envoyez des demandes dans la communauté.', 'No friends yet: send requests in the community.', 'Mbola tsy manana namana: mandefasa fangatahana.') : tr('Rejoignez la communauté pour discuter avec d\'autres membres, partager vos progrès et vous motiver.', 'Join the community to chat with other members, share progress and stay motivated.', 'Midira ao amin\'ny fiaraha-monina hiresahana amin\'ny hafa.')}</p>`}
+    <a class="btn" href="#/communaute?onglet=amis" onClick=${onClose}>👥 ${membre ? tr('Trouver des amis', 'Find friends', 'Hitady namana') : tr('Rejoindre la communauté', 'Join the community', 'Hiditra amin\'ny fiaraha-monina')}</a>
+  <//>`;
 }
 
 // ---------- Communauté ----------
@@ -119,7 +149,7 @@ export function Communaute({ client }) {
   const app = useApp();
   const { data } = app;
   const moi = (data.communaute || []).find((c) => c.client_id === client.id);
-  const [onglet, setOnglet] = useState('fil');
+  const [onglet, setOnglet] = useState(() => new URLSearchParams(location.hash.split('?')[1] || '').get('onglet') || 'fil');
   const demandes = (data.amis || []).filter((a) => a.a === client.id && a.statut === 'attente').length;
   return html`<div class="c-page">
     <h1>👥 ${tr('Communauté', 'Community', 'Fiaraha-monina')}</h1>

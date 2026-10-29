@@ -1,5 +1,5 @@
 // Sauvegarde complète (JSON) et restauration — tables dans l'ordre des dépendances.
-import { MODE, getClient, upsert, appelFonction, PK } from './db.js?v=202610291423';
+import { MODE, getClient, upsert, appelFonction, PK } from './db.js?v=202610291427';
 
 export const ORDRE = ['categories', 'ingredients', 'offres', 'options', 'plats', 'composition', 'menus', 'clients', 'livreurs', 'calendrier', 'mesures', 'livraisons',
   'suggestions', 'avis', 'communaute', 'amis', 'publications', 'reactions', 'incidents', 'messages', 'notifications'];

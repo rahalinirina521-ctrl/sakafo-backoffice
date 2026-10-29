@@ -1,7 +1,7 @@
 // Cartes (Leaflet + OpenStreetMap) et itinéraires (OSRM) — gratuits, sans clé.
 // OSRM ne connaît pas les embouteillages : on applique un « facteur trafic » (Antananarivo ≈ ×1,6 par défaut).
-import { html, useEffect, useRef } from './lib.js?v=202610291423';
-import { useThemeSombre, isDark } from './theme.js?v=202610291423';
+import { html, useEffect, useRef } from './lib.js?v=202610291427';
+import { useThemeSombre, isDark } from './theme.js?v=202610291427';
 // Fonds de carte modernes (CARTO, gratuits) : clair « Voyager » / sombre « Dark Matter »
 const tuiles = (d) => (d ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
 // Texte sûr pour les bulles de la carte (pas d'injection HTML)

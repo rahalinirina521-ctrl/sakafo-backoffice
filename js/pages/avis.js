@@ -1,12 +1,12 @@
 // Avis, communauté (modération) et incidents livreurs — vue admin.
-import { html, useState } from '../lib.js?v=202610291423';
-import { useApp, Badge, Empty } from '../ui.js?v=202610291423';
-import { tr, platTitle } from '../i18n.js?v=202610291423';
-import { fmt } from '../calc.js?v=202610291423';
-import { updateRow, supprimer } from '../db.js?v=202610291423';
-import { Etoiles, moyenne, Avatar, incidentLabel } from '../client/social.js?v=202610291423';
-import { heure } from '../map.js?v=202610291423';
-import { depuis } from './livreurs.js?v=202610291423';
+import { html, useState } from '../lib.js?v=202610291427';
+import { useApp, Badge, Empty } from '../ui.js?v=202610291427';
+import { tr, platTitle } from '../i18n.js?v=202610291427';
+import { fmt } from '../calc.js?v=202610291427';
+import { updateRow, supprimer } from '../db.js?v=202610291427';
+import { Etoiles, moyenne, Avatar, incidentLabel } from '../client/social.js?v=202610291427';
+import { heure } from '../map.js?v=202610291427';
+import { depuis } from './livreurs.js?v=202610291427';
 
 export function AvisAdmin() {
   const app = useApp();

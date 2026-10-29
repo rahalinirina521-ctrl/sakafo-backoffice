@@ -1,7 +1,7 @@
 // Adiresy + Google Maps: fikarohana, toerana GPS, marika (repère), itinéraire. Tsy mila clé API.
-import { html, useState } from './lib.js?v=202610291423';
-import { useApp } from './ui.js?v=202610291423';
-import { tr } from './i18n.js?v=202610291423';
+import { html, useState } from './lib.js?v=202610291427';
+import { useApp } from './ui.js?v=202610291427';
+import { tr } from './i18n.js?v=202610291427';
 
 const CITY = 'Antananarivo, Madagascar';
 const num = (v) => (v === null || v === undefined || v === '' || isNaN(+v) ? null : +v);

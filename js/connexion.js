@@ -1,10 +1,10 @@
 // Page de connexion unique : nom d'utilisateur (ou e-mail) + mot de passe, inscription des clients, compte démo.
-import { html, render, useState, useEffect } from './lib.js?v=202610291423';
-import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610291423';
-import { tr, catName } from './i18n.js?v=202610291423';
-import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610291423';
-import { Logo } from './logo.js?v=202610291423';
-import { ThemeToggle } from './theme.js?v=202610291423';
+import { html, render, useState, useEffect } from './lib.js?v=202610291427';
+import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610291427';
+import { tr, catName } from './i18n.js?v=202610291427';
+import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610291427';
+import { Logo } from './logo.js?v=202610291427';
+import { ThemeToggle } from './theme.js?v=202610291427';
 
 const destination = (w) => (w.admin ? 'index.html' : w.livreur_id || w.role === 'livreur' ? 'livreur.html' : 'client.html');
 const nettoie = (u) => String(u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30);

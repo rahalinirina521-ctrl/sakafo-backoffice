@@ -1,6 +1,6 @@
 // Activation des notifications push sur l'appareil de l'admin.
-import { upsert, MODE } from './db.js?v=202610291423';
-import { param } from './params.js?v=202610291423';
+import { upsert, MODE } from './db.js?v=202610291427';
+import { param } from './params.js?v=202610291427';
 
 export const pushPossible = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const b64 = (s) => { const p = '='.repeat((4 - (s.length % 4)) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, (c) => c.charCodeAt(0)); };

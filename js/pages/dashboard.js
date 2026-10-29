@@ -1,11 +1,11 @@
-import { html, useMemo } from '../lib.js?v=202610291423';
-import { useApp, Card, Badge } from '../ui.js?v=202610291423';
-import { platTotals, isComplete, isoDate, addDays, fmt } from '../calc.js?v=202610291423';
-import { aboStatut } from '../metier.js?v=202610291423';
-import { nonLus } from '../chat.js?v=202610291423';
-import { moyenne } from '../client/social.js?v=202610291423';
-import { tr, ingName, platTitle } from '../i18n.js?v=202610291423';
-import { MODE } from '../db.js?v=202610291423';
+import { html, useMemo } from '../lib.js?v=202610291427';
+import { useApp, Card, Badge } from '../ui.js?v=202610291427';
+import { platTotals, isComplete, isoDate, addDays, fmt } from '../calc.js?v=202610291427';
+import { aboStatut } from '../metier.js?v=202610291427';
+import { nonLus } from '../chat.js?v=202610291427';
+import { moyenne } from '../client/social.js?v=202610291427';
+import { tr, ingName, platTitle } from '../i18n.js?v=202610291427';
+import { MODE } from '../db.js?v=202610291427';
 
 export function Dashboard() {
   const { data, ingMap, me } = useApp();

@@ -956,3 +956,5 @@ details.howto[open] summary { margin-bottom: 8px; }
 @media (max-width: 420px) { .c-top .lang-switch .lang { padding: 4px 6px; min-width: 0; font-size: 12px; } .c-top { padding-left: 10px; padding-right: 10px; } .c-top .logo-txt b { font-size: 15px; } }
 .c-top { max-width: 100vw; overflow: hidden; }
 .verdict.note { background: var(--info-l); border-color: var(--info); } .verdict.note .row { margin-top: 8px; }
+.nd-titre { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.wa-av .av { width: 100%; height: 100%; }

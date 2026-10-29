@@ -1,16 +1,16 @@
 // Espace client « personnalisé » : accueil résumé (avant abonnement), onglet Programme (objectif + calendrier),
 // et page Formules (livraison ou prescription sans livraison, compte démo).
-import { html, useState } from '../lib.js?v=202610291423';
-import { useApp, Badge, Field } from '../ui.js?v=202610291423';
-import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291423';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291423';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291423';
-import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291423';
-import { aboStatut, menuDuJour } from '../metier.js?v=202610291423';
-import { updateRow } from '../db.js?v=202610291423';
-import { param } from '../params.js?v=202610291423';
-import { Thumb } from '../pickers.js?v=202610291423';
-import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291423';
+import { html, useState } from '../lib.js?v=202610291427';
+import { useApp, Badge, Field } from '../ui.js?v=202610291427';
+import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291427';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291427';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291427';
+import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291427';
+import { aboStatut, menuDuJour } from '../metier.js?v=202610291427';
+import { updateRow } from '../db.js?v=202610291427';
+import { param } from '../params.js?v=202610291427';
+import { Thumb } from '../pickers.js?v=202610291427';
+import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291427';
 
 const today = () => isoDate(new Date());
 const prenom = (n) => String(n || '').trim().split(/\s+/)[0] || '';

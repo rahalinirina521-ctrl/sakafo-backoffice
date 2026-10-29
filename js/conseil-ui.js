@@ -1,9 +1,9 @@
 // Composants partagés (back-office + application client) : profil, objectif, avis automatique, courbe de poids.
-import { html, useState, useRef } from './lib.js?v=202610291423';
-import { Field, Badge } from './ui.js?v=202610291423';
-import { tr } from './i18n.js?v=202610291423';
-import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610291423';
-import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610291423';
+import { html, useState, useRef } from './lib.js?v=202610291427';
+import { Field, Badge } from './ui.js?v=202610291427';
+import { tr } from './i18n.js?v=202610291427';
+import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610291427';
+import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610291427';
 
 const t3 = (l) => tr(l[0], l[1], l[2]);
 
