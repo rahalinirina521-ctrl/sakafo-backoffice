@@ -25,35 +25,37 @@ function PickerModal({ title, onClose, children, search, setSearch, filters }) {
 }
 
 // ---------- Sakafo ----------
+// Aseho daholo ny sakafo: ny mifanaraka amin'ny fotoana sy tanjona eo ambony, ny hafa eo ambany.
 export function PlatPicker({ value, fotoana, categorieId, onChange, placeholder }) {
   const { data, ingMap } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [scope, setScope] = useState('moment'); // moment | tous
-  const [onlyCat, setOnlyCat] = useState(!!categorieId);
   const plat = data.plats.find((p) => p.id === value);
   const kcal = (id) => platTotals(id, data.composition, ingMap).kcal;
 
-  const list = useMemo(() => {
-    if (!open) return [];
-    const q = norm(search);
+  const groups = useMemo(() => {
+    if (!open) return { top: [], rest: [] };
+    const q = norm(search).trim();
     const ingNames = (pid) => data.composition.filter((c) => c.plat_id === pid).map((c) => { const i = ingMap.get(c.ingredient_id); return i ? `${i.nom_fr || ''} ${i.nom_mg || ''} ${i.nom_en || ''}` : ''; }).join(' ');
-    return data.plats
-      .filter((p) => scope === 'tous' || !fotoana || p.fotoana === fotoana)
-      .filter((p) => !onlyCat || !categorieId || (p.categories || []).includes(categorieId))
-      .filter((p) => !q || norm(`${p.nom} ${p.nom_commercial || ''} ${p.id} ${ingNames(p.id)}`).includes(q))
-      .map((p) => ({ p, k: kcal(p.id) }))
-      .sort((a, b) => platTitle(a.p).localeCompare(platTitle(b.p)));
-  }, [open, search, scope, onlyCat, data, ingMap, fotoana, categorieId]);
+    const words = q.split(/\s+/).filter(Boolean);
+    const rows = data.plats
+      .filter((p) => { if (!words.length) return true; const hay = norm(`${p.nom} ${p.nom_commercial || ''} ${p.id} ${fotLabel(p.fotoana)} ${ingNames(p.id)}`); return words.every((w) => hay.includes(w)); })
+      .map((p) => {
+        const sameMoment = !fotoana || p.fotoana === fotoana;
+        const sameCat = !categorieId || (p.categories || []).includes(categorieId);
+        return { p, k: kcal(p.id), score: (sameMoment ? 2 : 0) + (sameCat ? 1 : 0) };
+      })
+      .sort((a, b) => b.score - a.score || platTitle(a.p).localeCompare(platTitle(b.p)));
+    return { top: rows.filter((r) => r.score >= 2), rest: rows.filter((r) => r.score < 2) };
+  }, [open, search, data, ingMap, fotoana, categorieId]);
 
-  const cat = data.categories.find((c) => c.id === categorieId);
-  const filters = html`<div class="picker-filters">
-    ${fotoana && html`<div class="tabs mini">
-      <button class=${'tab' + (scope === 'moment' ? ' on' : '')} onClick=${() => setScope('moment')}>${fotLabel(fotoana)}</button>
-      <button class=${'tab' + (scope === 'tous' ? ' on' : '')} onClick=${() => setScope('tous')}>${tr('Tous les moments', 'All meal times', 'Fotoana rehetra')}</button>
-    </div>`}
-    ${cat && html`<label class="check"><input type="checkbox" checked=${onlyCat} onChange=${(e) => setOnlyCat(e.target.checked)} /> ${tr('Seulement', 'Only', 'Ho an\'ny')} ${catName(cat)}</label>`}
-  </div>`;
+  const item = ({ p, k }) => html`<button class=${'picker-item' + (p.id === value ? ' on' : '')} onClick=${() => { onChange(p.id); setOpen(false); setSearch(''); }}>
+    <${Thumb} plat=${p} size=${56} />
+    <span class="pi-text"><b>${platTitle(p)}</b><small>${p.nom !== platTitle(p) ? p.nom + ' · ' : ''}${fotLabel(p.fotoana)}${p.prix_vente ? ' · ' + fmt(p.prix_vente) + ' Ar' : ''}</small>
+      <span class="pi-badges">${(p.details?.regimes || []).slice(0, 2).map((r) => html`<${Badge} tone="ok">${r}<//>`)}</span></span>
+    <span class="pi-kcal"><b>${fmt(k)}</b><small>kcal</small></span>
+  </button>`;
+  const total = groups.top.length + groups.rest.length;
 
   return html`<span class="picker-wrap">
     <button type="button" class=${'picker-btn' + (plat ? '' : ' empty')} onClick=${() => setOpen(true)}>
@@ -61,15 +63,14 @@ export function PlatPicker({ value, fotoana, categorieId, onChange, placeholder 
         : html`<span class="pb-text muted">${placeholder || tr('Choisir un plat…', 'Choose a dish…', 'Misafidiana sakafo…')}</span>`}
       <span class="pb-caret">▾</span>
     </button>
-    ${open && html`<${PickerModal} title=${fotoana ? tr('Plat pour : ', 'Dish for: ', 'Sakafo ho an\'ny: ') + fotLabel(fotoana) : tr('Choisir un plat', 'Choose a dish', 'Misafidiana sakafo')} onClose=${() => setOpen(false)} search=${search} setSearch=${setSearch} filters=${filters}>
+    ${open && html`<${PickerModal} title=${fotoana ? tr('Plat pour : ', 'Dish for: ', 'Sakafo ho an\'ny: ') + fotLabel(fotoana) : tr('Choisir un plat', 'Choose a dish', 'Misafidiana sakafo')} onClose=${() => setOpen(false)} search=${search} setSearch=${setSearch}
+      filters=${html`<p class="muted small picker-count">${total} ${tr('plat(s)', 'dish(es)', 'sakafo')}${search ? ' · « ' + search + ' »' : ''}</p>`}>
       ${value && html`<button class="picker-item clear" onClick=${() => { onChange(null); setOpen(false); }}>✕ ${tr('Retirer le plat', 'Remove the dish', 'Esory ny sakafo')}</button>`}
-      ${list.length === 0 && html`<p class="muted center-text">${tr('Aucun plat trouvé. Essayez « Tous les moments ».', 'No dish found. Try "All meal times".', 'Tsy misy sakafo hita. Andramo "Fotoana rehetra".')}</p>`}
-      ${list.map(({ p, k }) => html`<button class=${'picker-item' + (p.id === value ? ' on' : '')} onClick=${() => { onChange(p.id); setOpen(false); }}>
-        <${Thumb} plat=${p} size=${56} />
-        <span class="pi-text"><b>${platTitle(p)}</b><small>${p.nom !== platTitle(p) ? p.nom + ' · ' : ''}${fotLabel(p.fotoana)}${p.prix_vente ? ' · ' + fmt(p.prix_vente) + ' Ar' : ''}</small>
-          <span class="pi-badges">${(p.details?.regimes || []).slice(0, 2).map((r) => html`<${Badge} tone="ok">${r}<//>`)}</span></span>
-        <span class="pi-kcal"><b>${fmt(k)}</b><small>kcal</small></span>
-      </button>`)}
+      ${total === 0 && html`<p class="muted center-text">${data.plats.length ? tr('Aucun plat ne correspond à la recherche.', 'No dish matches the search.', 'Tsy misy sakafo mifanaraka amin\'ny fikarohana.') : tr('Aucun plat encore. Créez-en dans « Plats ».', 'No dish yet. Create some in "Dishes".', 'Mbola tsy misy sakafo. Mamorona ao amin\'ny "Sakafo".')}</p>`}
+      ${groups.top.length > 0 && fotoana && html`<p class="picker-group">${tr('Pour', 'For', 'Ho an\'ny')} ${fotLabel(fotoana)}</p>`}
+      ${groups.top.map(item)}
+      ${groups.rest.length > 0 && fotoana && html`<p class="picker-group">${groups.top.length ? tr('Autres plats', 'Other dishes', 'Sakafo hafa') : tr('Aucun plat « ', 'No "', 'Tsy misy sakafo "') + fotLabel(fotoana) + tr(' » encore : tous les plats', '" dish yet: all dishes', '" mbola: sakafo rehetra')}</p>`}
+      ${groups.rest.map(item)}
     <//>`}
   </span>`;
 }
@@ -79,22 +80,19 @@ export function MenuPicker({ value, categorieId, onChange, placeholder, compact 
   const { data, ingMap } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [onlyCat, setOnlyCat] = useState(!!categorieId);
   const menu = data.menus.find((m) => m.id === value);
   const tot = (m) => menuTotals(m, data.plats, data.composition, ingMap);
   const platsOf = (m) => menuRepas(m).map((r) => data.plats.find((p) => p.id === r.plat_id)).filter(Boolean);
 
   const list = useMemo(() => {
     if (!open) return [];
-    const q = norm(search);
+    const words = norm(search).trim().split(/\s+/).filter(Boolean);
     return data.menus
-      .filter((m) => !onlyCat || !categorieId || m.categorie_id === categorieId)
-      .filter((m) => !q || norm(`${m.nom || ''} ${m.id} ${platsOf(m).map((p) => platTitle(p) + ' ' + p.nom).join(' ')}`).includes(q))
-      .sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr', { numeric: true }));
-  }, [open, search, onlyCat, data, categorieId]);
+      .filter((m) => { if (!words.length) return true; const hay = norm(`${m.nom || ''} ${m.id} ${platsOf(m).map((p) => platTitle(p) + ' ' + p.nom).join(' ')}`); return words.every((w) => hay.includes(w)); })
+      .sort((a, b) => ((b.categorie_id === categorieId) - (a.categorie_id === categorieId)) || (a.nom || '').localeCompare(b.nom || '', 'fr', { numeric: true }));
+  }, [open, search, data, categorieId]);
 
-  const cat = data.categories.find((c) => c.id === categorieId);
-  const filters = cat ? html`<div class="picker-filters"><label class="check"><input type="checkbox" checked=${onlyCat} onChange=${(e) => setOnlyCat(e.target.checked)} /> ${tr('Seulement', 'Only', 'Ho an\'ny')} ${catName(cat)}</label></div>` : null;
+  const filters = html`<p class="muted small picker-count">${list.length} menu(s)</p>`;
 
   return html`<span class="picker-wrap">
     <button type="button" class=${'picker-btn' + (menu ? '' : ' empty') + (compact ? ' compact' : '')} onClick=${() => setOpen(true)}>
@@ -108,7 +106,7 @@ export function MenuPicker({ value, categorieId, onChange, placeholder, compact 
       ${list.map((m) => {
         const t = tot(m);
         const ps = platsOf(m);
-        return html`<button class=${'picker-item' + (m.id === value ? ' on' : '')} onClick=${() => { onChange(m.id); setOpen(false); }}>
+        return html`<button class=${'picker-item' + (m.id === value ? ' on' : '')} onClick=${() => { onChange(m.id); setOpen(false); setSearch(''); }}>
           <span class="thumbs">${ps.slice(0, 4).map((p) => html`<${Thumb} plat=${p} size=${40} />`)}</span>
           <span class="pi-text"><b>${m.nom || m.id}</b><small>${catName(data.categories.find((c) => c.id === m.categorie_id))} · ${ps.map((p) => platTitle(p)).join(' · ')}</small></span>
           <span class="pi-kcal"><b>${fmt(t.kcal)}</b><small>kcal</small></span>

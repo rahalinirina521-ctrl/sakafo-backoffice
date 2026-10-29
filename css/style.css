@@ -330,3 +330,6 @@ img { max-width: 100%; }
   .offres-t input:not([type=checkbox]), .offres-t select { max-width: 60%; }
   .week-actions > * { width: 100%; }
 }
+.picker-group { margin: 8px 0 2px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--green); }
+.picker-count { margin: 0 0 6px; }
+.modal.picker .picker-list { flex: 1; }
