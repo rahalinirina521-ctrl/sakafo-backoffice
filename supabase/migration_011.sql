@@ -109,3 +109,4 @@ begin
 end $$;
 drop trigger if exists sakafo_role_message on messages;
 create trigger sakafo_role_message before insert on messages for each row execute function private.role_message();
+revoke execute on function public.whoami() from public, anon;

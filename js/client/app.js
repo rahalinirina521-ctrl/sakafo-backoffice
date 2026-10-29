@@ -1,18 +1,18 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610290705';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610290705';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610290705';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610290705';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610290705';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290705';
-import { analyse, typeObjectif } from '../conseil.js?v=202610290705';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290705';
-import { aboStatut } from '../metier.js?v=202610290705';
-import { nonLus } from '../chat.js?v=202610290705';
-import { param } from '../params.js?v=202610290705';
-import { Thumb } from '../pickers.js?v=202610290705';
-import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290705';
-import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610290705';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610290725';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610290725';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610290725';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610290725';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610290725';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290725';
+import { analyse, typeObjectif } from '../conseil.js?v=202610290725';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290725';
+import { aboStatut } from '../metier.js?v=202610290725';
+import { nonLus } from '../chat.js?v=202610290725';
+import { param } from '../params.js?v=202610290725';
+import { Thumb } from '../pickers.js?v=202610290725';
+import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290725';
+import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610290725';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();

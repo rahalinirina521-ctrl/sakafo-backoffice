@@ -1,7 +1,7 @@
 // Éléments communs aux applications client et livreur : session, connexion / inscription, langue, toast, mise à jour.
-import { html, useState, useEffect, useCallback } from './lib.js?v=202610290705';
-import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword } from './db.js?v=202610290705';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290705';
+import { html, useState, useEffect, useCallback } from './lib.js?v=202610290725';
+import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword } from './db.js?v=202610290725';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290725';
 
 export function LangSwitch({ lang, onChange }) {
   return html`<div class="lang-switch" role="group" aria-label="Langue">

@@ -1,7 +1,7 @@
 // Ajout de plats en lot par l'IA (gratuit) : prompt + Excel à remplir dans ChatGPT / Claude.ai, puis import.
-import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290705';
-import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290705';
-import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290705';
+import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290725';
+import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290725';
+import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290725';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const ING_CATS = 'Féculent / Protéine / Légumineuse / Légume / Fruit / Boisson / Laitier / Matière grasse / Condiment';

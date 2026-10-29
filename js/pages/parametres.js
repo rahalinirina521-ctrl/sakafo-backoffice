@@ -1,12 +1,12 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState, useEffect } from '../lib.js?v=202610290705';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290705';
-import { tr } from '../i18n.js?v=202610290705';
-import { toNum } from '../calc.js?v=202610290705';
-import { param, paramRow } from '../params.js?v=202610290705';
-import { MapView } from '../map.js?v=202610290705';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290705';
-import { MODE } from '../db.js?v=202610290705';
+import { html, useState, useEffect } from '../lib.js?v=202610290725';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290725';
+import { tr } from '../i18n.js?v=202610290725';
+import { toNum } from '../calc.js?v=202610290725';
+import { param, paramRow } from '../params.js?v=202610290725';
+import { MapView } from '../map.js?v=202610290725';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290725';
+import { MODE } from '../db.js?v=202610290725';
 
 export function Parametres() {
   const app = useApp();

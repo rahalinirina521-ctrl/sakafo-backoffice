@@ -1,15 +1,15 @@
 // Application livreur (PWA) : tournée du jour, ordre optimisé, carte, ETA, GPS partagé, messages.
-import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290705';
-import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290705';
-import { tr } from '../i18n.js?v=202610290705';
-import { isoDate } from '../calc.js?v=202610290705';
-import { loadAll, upsert, updateRow } from '../db.js?v=202610290705';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290705';
-import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290705';
-import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290705';
-import { Chat, nonLus } from '../chat.js?v=202610290705';
-import { param } from '../params.js?v=202610290705';
-import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290705';
+import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290725';
+import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290725';
+import { tr } from '../i18n.js?v=202610290725';
+import { isoDate } from '../calc.js?v=202610290725';
+import { loadAll, upsert, updateRow } from '../db.js?v=202610290725';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290725';
+import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290725';
+import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290725';
+import { Chat, nonLus } from '../chat.js?v=202610290725';
+import { param } from '../params.js?v=202610290725';
+import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290725';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const DEMO_AS = { user_id: 'demo-livreur', admin: false, role: 'livreur', livreur_id: new URLSearchParams(location.search).get('as') || 'LR001' };
