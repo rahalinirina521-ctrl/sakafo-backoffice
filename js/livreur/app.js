@@ -1,15 +1,15 @@
 // Application livreur (PWA) : tournée du jour, ordre optimisé, carte, ETA, GPS partagé, messages.
-import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290725';
-import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290725';
-import { tr } from '../i18n.js?v=202610290725';
-import { isoDate } from '../calc.js?v=202610290725';
-import { loadAll, upsert, updateRow } from '../db.js?v=202610290725';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290725';
-import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290725';
-import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290725';
-import { Chat, nonLus } from '../chat.js?v=202610290725';
-import { param } from '../params.js?v=202610290725';
-import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290725';
+import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290734';
+import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290734';
+import { tr } from '../i18n.js?v=202610290734';
+import { isoDate } from '../calc.js?v=202610290734';
+import { loadAll, upsert, updateRow } from '../db.js?v=202610290734';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290734';
+import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290734';
+import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290734';
+import { Chat, nonLus } from '../chat.js?v=202610290734';
+import { param } from '../params.js?v=202610290734';
+import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290734';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const DEMO_AS = { user_id: 'demo-livreur', admin: false, role: 'livreur', livreur_id: new URLSearchParams(location.search).get('as') || 'LR001' };
@@ -33,10 +33,10 @@ export function LivreurApp() {
     send: (c, t) => envoyerMessage(setData, c, t, meChat), markRead: (m) => marquerLus(setData, m, meChat) }), [data, lang, me, livreur?.nom]);
 
   if (auth.session === undefined) return html`<div class="center muted">${tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
-  if (!me) { if (auth.session === null) location.replace('index.html'); return html`<div class="center muted">…</div>`; }
+  if (!me) { if (auth.session === null) location.replace('connexion.html'); return html`<div class="center muted">…</div>`; }
   if (me.role !== 'livreur' || !lid) return html`<div class="center"><div class="card login"><h2>${tr('Compte non relié à un livreur', 'Account not linked to a courier', 'Tsy mifandray amin\'ny mpitondra')}</h2><p class="muted">${me.email}</p>
     <p>${tr('Demandez à l\'administrateur d\'indiquer cet e-mail dans votre fiche livreur, puis rouvrez l\'application.', 'Ask the administrator to enter this e-mail in your courier record, then reopen the app.', 'Angataho amin\'ny mpitantana ny hampiditra ity mailaka ity ao amin\'ny fiche-nao, dia sokafy indray.')}</p>
-    <button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('index.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></div></div>`;
+    <button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('connexion.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></div></div>`;
   if (!data) return html`<div class="center muted">${error ? html`<span class="error">${error}</span>` : tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
 
   const convs = ['livreur:' + lid, ...[...new Set((data.livraisons || []).filter((l) => l.date === isoDate(new Date())).map((l) => 'client:' + l.client_id))]];
@@ -47,7 +47,7 @@ export function LivreurApp() {
       <${UpdateNotice} /><main class="c-main">
         ${onglet === 'tournee' && html`<${Tournee} livreur=${livreur} lid=${lid} ouvrirChat=${(c) => { setChatConv(c); setOnglet('messages'); }} />`}
         ${onglet === 'messages' && html`<${MessagesLivreur} convs=${convs} conv=${chatConv} setConv=${setChatConv} />`}
-        ${onglet === 'compte' && html`<div class="c-page"><section class="c-card"><p>${me.email}</p><button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('index.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section></div>`}
+        ${onglet === 'compte' && html`<div class="c-page"><section class="c-card"><p>${me.email}</p><button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('connexion.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section></div>`}
       </main>
       <nav class="c-nav">${[['tournee', '🗺️', tr('Tournée', 'Route', 'Lalana')], ['messages', '💬', tr('Messages', 'Messages', 'Hafatra')], ['compte', '👤', tr('Compte', 'Account', 'Kaonty')]].map(([k, i, l]) => html`<a href="#" class=${onglet === k ? 'on' : ''} onClick=${(e) => { e.preventDefault(); setOnglet(k); }}><span>${i}${k === 'messages' && unread ? html`<i class="dot-badge">${unread}</i>` : null}</span><small>${l}</small></a>`)}</nav>
     </div>

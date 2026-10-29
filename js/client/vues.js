@@ -1,18 +1,18 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290725';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290725';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290725';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290725';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290725';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290725';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290725';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290725';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290725';
-import { Chat } from '../chat.js?v=202610290725';
-import { insertRow, updateRow, remove } from '../db.js?v=202610290725';
-import { param } from '../params.js?v=202610290725';
-import { AddressField } from '../address.js?v=202610290725';
-import { Thumb } from '../pickers.js?v=202610290725';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290734';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290734';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290734';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290734';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290734';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290734';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290734';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290734';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290734';
+import { Chat } from '../chat.js?v=202610290734';
+import { insertRow, updateRow, remove } from '../db.js?v=202610290734';
+import { param } from '../params.js?v=202610290734';
+import { AddressField } from '../address.js?v=202610290734';
+import { Thumb } from '../pickers.js?v=202610290734';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());
@@ -261,8 +261,15 @@ export function MessagesClient({ conversation }) {
 }
 
 // ---------- Profil ----------
-export function Profil({ client, onClient, logout, lang, onLang, LangSwitch }) {
+export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi, onMoi }) {
   const { toast } = useApp();
+  const [username, setUsername] = useState(moi?.username || '');
+  async function saveUsername() {
+    const u = username.toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (u.length < 3) { toast(tr('3 caractères minimum', 'At least 3 characters', 'Litera 3 farafahakeliny'), 'bad'); return; }
+    try { await updateRow('profils', moi.user_id, { username: u }); onMoi({ ...moi, username: u }); toast(tr(`Vous pouvez maintenant vous connecter avec « ${u} »`, `You can now sign in with "${u}"`, `Afaka miditra amin'ny « ${u} » ianao izao`)); }
+    catch (e) { toast(/duplicate|unique/i.test(e.message) ? tr('Ce nom d\'utilisateur est déjà pris', 'This username is taken', 'Efa misy mampiasa') : e.message, 'bad'); }
+  }
   const [f, setF] = useState({ nom: client.nom, telephone: client.telephone || '', adresse: client.adresse, repere: client.repere, lat: client.lat, lng: client.lng, maps_url: client.maps_url, allergies: client.allergies || '' });
   async function save() {
     try { await updateRow('clients', client.id, f); onClient({ ...client, ...f }); toast(tr('Profil enregistré', 'Profile saved', 'Voatahiry')); } catch (e) { toast(e.message, 'bad'); }
@@ -275,6 +282,8 @@ export function Profil({ client, onClient, logout, lang, onLang, LangSwitch }) {
       ${client.formule !== 'conseil' && html`<${AddressField} value=${f} onChange=${(a) => setF({ ...f, ...a })} />`}
       <${Field} label=${tr('Allergies / aliments à éviter', 'Allergies / foods to avoid', 'Allergies / sakafo tsy tiana')} wide><input value=${f.allergies} onInput=${(e) => setF({ ...f, allergies: e.target.value })} /><//>
     </div><button class="btn primary" onClick=${save}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button></section>
+    ${moi && client.id !== 'CL-DEMO' && html`<section class="c-card"><${Field} label=${tr('Nom d\'utilisateur (pour se connecter)', 'Username (to sign in)', 'Anarana mpampiasa (hidirana)')}><div class="row gap"><input value=${username} onInput=${(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))} autocapitalize="none" /><button class="btn" onClick=${saveUsername}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button></div><//>
+      <small class="muted">${tr('Vous pouvez aussi vous connecter avec votre e-mail.', 'You can also sign in with your e-mail.', 'Azonao ampiasaina koa ny mailakao.')}</small></section>`}
     <section class="c-card"><div class="row between wrap gap"><span>${tr('Langue', 'Language', 'Fiteny')}</span><${LangSwitch} lang=${lang} onChange=${onLang} /></div></section>
     <section class="c-card"><p class="small muted">${client.email || ''}</p><button class="btn ghost" onClick=${logout}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section>
   </div>`;

@@ -1,6 +1,6 @@
 // Messagerie interne (admin ↔ client ↔ livreur), temps réel via Supabase.
-import { html, useState, useEffect, useRef } from './lib.js?v=202610290725';
-import { tr } from './i18n.js?v=202610290725';
+import { html, useState, useEffect, useRef } from './lib.js?v=202610290734';
+import { tr } from './i18n.js?v=202610290734';
 
 const ROLE_ICON = { admin: '🧑‍🍳', client: '🙂', livreur: '🛵', invite: '👤' };
 export const convLabel = (conv, data) => {

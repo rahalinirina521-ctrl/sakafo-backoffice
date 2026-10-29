@@ -1,12 +1,12 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState, useEffect } from '../lib.js?v=202610290725';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290725';
-import { tr } from '../i18n.js?v=202610290725';
-import { toNum } from '../calc.js?v=202610290725';
-import { param, paramRow } from '../params.js?v=202610290725';
-import { MapView } from '../map.js?v=202610290725';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290725';
-import { MODE } from '../db.js?v=202610290725';
+import { html, useState, useEffect } from '../lib.js?v=202610290734';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290734';
+import { tr } from '../i18n.js?v=202610290734';
+import { toNum } from '../calc.js?v=202610290734';
+import { param, paramRow } from '../params.js?v=202610290734';
+import { MapView } from '../map.js?v=202610290734';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290734';
+import { MODE } from '../db.js?v=202610290734';
 
 export function Parametres() {
   const app = useApp();
@@ -19,7 +19,7 @@ export function Parametres() {
   const [wa, setWa] = useState(param(data, 'whatsapp'));
   const [accueil, setAccueil] = useState(param(data, 'message_accueil'));
   const base = location.href.split('#')[0].replace(/index\.html$/, '').replace(/[^/]*$/, '');
-  const liens = [['🙂 ' + tr('Application client', 'Customer app', 'App client'), base + 'client.html'], ['🛵 ' + tr('Application livreur', 'Courier app', 'App livreur'), base + 'livreur.html']];
+  const liens = [['🔐 ' + tr('Page de connexion (lien à partager)', 'Sign-in page (link to share)', 'Pejy fidirana (rohy hozaraina)'), base + 'connexion.html'], ['🙂 ' + tr('Application client', 'Customer app', 'App client'), base + 'client.html'], ['🛵 ' + tr('Application livreur', 'Courier app', 'App livreur'), base + 'livreur.html']];
 
   async function save() {
     try {
@@ -40,7 +40,7 @@ export function Parametres() {
     <${Card} title=${'📱 ' + tr('Liens des applications', 'App links', 'Rohy ho an\'ny app')}>
       ${liens.map(([l, u]) => html`<div class="row gap wrap between link-row"><span><b>${l}</b><br/><small class="muted mono">${u}</small></span><span class="row gap"><a class="btn small" href=${u} target="_blank" rel="noopener">${tr('Ouvrir', 'Open', 'Sokafy')}</a><button class="btn small ghost" onClick=${async () => toast((await copyText(u)) ? tr('Lien copié', 'Link copied', 'Voadika') : u)}>${tr('Copier', 'Copy', 'Adikao')}</button></span></div>`)}
       <p class="hint">${tr('Partagez le lien client sur Facebook, Instagram et WhatsApp. Sur téléphone, « Ajouter à l\'écran d\'accueil » l\'installe comme une application.', 'Share the customer link on Facebook, Instagram and WhatsApp. On phones, "Add to home screen" installs it as an app.', 'Zarao amin\'ny Facebook, Instagram ary WhatsApp ny rohy client. Amin\'ny finday, « Ajouter à l\'écran d\'accueil » no hametrahana azy ho app.')}</p>
-      ${MODE === 'supabase' && html`<p class="warn-box small">${tr('Important (une seule fois) : dans Supabase → Authentication → URL Configuration, mettez « Site URL » = ', 'Important (once): in Supabase → Authentication → URL Configuration, set "Site URL" = ', 'Zava-dehibe (indray mandeha): ao amin\'ny Supabase → Authentication → URL Configuration, apetraho ny « Site URL » = ')}<b class="mono">${base}</b>${tr(' et ajoutez ', ' and add ', ' ary ampio ')}<b class="mono">${base}*</b>${tr(' dans « Redirect URLs », sinon les e-mails de confirmation renvoient vers une mauvaise adresse.', ' to "Redirect URLs", otherwise confirmation e-mails point to a wrong address.', ' ao amin\'ny « Redirect URLs », raha tsy izany dia diso adiresy ny mailaka fanamarinana.')}</p>`}
+      ${MODE === 'supabase' && html`<p class="warn-box small">${tr('Important (une seule fois) : dans Supabase → Authentication → URL Configuration, mettez « Site URL » = ', 'Important (once): in Supabase → Authentication → URL Configuration, set "Site URL" = ', 'Zava-dehibe (indray mandeha): ao amin\'ny Supabase → Authentication → URL Configuration, apetraho ny « Site URL » = ')}<b class="mono">${base}connexion.html</b>${tr(' et ajoutez ', ' and add ', ' ary ampio ')}<b class="mono">${base}*</b>${tr(' dans « Redirect URLs », sinon les e-mails de confirmation renvoient vers une mauvaise adresse.', ' to "Redirect URLs", otherwise confirmation e-mails point to a wrong address.', ' ao amin\'ny « Redirect URLs », raha tsy izany dia diso adiresy ny mailaka fanamarinana.')}</p>`}
     <//>
 
     <${PushCard} />

@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290725';
-import { DEMO } from './seed.js?v=202610290725';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290725';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290734';
+import { DEMO } from './seed.js?v=202610290734';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290734';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
@@ -259,4 +259,26 @@ export async function appelFonction(nom, body) {
   const { data, error } = await c.functions.invoke(nom, { body });
   if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (e) { /* */ } throw new Error(m); }
   return data;
+}
+
+// Connexion : e-mail directement, ou nom d'utilisateur / compte démo via la fonction « connexion »
+export async function connexion(identifiant, password) {
+  const id = String(identifiant || '').trim();
+  if (MODE === 'demo') return;
+  const c = await getClient();
+  if (id.includes('@')) {
+    const { error } = await c.auth.signInWithPassword({ email: id, password });
+    if (error) throw new Error(/confirm/i.test(error.message) ? 'Adresse e-mail pas encore confirmée : ouvrez l\'e-mail reçu à l\'inscription.' : 'Identifiant ou mot de passe incorrect');
+    return;
+  }
+  const { data, error } = await c.functions.invoke('connexion', { body: { identifiant: id, password } });
+  if (error) { let m = 'Identifiant ou mot de passe incorrect'; try { const j = await error.context.json(); m = j.error || m; } catch (e) { /* */ } throw new Error(m); }
+  const { error: e2 } = await c.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
+  if (e2) throw e2;
+}
+export async function usernameLibre(u) {
+  if (MODE === 'demo') return true;
+  const c = await getClient();
+  const { data } = await c.rpc('username_libre', { u });
+  return !!data;
 }

@@ -7,7 +7,7 @@ root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))  # Antananarivo
 version = now.strftime('%Y-%m-%d %H:%M')
 tag = now.strftime('%Y%m%d%H%M')
-PAGES = ['index.html', 'client.html', 'livreur.html']
+PAGES = ['index.html', 'connexion.html', 'client.html', 'livreur.html']
 files = PAGES + ['config.js']
 imp = re.compile(r"""((?:from|import)\s*\(?\s*['"])(\.{1,2}/[^'"?]+?\.(?:js|mjs))(?:\?v=\d+)?(['"])""")
 for d in ('js', 'css'):

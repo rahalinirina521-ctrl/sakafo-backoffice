@@ -1,10 +1,11 @@
 {
- "version": "2026-10-29 07:25",
- "tag": "202610290725",
- "date": "2026-10-29T07:25+03:00",
+ "version": "2026-10-29 07:34",
+ "tag": "202610290734",
+ "date": "2026-10-29T07:34+03:00",
  "files": [
   "client.html",
   "config.js",
+  "connexion.html",
   "css/style.css",
   "index.html",
   "js/address.js",
@@ -14,6 +15,7 @@
   "js/chat.js",
   "js/client/app.js",
   "js/client/vues.js",
+  "js/connexion.js",
   "js/conseil-ui.js",
   "js/conseil.js",
   "js/db.js",

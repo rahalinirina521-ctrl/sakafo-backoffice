@@ -1,6 +1,6 @@
-import { html, useState, createContext, useContext } from './lib.js?v=202610290725';
-import { tr } from './i18n.js?v=202610290725';
-import { optionList } from './calc.js?v=202610290725';
+import { html, useState, createContext, useContext } from './lib.js?v=202610290734';
+import { tr } from './i18n.js?v=202610290734';
+import { optionList } from './calc.js?v=202610290734';
 
 export const AppCtx = createContext(null);
 export const useApp = () => useContext(AppCtx);
