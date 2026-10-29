@@ -592,3 +592,22 @@ body.app-connexion { background: #f4f6f1; }
   .cx-points { display: none; }
   .cx-card { margin: -8px auto 24px; padding: 18px; }
 }
+
+/* compte / déconnexion */
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--green); color: #fff; border: 0; display: inline-grid; place-items: center; font-weight: 700; font-size: 13px; cursor: pointer; flex: none; font-family: inherit; }
+.avatar.big { width: 48px; height: 48px; font-size: 18px; }
+.user-menu { position: relative; }
+.user-pop { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.15); min-width: 230px; z-index: 50; padding: 6px; display: flex; flex-direction: column; }
+.user-pop button { font: inherit; text-align: left; background: none; border: 0; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+.user-pop button:hover { background: #f3f6f1; } .user-pop button.danger { color: var(--bad); }
+.user-id { padding: 8px 12px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px; }
+.user-id small { color: var(--muted); word-break: break-all; } .user-id .badge { align-self: flex-start; margin-top: 4px; }
+.side-user { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .side-user span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.side-user small { color: #9fb79c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.side-link { display: block; color: #dfe9dd; padding: 6px 0; }
+.logout-btn { width: 100%; justify-content: center; margin-top: 6px; background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.25); }
+.compte-id { display: flex; gap: 12px; align-items: center; } .compte-id > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .compte-id small { color: var(--muted); word-break: break-all; }
+.compte-id .badge { align-self: flex-start; }
+.btn.danger:not(.ghost) { border-color: #f1c4c4; }
+.deja { display: flex; gap: 12px; align-items: center; background: #f6f9f4; border-radius: 12px; padding: 12px; } .deja > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .deja b { word-break: break-all; } .deja .badge { align-self: flex-start; }
+.c-top .row.gap { gap: 6px; }

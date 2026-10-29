@@ -1,18 +1,18 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290734';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290734';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290734';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290734';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290734';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290734';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290734';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290734';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290734';
-import { Chat } from '../chat.js?v=202610290734';
-import { insertRow, updateRow, remove } from '../db.js?v=202610290734';
-import { param } from '../params.js?v=202610290734';
-import { AddressField } from '../address.js?v=202610290734';
-import { Thumb } from '../pickers.js?v=202610290734';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290744';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290744';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290744';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290744';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290744';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290744';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290744';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290744';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290744';
+import { Chat } from '../chat.js?v=202610290744';
+import { insertRow, updateRow, remove } from '../db.js?v=202610290744';
+import { param } from '../params.js?v=202610290744';
+import { AddressField } from '../address.js?v=202610290744';
+import { Thumb } from '../pickers.js?v=202610290744';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());
@@ -261,7 +261,7 @@ export function MessagesClient({ conversation }) {
 }
 
 // ---------- Profil ----------
-export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi, onMoi }) {
+export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi, onMoi, compte }) {
   const { toast } = useApp();
   const [username, setUsername] = useState(moi?.username || '');
   async function saveUsername() {
@@ -285,6 +285,6 @@ export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi
     ${moi && client.id !== 'CL-DEMO' && html`<section class="c-card"><${Field} label=${tr('Nom d\'utilisateur (pour se connecter)', 'Username (to sign in)', 'Anarana mpampiasa (hidirana)')}><div class="row gap"><input value=${username} onInput=${(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))} autocapitalize="none" /><button class="btn" onClick=${saveUsername}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button></div><//>
       <small class="muted">${tr('Vous pouvez aussi vous connecter avec votre e-mail.', 'You can also sign in with your e-mail.', 'Azonao ampiasaina koa ny mailakao.')}</small></section>`}
     <section class="c-card"><div class="row between wrap gap"><span>${tr('Langue', 'Language', 'Fiteny')}</span><${LangSwitch} lang=${lang} onChange=${onLang} /></div></section>
-    <section class="c-card"><p class="small muted">${client.email || ''}</p><button class="btn ghost" onClick=${logout}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section>
+    ${compte || html`<section class="c-card"><button class="btn ghost" onClick=${logout}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section>`}
   </div>`;
 }

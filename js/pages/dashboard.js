@@ -1,8 +1,8 @@
-import { html, useMemo } from '../lib.js?v=202610290734';
-import { useApp, Card, Badge } from '../ui.js?v=202610290734';
-import { platTotals, isComplete } from '../calc.js?v=202610290734';
-import { tr, ingName, platTitle } from '../i18n.js?v=202610290734';
-import { MODE } from '../db.js?v=202610290734';
+import { html, useMemo } from '../lib.js?v=202610290744';
+import { useApp, Card, Badge } from '../ui.js?v=202610290744';
+import { platTotals, isComplete } from '../calc.js?v=202610290744';
+import { tr, ingName, platTitle } from '../i18n.js?v=202610290744';
+import { MODE } from '../db.js?v=202610290744';
 
 export function Dashboard() {
   const { data, ingMap } = useApp();

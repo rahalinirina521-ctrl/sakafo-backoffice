@@ -1,6 +1,6 @@
 // Cartes (Leaflet + OpenStreetMap) et itinéraires (OSRM) — gratuits, sans clé.
 // OSRM ne connaît pas les embouteillages : on applique un « facteur trafic » (Antananarivo ≈ ×1,6 par défaut).
-import { html, useEffect, useRef } from './lib.js?v=202610290734';
+import { html, useEffect, useRef } from './lib.js?v=202610290744';
 
 const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
 const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';

@@ -1,15 +1,15 @@
 // Application livreur (PWA) : tournée du jour, ordre optimisé, carte, ETA, GPS partagé, messages.
-import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290734';
-import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290734';
-import { tr } from '../i18n.js?v=202610290734';
-import { isoDate } from '../calc.js?v=202610290734';
-import { loadAll, upsert, updateRow } from '../db.js?v=202610290734';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290734';
-import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290734';
-import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290734';
-import { Chat, nonLus } from '../chat.js?v=202610290734';
-import { param } from '../params.js?v=202610290734';
-import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290734';
+import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610290744';
+import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610290744';
+import { tr } from '../i18n.js?v=202610290744';
+import { isoDate } from '../calc.js?v=202610290744';
+import { loadAll, upsert, updateRow } from '../db.js?v=202610290744';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290744';
+import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610290744';
+import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290744';
+import { Chat, nonLus } from '../chat.js?v=202610290744';
+import { param } from '../params.js?v=202610290744';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610290744';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const DEMO_AS = { user_id: 'demo-livreur', admin: false, role: 'livreur', livreur_id: new URLSearchParams(location.search).get('as') || 'LR001' };
@@ -43,11 +43,11 @@ export function LivreurApp() {
   const unread = convs.reduce((n, c) => n + nonLus(data.messages || [], c, me.id), 0);
   return html`<${AppCtx.Provider} value=${ctx}>
     <div class="c-app lv-app">
-      <header class="c-top"><span class="auth-brand"><span class="logo-dot" style=${{ background: livreur?.couleur }}>🛵</span><b>${livreur?.nom || tr('Livreur', 'Courier', 'Mpitondra')}</b></span><${LangSwitch} lang=${lang} onChange=${setLang} /></header>
+      <header class="c-top"><span class="auth-brand"><span class="logo-dot" style=${{ background: livreur?.couleur }}>🛵</span><b>${livreur?.nom || tr('Livreur', 'Courier', 'Mpitondra')}</b></span><span class="row gap"><${LangSwitch} lang=${lang} onChange=${setLang} /><${UserMenu} nom=${livreur?.nom} email=${me.email} role="livreur" onCompte=${() => setOnglet('compte')} /></span></header>
       <${UpdateNotice} /><main class="c-main">
         ${onglet === 'tournee' && html`<${Tournee} livreur=${livreur} lid=${lid} ouvrirChat=${(c) => { setChatConv(c); setOnglet('messages'); }} />`}
         ${onglet === 'messages' && html`<${MessagesLivreur} convs=${convs} conv=${chatConv} setConv=${setChatConv} />`}
-        ${onglet === 'compte' && html`<div class="c-page"><section class="c-card"><p>${me.email}</p><button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('connexion.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section></div>`}
+        ${onglet === 'compte' && html`<div class="c-page"><${CompteCard} email=${me.email} nom=${livreur?.nom} role="livreur" toast=${toast} /></div>`}
       </main>
       <nav class="c-nav">${[['tournee', '🗺️', tr('Tournée', 'Route', 'Lalana')], ['messages', '💬', tr('Messages', 'Messages', 'Hafatra')], ['compte', '👤', tr('Compte', 'Account', 'Kaonty')]].map(([k, i, l]) => html`<a href="#" class=${onglet === k ? 'on' : ''} onClick=${(e) => { e.preventDefault(); setOnglet(k); }}><span>${i}${k === 'messages' && unread ? html`<i class="dot-badge">${unread}</i>` : null}</span><small>${l}</small></a>`)}</nav>
     </div>

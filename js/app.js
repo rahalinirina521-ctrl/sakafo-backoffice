@@ -1,30 +1,30 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290734';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290734';
-import { NewPassword } from './shell.js?v=202610290734';
-import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290734';
-import { nonLus } from './chat.js?v=202610290734';
-import { BRAND } from '../config.js?v=202610290734';
-import { AppCtx } from './ui.js?v=202610290734';
-import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610290734';
-import { registerCustomUnits } from './calc.js?v=202610290734';
-import { Dashboard } from './pages/dashboard.js?v=202610290734';
-import { PlatsList } from './pages/plats.js?v=202610290734';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290734';
-import { Ingredients } from './pages/ingredients.js?v=202610290734';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290734';
-import { Planning } from './pages/planning.js?v=202610290734';
-import { Clients } from './pages/clients.js?v=202610290734';
-import { Tarifs } from './pages/tarifs.js?v=202610290734';
-import { Propositions } from './pages/propositions.js?v=202610290734';
-import { Categories } from './pages/categories.js?v=202610290734';
-import { Backup } from './pages/backup.js?v=202610290734';
-import { Livraisons } from './pages/livraisons.js?v=202610290734';
-import { Livreurs } from './pages/livreurs.js?v=202610290734';
-import { Messages } from './pages/messages.js?v=202610290734';
-import { Notifications } from './pages/notifications.js?v=202610290734';
-import { Parametres } from './pages/parametres.js?v=202610290734';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290744';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290744';
+import { NewPassword, UserMenu, deconnecter } from './shell.js?v=202610290744';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290744';
+import { nonLus } from './chat.js?v=202610290744';
+import { BRAND } from '../config.js?v=202610290744';
+import { AppCtx } from './ui.js?v=202610290744';
+import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610290744';
+import { registerCustomUnits } from './calc.js?v=202610290744';
+import { Dashboard } from './pages/dashboard.js?v=202610290744';
+import { PlatsList } from './pages/plats.js?v=202610290744';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290744';
+import { Ingredients } from './pages/ingredients.js?v=202610290744';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290744';
+import { Planning } from './pages/planning.js?v=202610290744';
+import { Clients } from './pages/clients.js?v=202610290744';
+import { Tarifs } from './pages/tarifs.js?v=202610290744';
+import { Propositions } from './pages/propositions.js?v=202610290744';
+import { Categories } from './pages/categories.js?v=202610290744';
+import { Backup } from './pages/backup.js?v=202610290744';
+import { Livraisons } from './pages/livraisons.js?v=202610290744';
+import { Livreurs } from './pages/livreurs.js?v=202610290744';
+import { Messages } from './pages/messages.js?v=202610290744';
+import { Notifications } from './pages/notifications.js?v=202610290744';
+import { Parametres } from './pages/parametres.js?v=202610290744';
 
-export const VERSION = '2026-10-29 07:34';
+export const VERSION = '2026-10-29 07:44';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -145,7 +145,7 @@ export function App() {
   }, []);
   useEffect(() => {
     if (!session) { setMe(null); return; }
-    whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
+    whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND, email: session.user?.email }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
   }, [session]);
   useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications']], [me?.admin]);
   // Page de connexion unique : chacun est envoyé vers son espace après connexion
@@ -272,13 +272,15 @@ export function App() {
           ${MODE === 'demo'
             ? html`<div class="demo-note"><b>${tr('Mode démo', 'Demo mode', 'Mode démo')}</b><br/>${tr('Les données sont enregistrées uniquement dans ce navigateur.', 'Data is saved in this browser only.', 'Ao amin\'ity navigateur ity ihany no voatahiry ny données.')}<br/>
                 <button class="link" onClick=${() => { if (confirm(tr('Effacer toutes les données de démo ?', 'Erase all demo data?', 'Hamafa ny données démo rehetra?'))) { resetDemo(); reload(); } }}>${tr('Réinitialiser', 'Reset', 'Avereno amin\'ny voalohany')}</button></div>`
-            : html`<div class="muted small">${session.user?.email}</div><button class="btn ghost small" onClick=${async () => { await signOut(); location.replace('connexion.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button>`}
+            : html`<div class="side-user"><span class="avatar">${(session.user?.email || '?')[0].toUpperCase()}</span><span><b>${tr('Administrateur', 'Administrator', 'Mpitantana')}</b><small>${session.user?.email}</small></span></div>
+              <a class="side-link" href="#/parametres" onClick=${() => setMenuOpen(false)}>👤 ${tr('Mon compte', 'My account', 'Ny kaontiko')}</a>
+              <button class="btn small logout-btn" onClick=${() => deconnecter()}>⎋ ${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button>`}
         </div>
       </aside>
       ${menuOpen && html`<div class="backdrop" onClick=${() => setMenuOpen(false)}></div>`}
       <main>
         <${UpdateBanner} />
-        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰${notifNonLues + unread ? html`<i class="dot-badge">${notifNonLues + unread}</i>` : null}</button><span class="topbar-title">${BRAND}</span><a class="bell" href="#/notifications" aria-label="Notifications">🔔${notifNonLues ? html`<i class="dot-badge">${notifNonLues}</i>` : null}</a><${LangSwitch} lang=${lang} onChange=${changeLang} /></div>
+        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰${notifNonLues + unread ? html`<i class="dot-badge">${notifNonLues + unread}</i>` : null}</button><span class="topbar-title">${BRAND}</span><a class="bell" href="#/notifications" aria-label="Notifications">🔔${notifNonLues ? html`<i class="dot-badge">${notifNonLues}</i>` : null}</a><${LangSwitch} lang=${lang} onChange=${changeLang} />${MODE !== 'demo' && html`<${UserMenu} nom=${tr('Administrateur', 'Administrator', 'Mpitantana')} email=${session.user?.email} role="admin" onCompte=${() => { location.hash = '#/parametres'; }} />`}</div>
         ${error && html`<p class="error banner">${error}</p>`}
         ${page}
       </main>

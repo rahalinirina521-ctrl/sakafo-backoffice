@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290734';
-import { DEMO } from './seed.js?v=202610290734';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290734';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290744';
+import { DEMO } from './seed.js?v=202610290744';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290744';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
@@ -128,18 +128,42 @@ export async function remove(table, ids) {
 export async function getSession() {
   if (MODE === 'demo') return { user: { email: 'demo' } };
   const c = await getClient();
+  // « Se souvenir de moi » décoché : la session se termine à la fermeture du navigateur
+  try {
+    if (localStorage.getItem('sakafo_session_temp') === '1' && !sessionStorage.getItem('sakafo_alive')) {
+      localStorage.removeItem('sakafo_session_temp');
+      await c.auth.signOut({ scope: 'local' });
+      return null;
+    }
+  } catch (e) { /* stockage indisponible */ }
   const { data } = await c.auth.getSession();
   return data.session;
+}
+export function seSouvenir(oui) {
+  try {
+    if (oui) localStorage.removeItem('sakafo_session_temp'); else localStorage.setItem('sakafo_session_temp', '1');
+    sessionStorage.setItem('sakafo_alive', '1');
+  } catch (e) { /* */ }
 }
 export async function signIn(email, password) {
   const c = await getClient();
   const { error } = await c.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
-export async function signOut() {
+// scope : 'local' (cet appareil) ou 'global' (tous les appareils)
+export async function signOut(scope = 'local') {
+  try { localStorage.removeItem('sakafo_session_temp'); sessionStorage.removeItem('sakafo_alive'); } catch (e) { /* */ }
   if (MODE === 'demo') return;
   const c = await getClient();
-  await c.auth.signOut();
+  await c.auth.signOut({ scope });
+}
+// Vérifie le mot de passe actuel puis le remplace
+export async function changerMotDePasse(email, actuel, nouveau) {
+  const c = await getClient();
+  const { error: e1 } = await c.auth.signInWithPassword({ email, password: actuel });
+  if (e1) throw new Error('Mot de passe actuel incorrect');
+  const { error } = await c.auth.updateUser({ password: nouveau });
+  if (error) throw error;
 }
 
 // ---------- Sary ----------

@@ -1,8 +1,8 @@
 // Page de connexion unique : nom d'utilisateur (ou e-mail) + mot de passe, inscription des clients, compte démo.
-import { html, render, useState, useEffect } from './lib.js?v=202610290734';
-import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable } from './db.js?v=202610290734';
-import { tr, catName } from './i18n.js?v=202610290734';
-import { LangSwitch, useLang, NewPassword } from './shell.js?v=202610290734';
+import { html, render, useState, useEffect } from './lib.js?v=202610290744';
+import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610290744';
+import { tr, catName } from './i18n.js?v=202610290744';
+import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610290744';
 
 const destination = (w) => (w.admin ? 'index.html' : w.livreur_id || w.role === 'livreur' ? 'livreur.html' : 'client.html');
 const nettoie = (u) => String(u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30);
@@ -11,7 +11,9 @@ function Connexion() {
   const [lang, setLang] = useLang();
   const params = new URLSearchParams(location.search);
   const [mode, setMode] = useState(params.has('inscription') || location.hash === '#inscription' ? 'signup' : 'login');
-  const [etat, setEtat] = useState('verif'); // verif | form | redirection
+  const [etat, setEtat] = useState('verif'); // verif | form | connecte | redirection
+  const [moi, setMoi] = useState(null);
+  const deco = params.get('deconnecte');
   const [recovery, setRecovery] = useState(false);
   const [objectifs, setObjectifs] = useState([]);
 
@@ -25,7 +27,10 @@ function Connexion() {
       stop = await onAuthChange((ev) => { if (ev === 'PASSWORD_RECOVERY') setRecovery(true); });
       if (MODE === 'demo') { location.replace('index.html'); return; }
       const s = await getSession();
-      if (s && !location.hash.includes('type=recovery')) allerVersEspace(); else setEtat('form');
+      if (s && !location.hash.includes('type=recovery')) {
+        // Déjà connecté : on le montre clairement au lieu de rediriger sans prévenir
+        try { const w = await whoami(); setMoi({ ...w, email: s.user?.email }); setEtat('connecte'); } catch (e) { setEtat('form'); }
+      } else setEtat('form');
     })();
     lireTable('categories').then((cs) => setObjectifs(cs.filter((c) => c.statut !== 'attente').sort((a, b) => (a.ordre || 0) - (b.ordre || 0)))).catch(() => {});
     return () => stop();
@@ -45,7 +50,13 @@ function Connexion() {
     </section>
     <section class="cx-card card">
       <div class="row between"><h2>${mode === 'signup' ? tr('Créer un compte', 'Create an account', 'Hamorona kaonty') : mode === 'reset' ? tr('Mot de passe oublié', 'Forgot password', 'Hadino ny teny miafina') : tr('Connexion', 'Sign in', 'Fidirana')}</h2><${LangSwitch} lang=${lang} onChange=${setLang} /></div>
-      ${etat !== 'form' ? html`<p class="muted center-text">${etat === 'redirection' ? tr('Ouverture de votre espace…', 'Opening your space…', 'Manokatra ny toeranao…') : '…'}</p>`
+      ${deco !== null && etat === 'form' && html`<p class="ok-box small">✓ ${deco === 'tous' ? tr('Vous êtes déconnecté de tous les appareils.', 'You are signed out of all devices.', 'Nivoaka tamin\'ny fitaovana rehetra ianao.') : tr('Vous êtes déconnecté.', 'You are signed out.', 'Nivoaka ianao.')}</p>`}
+      ${etat === 'connecte' && moi ? html`<div class="col">
+          <div class="deja"><span class="avatar big">${(moi.email || '?')[0].toUpperCase()}</span><div><small class="muted">${tr('Vous êtes connecté en tant que', 'You are signed in as', 'Tafiditra ho')}</small><b>${moi.email}</b><span class="badge muted">${moi.admin ? roleLabel('admin') : roleLabel(moi.livreur_id ? 'livreur' : moi.client_id ? 'client' : 'invite')}</span></div></div>
+          <button class="btn primary big" onClick=${allerVersEspace}>${moi.admin ? tr('Ouvrir le back-office →', 'Open the back-office →', 'Hanokatra ny back-office →') : tr('Continuer vers mon espace →', 'Continue to my space →', 'Hiditra amin\'ny toerako →')}</button>
+          <button class="btn big" onClick=${() => deconnecter()}>⎋ ${tr('Se déconnecter / changer de compte', 'Sign out / switch account', 'Hivoaka / hanova kaonty')}</button>
+        </div>`
+      : etat !== 'form' ? html`<p class="muted center-text">${etat === 'redirection' ? tr('Ouverture de votre espace…', 'Opening your space…', 'Manokatra ny toeranao…') : '…'}</p>`
         : mode === 'signup' ? html`<${Inscription} objectifs=${objectifs} onLogin=${() => setMode('login')} />`
         : mode === 'reset' ? html`<${Oubli} onBack=${() => setMode('login')} />`
         : html`<${Login} onOk=${allerVersEspace} onSignup=${() => setMode('signup')} onReset=${() => setMode('reset')} />`}
@@ -62,16 +73,18 @@ function Mdp({ value, onInput, autocomplete, placeholder }) {
 function Login({ onOk, onSignup, onReset }) {
   const [id, setId] = useState(() => { try { return localStorage.getItem('sakafo_last_user') || ''; } catch (e) { return ''; } });
   const [pwd, setPwd] = useState('');
+  const [souvenir, setSouvenir] = useState(true);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   async function go(i = id, p = pwd) {
     setBusy(true); setErr('');
-    try { await connexion(i, p); try { if (i !== 'demo') localStorage.setItem('sakafo_last_user', i.trim()); } catch (e) { /* */ } await onOk(); } catch (x) { setErr(x.message || String(x)); setBusy(false); }
+    try { await connexion(i, p); seSouvenir(i === 'demo' ? false : souvenir); try { if (i !== 'demo') localStorage.setItem('sakafo_last_user', i.trim()); } catch (e) { /* */ } await onOk(); } catch (x) { setErr(x.message || String(x)); setBusy(false); }
   }
   return html`<form class="col" onSubmit=${(e) => { e.preventDefault(); go(); }}>
     <label class="field"><span class="field-label">${tr('Nom d\'utilisateur ou e-mail', 'Username or e-mail', 'Anarana mpampiasa na mailaka')}</span>
       <input required value=${id} onInput=${(e) => setId(e.target.value)} autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=${tr('ex. rasoa.hanta', 'e.g. rasoa.hanta', 'ohatra rasoa.hanta')} /></label>
     <label class="field"><span class="field-label">${tr('Mot de passe', 'Password', 'Teny miafina')}</span><${Mdp} value=${pwd} onInput=${(e) => setPwd(e.target.value)} autocomplete="current-password" /></label>
+    <label class="check"><input type="checkbox" checked=${souvenir} onChange=${(e) => setSouvenir(e.target.checked)} /> ${tr('Rester connecté sur cet appareil', 'Keep me signed in on this device', 'Avelao hiditra foana amin\'ity fitaovana ity')}</label>
     ${err && html`<p class="error">${err}</p>`}
     <button class="btn primary big" disabled=${busy}>${busy ? tr('Connexion…', 'Signing in…', 'Miditra…') : tr('Se connecter', 'Sign in', 'Hiditra')}</button>
     <button type="button" class="link-btn small" onClick=${onReset}>${tr('Mot de passe oublié ?', 'Forgot password?', 'Hadino ny teny miafina?')}</button>

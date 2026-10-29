@@ -1,7 +1,7 @@
 // Éléments communs aux applications client et livreur : session, connexion / inscription, langue, toast, mise à jour.
-import { html, useState, useEffect, useCallback } from './lib.js?v=202610290734';
-import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword } from './db.js?v=202610290734';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290734';
+import { html, useState, useEffect, useCallback } from './lib.js?v=202610290744';
+import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword, changerMotDePasse } from './db.js?v=202610290744';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290744';
 
 export function LangSwitch({ lang, onChange }) {
   return html`<div class="lang-switch" role="group" aria-label="Langue">
@@ -45,7 +45,7 @@ export function useAuth(demoAs) {
     if (!session) { setMe(null); return; }
     whoami(demoAs).then((w) => setMe({ ...w, id: w.user_id, email: session.user?.email })).catch((e) => setErr(e.message || String(e)));
   }, [session]);
-  const logout = async () => { await signOut(); setSession(null); };
+  const logout = async () => { await deconnecter(); };
   return { session, me, err, logout, recovery, setRecovery };
 }
 
@@ -123,4 +123,61 @@ export function UpdateNotice() {
   if (!nv) return null;
   return html`<div class="update-banner"><span>${tr('Nouvelle version disponible', 'New version available', 'Misy version vaovao')}</span>
     <button class="btn small primary" onClick=${async () => { await fetch(location.pathname, { cache: 'reload' }).catch(() => {}); location.reload(); }}>${tr('Mettre à jour', 'Update', 'Avaozy')}</button></div>`;
+}
+
+// ---------- Compte : déconnexion, changement de mot de passe, menu utilisateur ----------
+export async function deconnecter(scope = 'local') {
+  try { await signOut(scope); } catch (e) { /* on quitte quand même */ }
+  location.replace('connexion.html?deconnecte' + (scope === 'global' ? '=tous' : ''));
+}
+const ROLES = { admin: ['Administrateur', 'Administrator', 'Mpitantana'], client: ['Client', 'Customer', 'Client'], livreur: ['Livreur', 'Courier', 'Mpitondra'], invite: ['Invité', 'Guest', 'Vahiny'] };
+export const roleLabel = (r) => tr(...(ROLES[r] || ROLES.invite));
+const initiales = (n) => String(n || '?').trim().split(/[\s.@_-]+/).filter(Boolean).slice(0, 2).map((x) => x[0].toUpperCase()).join('') || '?';
+
+// Bouton rond (initiales) en haut à droite → nom, rôle, « Mon compte », « Se déconnecter »
+export function UserMenu({ nom, email, role, onCompte, demo }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => { if (!e.target.closest || !e.target.closest('.user-menu')) setOpen(false); };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [open]);
+  return html`<div class="user-menu">
+    <button class="avatar" onClick=${() => setOpen(!open)} aria-label=${tr('Mon compte', 'My account', 'Ny kaontiko')} aria-expanded=${open}>${initiales(nom || email)}</button>
+    ${open && html`<div class="user-pop" role="menu">
+      <div class="user-id"><b>${nom || email}</b><small>${email || ''}</small><span class="badge muted">${demo ? tr('Compte démo', 'Demo account', 'Kaonty démo') : roleLabel(role)}</span></div>
+      ${onCompte && html`<button role="menuitem" onClick=${() => { setOpen(false); onCompte(); }}>👤 ${tr('Mon compte', 'My account', 'Ny kaontiko')}</button>`}
+      <button role="menuitem" class="danger" onClick=${() => deconnecter()}>⎋ ${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button>
+    </div>`}
+  </div>`;
+}
+
+// Carte « Mon compte » : identité, mot de passe, déconnexion (cet appareil / tous les appareils)
+export function CompteCard({ email, nom, role, username, demo, toast }) {
+  const [f, setF] = useState({ actuel: '', nouveau: '', confirme: '' });
+  const [busy, setBusy] = useState(false);
+  const [ouvert, setOuvert] = useState(false);
+  async function changer(e) {
+    e.preventDefault();
+    if (f.nouveau.length < 8) return toast(tr('Nouveau mot de passe : 8 caractères minimum', 'New password: at least 8 characters', 'Teny miafina vaovao: litera 8 farafahakeliny'), 'bad');
+    if (f.nouveau !== f.confirme) return toast(tr('Les deux mots de passe sont différents', 'Passwords do not match', 'Tsy mitovy ny teny miafina roa'), 'bad');
+    setBusy(true);
+    try { await changerMotDePasse(email, f.actuel, f.nouveau); setF({ actuel: '', nouveau: '', confirme: '' }); setOuvert(false); toast(tr('Mot de passe modifié ✅', 'Password changed ✅', 'Voaova ny teny miafina ✅')); } catch (x) { toast(x.message, 'bad'); }
+    setBusy(false);
+  }
+  return html`<section class="c-card compte-card">
+    <h2>🔐 ${tr('Mon compte', 'My account', 'Ny kaontiko')}</h2>
+    <div class="compte-id"><span class="avatar big">${initiales(nom || email)}</span><div><b>${nom || '—'}</b><small>${email}</small>${username && html`<small>${tr('Utilisateur', 'Username', 'Mpampiasa')} : <b>${username}</b></small>`}<span class="badge muted">${demo ? tr('Compte démo', 'Demo account', 'Kaonty démo') : roleLabel(role)}</span></div></div>
+    ${!demo && (ouvert ? html`<form class="col" onSubmit=${changer}>
+        <input type="password" required placeholder=${tr('Mot de passe actuel', 'Current password', 'Teny miafina ankehitriny')} value=${f.actuel} onInput=${(e) => setF({ ...f, actuel: e.target.value })} autocomplete="current-password" />
+        <input type="password" required placeholder=${tr('Nouveau mot de passe (8 caractères min.)', 'New password (min. 8)', 'Teny miafina vaovao')} value=${f.nouveau} onInput=${(e) => setF({ ...f, nouveau: e.target.value })} autocomplete="new-password" />
+        <input type="password" required placeholder=${tr('Confirmer le nouveau mot de passe', 'Confirm new password', 'Averina ny teny miafina vaovao')} value=${f.confirme} onInput=${(e) => setF({ ...f, confirme: e.target.value })} autocomplete="new-password" />
+        <div class="row gap"><button class="btn primary" disabled=${busy}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button><button type="button" class="btn ghost" onClick=${() => setOuvert(false)}>${tr('Annuler', 'Cancel', 'Aoka ihany')}</button></div>
+      </form>` : html`<button class="btn" onClick=${() => setOuvert(true)}>🔑 ${tr('Changer mon mot de passe', 'Change my password', 'Hanova ny teny miafina')}</button>`)}
+    <div class="row gap wrap">
+      <button class="btn danger" onClick=${() => deconnecter()}>⎋ ${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button>
+      ${!demo && html`<button class="btn ghost small" onClick=${() => { if (confirm(tr('Se déconnecter de tous les appareils (téléphones, ordinateurs) ?', 'Sign out from all devices?', 'Hivoaka amin\'ny fitaovana rehetra?'))) deconnecter('global'); }}>${tr('Se déconnecter de tous les appareils', 'Sign out of all devices', 'Hivoaka amin\'ny fitaovana rehetra')}</button>`}
+    </div>
+  </section>`;
 }

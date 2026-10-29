@@ -1,18 +1,18 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610290734';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610290734';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610290734';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610290734';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610290734';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290734';
-import { analyse, typeObjectif } from '../conseil.js?v=202610290734';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290734';
-import { aboStatut } from '../metier.js?v=202610290734';
-import { nonLus } from '../chat.js?v=202610290734';
-import { param } from '../params.js?v=202610290734';
-import { Thumb } from '../pickers.js?v=202610290734';
-import { LangSwitch, useLang, useToast, useAuth, AuthScreen, NewPassword, UpdateNotice } from '../shell.js?v=202610290734';
-import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610290734';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610290744';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610290744';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610290744';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610290744';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610290744';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290744';
+import { analyse, typeObjectif } from '../conseil.js?v=202610290744';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290744';
+import { aboStatut } from '../metier.js?v=202610290744';
+import { nonLus } from '../chat.js?v=202610290744';
+import { param } from '../params.js?v=202610290744';
+import { Thumb } from '../pickers.js?v=202610290744';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610290744';
+import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610290744';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();
@@ -52,7 +52,7 @@ export function ClientApp() {
     send: (c, t) => envoyerMessage(setData, c, t, meChat), markRead: (m) => marquerLus(setData, m, meChat) }), [data, ingMap, lang, me, client?.nom]);
 
   if (auth.session === undefined) return html`<div class="center muted">${tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
-  if (!actif) { location.replace('connexion.html'); return html`<div class="center muted">…</div>`; }
+  if (!actif) { if (auth.session === null) location.replace('connexion.html'); return html`<div class="center muted">${tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`; }
   if (me && me.role === 'livreur') return html`<div class="center"><div class="card login"><p>${tr('Ce compte est un compte livreur.', 'This is a courier account.', 'Kaonty mpitondra ity.')}</p><a class="btn primary" href="livreur.html">🛵 ${tr('Ouvrir l\'application livreur', 'Open the courier app', 'Sokafy ny app livreur')}</a> <button class="btn ghost" onClick=${async () => { await auth.logout(); location.replace('connexion.html'); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></div></div>`;
   if (!data) return html`<div class="center muted">${error ? html`<span class="error">${error}</span>` : tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
 
@@ -66,7 +66,7 @@ export function ClientApp() {
       : parts === '/livraison' ? html`<${LivraisonLive} client=${client} />`
       : parts === '/suivi' ? html`<${Suivi} client=${client} onClient=${setClient} />`
       : parts === '/messages' ? html`<${MessagesClient} conversation=${conv} />`
-      : parts === '/profil' ? html`<${Profil} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
+      : parts === '/profil' ? html`<${Profil} compte=${html`<${CompteCard} email=${me?.email} nom=${client?.nom} role="client" username=${(data.profils || []).find((x) => x.user_id === me?.id)?.username} demo=${estDemo} toast=${toast} />`} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
       : parts === '/formules' ? html`<${Formules} me=${me} conv=${conv} />`
       : html`<${Accueil} client=${client} go=${go} />`;
   } else {
@@ -75,14 +75,14 @@ export function ClientApp() {
       : parts === '/plats' ? html`<${Vitrine} />`
       : parts === '/formules' ? html`<${Formules} me=${me} conv=${conv} />`
       : parts === '/messages' && me ? html`<${MessagesClient} conversation=${conv} />`
-      : parts === '/compte' && client ? html`<${Profil} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
+      : parts === '/compte' && client ? html`<${Profil} compte=${html`<${CompteCard} email=${me?.email} nom=${client?.nom} role="client" username=${(data.profils || []).find((x) => x.user_id === me?.id)?.username} demo=${estDemo} toast=${toast} />`} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
       : parts === '/compte' ? html`<${CompteInvite} me=${me} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} quitter=${() => { location.href = 'connexion.html'; }} lang=${lang} onLang=${setLang} />`
       : html`<${Decouvrir} me=${me} client=${client} />`;
   }
   const actifTab = '/' + (parts.split('/')[1] || '');
   return html`<${AppCtx.Provider} value=${ctx}>
     <div class="c-app">
-      <header class="c-top"><span class="auth-brand"><span class="logo-dot">S</span><b>${BRAND}</b></span>${!abonne && html`<${Badge} tone="warn">${client ? tr('Découverte', 'Discovery', 'Fijerena') : tr('Démo', 'Demo', 'Démo')}<//>`}<${LangSwitch} lang=${lang} onChange=${setLang} /></header>
+      <header class="c-top"><span class="auth-brand"><span class="logo-dot">S</span><b>${BRAND}</b></span>${!abonne && html`<${Badge} tone="warn">${client ? tr('Découverte', 'Discovery', 'Fijerena') : tr('Démo', 'Demo', 'Démo')}<//>`}<${LangSwitch} lang=${lang} onChange=${setLang} />${me ? html`<${UserMenu} nom=${client?.nom} email=${me.email} role=${client ? 'client' : 'invite'} demo=${estDemo} onCompte=${() => go(abonne ? '/profil' : '/compte')} />` : html`<a class="btn small" href="connexion.html">${tr('Connexion', 'Sign in', 'Hiditra')}</a>`}</header>
       <${UpdateNotice} />${estDemo && html`<div class="demo-bar">👀 ${tr('Compte démo — lecture seule', 'Demo account — read only', 'Kaonty démo — jerena fotsiny')} <button class="btn small primary" onClick=${async () => { await auth.logout(); location.replace('connexion.html?inscription'); }}>${tr('Créer mon compte', 'Create my account', 'Hamorona kaonty')}</button></div>`}<main class="c-main">${page}</main>
       <nav class="c-nav">${tabs.map(([p, i, l]) => html`<a href=${'#' + p} class=${actifTab === p ? 'on' : ''}><span>${i}${p === '/messages' && unread ? html`<i class="dot-badge">${unread}</i>` : null}</span><small>${l}</small></a>`)}</nav>
     </div>

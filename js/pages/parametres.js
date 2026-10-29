@@ -1,12 +1,13 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState, useEffect } from '../lib.js?v=202610290734';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290734';
-import { tr } from '../i18n.js?v=202610290734';
-import { toNum } from '../calc.js?v=202610290734';
-import { param, paramRow } from '../params.js?v=202610290734';
-import { MapView } from '../map.js?v=202610290734';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290734';
-import { MODE } from '../db.js?v=202610290734';
+import { html, useState, useEffect } from '../lib.js?v=202610290744';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290744';
+import { tr } from '../i18n.js?v=202610290744';
+import { toNum } from '../calc.js?v=202610290744';
+import { param, paramRow } from '../params.js?v=202610290744';
+import { MapView } from '../map.js?v=202610290744';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290744';
+import { MODE } from '../db.js?v=202610290744';
+import { CompteCard } from '../shell.js?v=202610290744';
 
 export function Parametres() {
   const app = useApp();
@@ -36,6 +37,7 @@ export function Parametres() {
 
   return html`<div class="page">
     <h1>⚙️ ${tr('Paramètres', 'Settings', 'Fikirana')}</h1>
+    ${MODE === 'supabase' && html`<${CompteCard} email=${app.me?.email || ''} nom=${tr('Administrateur', 'Administrator', 'Mpitantana')} role="admin" toast=${toast} />`}
 
     <${Card} title=${'📱 ' + tr('Liens des applications', 'App links', 'Rohy ho an\'ny app')}>
       ${liens.map(([l, u]) => html`<div class="row gap wrap between link-row"><span><b>${l}</b><br/><small class="muted mono">${u}</small></span><span class="row gap"><a class="btn small" href=${u} target="_blank" rel="noopener">${tr('Ouvrir', 'Open', 'Sokafy')}</a><button class="btn small ghost" onClick=${async () => toast((await copyText(u)) ? tr('Lien copié', 'Link copied', 'Voadika') : u)}>${tr('Copier', 'Copy', 'Adikao')}</button></span></div>`)}

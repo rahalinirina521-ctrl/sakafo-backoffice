@@ -14,11 +14,11 @@ const ERREUR = "Nom d'utilisateur ou mot de passe incorrect";
 const jour = (d: number) => new Date(Date.now() + 3 * 3600e3 + d * 864e5).toISOString().slice(0, 10); // Antananarivo
 
 async function preparerDemo(cfg: Record<string, string>) {
-  // compte
+  // compte (recréé si besoin, mot de passe toujours remis à la valeur de référence)
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  if (!(list?.users || []).some((u) => (u.email || "").toLowerCase() === cfg.demo_email)) {
-    await admin.auth.admin.createUser({ email: cfg.demo_email, password: cfg.demo_password, email_confirm: true, user_metadata: { nom: "Compte démo", app: "demo" } });
-  }
+  const u = (list?.users || []).find((x) => (x.email || "").toLowerCase() === cfg.demo_email);
+  if (!u) await admin.auth.admin.createUser({ email: cfg.demo_email, password: cfg.demo_password, email_confirm: true, user_metadata: { nom: "Compte démo", app: "demo" } });
+  else await admin.auth.admin.updateUserById(u.id, { password: cfg.demo_password });
   // menus de la semaine
   const { data: menus } = await admin.from("menus").select("id, categorie_id").order("id");
   const ms = (menus || []).filter((m) => m.categorie_id === "perte-de-poids");
