@@ -1,18 +1,21 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610290744';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610290744';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610290744';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610290744';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610290744';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610290744';
-import { analyse, typeObjectif } from '../conseil.js?v=202610290744';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290744';
-import { aboStatut } from '../metier.js?v=202610290744';
-import { nonLus } from '../chat.js?v=202610290744';
-import { param } from '../params.js?v=202610290744';
-import { Thumb } from '../pickers.js?v=202610290744';
-import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610290744';
-import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610290744';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291028';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291028';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291028';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291028';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291028';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291028';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291028';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291028';
+import { aboStatut } from '../metier.js?v=202610291028';
+import { nonLus } from '../chat.js?v=202610291028';
+import { param } from '../params.js?v=202610291028';
+import { Thumb } from '../pickers.js?v=202610291028';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291028';
+import { Accueil, MenusSemaine, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291028';
+import { MessagesHub, Communaute } from './social.js?v=202610291028';
+import { Logo } from '../logo.js?v=202610291028';
+import { ThemeToggle } from '../theme.js?v=202610291028';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();
@@ -44,7 +47,7 @@ export function ClientApp() {
   const conv = client ? 'client:' + client.id : me ? 'user:' + me.id : null;
   const abonne = !!client && aboStatut(client).actif;
   const estDemo = client?.id === 'CL-DEMO';
-  useLive(setData, client ? [['messages', 'conversation=eq.' + conv], ['livraisons', 'client_id=eq.' + client.id], ['positions'], ['clients', 'id=eq.' + client.id]] : me ? [['messages', 'conversation=eq.' + conv]] : [], [conv]);
+  useLive(setData, client ? [['messages'], ['livraisons', 'client_id=eq.' + client.id], ['positions'], ['incidents'], ['amis'], ['publications'], ['reactions']] : me ? [['messages', 'conversation=eq.' + conv]] : [], [conv]);
 
   const ingMap = useMemo(() => { registerCustomUnits(data?.options || []); return new Map((data?.ingredients || []).map((i) => [i.id, i])); }, [data]);
   const meChat = me && { id: me.id, role: client ? 'client' : 'invite', nom: client?.nom || me.email || '' };
@@ -57,15 +60,17 @@ export function ClientApp() {
   if (!data) return html`<div class="center muted">${error ? html`<span class="error">${error}</span>` : tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
 
   const setClient = (c) => setData((d) => ({ ...d, clients: d.clients.map((x) => (x.id === c.id ? c : x)) }));
-  const unread = conv ? nonLus(data.messages || [], conv, me?.id) : 0;
+  const unread = me ? [...new Set((data.messages || []).map((m) => m.conversation))].reduce((n, c) => n + nonLus(data.messages, c, me.id), 0) : 0;
+  const demandesAmis = client ? (data.amis || []).filter((a) => a.a === client.id && a.statut === 'attente').length : 0;
   const parts = route.split('?')[0];
   let tabs; let page;
   if (abonne) {
-    tabs = [['/', '🏠', tr('Accueil', 'Home', 'Fandraisana')], ['/menus', '📅', tr('Menus', 'Menus', 'Menus')], ...(client.formule !== 'conseil' ? [['/livraison', '🛵', tr('Livraison', 'Delivery', 'Fanaterana')]] : []), ['/suivi', '📈', tr('Suivi', 'Progress', 'Fandrosoana')], ['/messages', '💬', tr('Messages', 'Messages', 'Hafatra')], ['/profil', '👤', tr('Profil', 'Profile', 'Momba ahy')]];
+    tabs = [['/', '🏠', tr('Accueil', 'Home', 'Fandraisana')], ['/menus', '📅', tr('Menus', 'Menus', 'Menus')], ...(client.formule !== 'conseil' ? [['/livraison', '🛵', tr('Livraison', 'Delivery', 'Fanaterana')]] : []), ['/suivi', '📈', tr('Suivi', 'Progress', 'Fandrosoana')], ['/communaute', '👥', tr('Communauté', 'Community', 'Namana')], ['/messages', '💬', tr('Messages', 'Messages', 'Hafatra')]];
     page = parts === '/menus' ? html`<${MenusSemaine} client=${client} />`
       : parts === '/livraison' ? html`<${LivraisonLive} client=${client} />`
       : parts === '/suivi' ? html`<${Suivi} client=${client} onClient=${setClient} />`
-      : parts === '/messages' ? html`<${MessagesClient} conversation=${conv} />`
+      : parts === '/messages' ? html`<${MessagesHub} client=${client} key=${route} />`
+      : parts === '/communaute' ? html`<${Communaute} client=${client} />`
       : parts === '/profil' ? html`<${Profil} compte=${html`<${CompteCard} email=${me?.email} nom=${client?.nom} role="client" username=${(data.profils || []).find((x) => x.user_id === me?.id)?.username} demo=${estDemo} toast=${toast} />`} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
       : parts === '/formules' ? html`<${Formules} me=${me} conv=${conv} />`
       : html`<${Accueil} client=${client} go=${go} />`;
@@ -74,6 +79,7 @@ export function ClientApp() {
     page = parts === '/objectif' ? html`<${Simulateur} me=${me} client=${client} onClient=${setClient} conv=${conv} />`
       : parts === '/plats' ? html`<${Vitrine} />`
       : parts === '/formules' ? html`<${Formules} me=${me} conv=${conv} />`
+      : parts === '/messages' && client ? html`<${MessagesHub} client=${client} key=${route} />`
       : parts === '/messages' && me ? html`<${MessagesClient} conversation=${conv} />`
       : parts === '/compte' && client ? html`<${Profil} compte=${html`<${CompteCard} email=${me?.email} nom=${client?.nom} role="client" username=${(data.profils || []).find((x) => x.user_id === me?.id)?.username} demo=${estDemo} toast=${toast} />`} client=${client} moi=${(data.profils || []).find((x) => x.user_id === me?.id)} onMoi=${(p) => setData((d) => ({ ...d, profils: (d.profils || []).map((x) => (x.user_id === p.user_id ? p : x)) }))} onClient=${setClient} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} lang=${lang} onLang=${setLang} LangSwitch=${LangSwitch} />`
       : parts === '/compte' ? html`<${CompteInvite} me=${me} logout=${async () => { await auth.logout(); location.replace('connexion.html'); }} quitter=${() => { location.href = 'connexion.html'; }} lang=${lang} onLang=${setLang} />`
@@ -82,9 +88,9 @@ export function ClientApp() {
   const actifTab = '/' + (parts.split('/')[1] || '');
   return html`<${AppCtx.Provider} value=${ctx}>
     <div class="c-app">
-      <header class="c-top"><span class="auth-brand"><span class="logo-dot">S</span><b>${BRAND}</b></span>${!abonne && html`<${Badge} tone="warn">${client ? tr('Découverte', 'Discovery', 'Fijerena') : tr('Démo', 'Demo', 'Démo')}<//>`}<${LangSwitch} lang=${lang} onChange=${setLang} />${me ? html`<${UserMenu} nom=${client?.nom} email=${me.email} role=${client ? 'client' : 'invite'} demo=${estDemo} onCompte=${() => go(abonne ? '/profil' : '/compte')} />` : html`<a class="btn small" href="connexion.html">${tr('Connexion', 'Sign in', 'Hiditra')}</a>`}</header>
+      <header class="c-top"><a class="auth-brand" href="#/"><${Logo} size=${32} titre /></a><span class="grow"></span>${!abonne && html`<${Badge} tone="warn">${client ? tr('Découverte', 'Discovery', 'Fijerena') : tr('Démo', 'Demo', 'Démo')}<//>`}<${ThemeToggle} compact /><${LangSwitch} lang=${lang} onChange=${setLang} />${me ? html`<${UserMenu} nom=${client?.nom} email=${me.email} role=${client ? 'client' : 'invite'} demo=${estDemo} onCompte=${() => go(abonne ? '/profil' : '/compte')} />` : html`<a class="btn small" href="connexion.html">${tr('Connexion', 'Sign in', 'Hiditra')}</a>`}</header>
       <${UpdateNotice} />${estDemo && html`<div class="demo-bar">👀 ${tr('Compte démo — lecture seule', 'Demo account — read only', 'Kaonty démo — jerena fotsiny')} <button class="btn small primary" onClick=${async () => { await auth.logout(); location.replace('connexion.html?inscription'); }}>${tr('Créer mon compte', 'Create my account', 'Hamorona kaonty')}</button></div>`}<main class="c-main">${page}</main>
-      <nav class="c-nav">${tabs.map(([p, i, l]) => html`<a href=${'#' + p} class=${actifTab === p ? 'on' : ''}><span>${i}${p === '/messages' && unread ? html`<i class="dot-badge">${unread}</i>` : null}</span><small>${l}</small></a>`)}</nav>
+      <nav class="c-nav">${tabs.map(([p, i, l]) => html`<a href=${'#' + p} class=${actifTab === p ? 'on' : ''}><span>${i}${p === '/messages' && unread ? html`<i class="dot-badge">${unread}</i>` : null}${p === '/communaute' && demandesAmis ? html`<i class="dot-badge">${demandesAmis}</i>` : null}</span><small>${l}</small></a>`)}</nav>
     </div>
     ${auth.recovery && html`<${NewPassword} onDone=${() => { auth.setRecovery(false); toast(tr('Mot de passe modifié', 'Password changed', 'Voaova ny teny miafina')); }} />`}
     ${toastView}

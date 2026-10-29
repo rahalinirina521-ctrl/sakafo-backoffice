@@ -1,8 +1,10 @@
 // Page de connexion unique : nom d'utilisateur (ou e-mail) + mot de passe, inscription des clients, compte démo.
-import { html, render, useState, useEffect } from './lib.js?v=202610290744';
-import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610290744';
-import { tr, catName } from './i18n.js?v=202610290744';
-import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610290744';
+import { html, render, useState, useEffect } from './lib.js?v=202610291028';
+import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610291028';
+import { tr, catName } from './i18n.js?v=202610291028';
+import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610291028';
+import { Logo } from './logo.js?v=202610291028';
+import { ThemeToggle } from './theme.js?v=202610291028';
 
 const destination = (w) => (w.admin ? 'index.html' : w.livreur_id || w.role === 'livreur' ? 'livreur.html' : 'client.html');
 const nettoie = (u) => String(u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30);
@@ -39,7 +41,7 @@ function Connexion() {
   if (recovery) return html`<div class="cx-wrap"><${NewPassword} onDone=${() => { setRecovery(false); allerVersEspace(); }} /></div>`;
   return html`<div class="cx-wrap">
     <section class="cx-hero">
-      <div class="cx-logo"><span class="logo-dot big">S</span><b>Sakafo Sur Mesure</b></div>
+      <div class="cx-logo"><${Logo} size=${52} titre /></div>
       <h1>${tr('Des repas calculés pour votre objectif, livrés chez vous.', 'Meals calculated for your goal, delivered to your door.', 'Sakafo kajiana araka ny tanjonao, aterina any aminao.')}</h1>
       <ul class="cx-points">
         <li>🎯 ${tr('Perte de poids, muscle, diabète, grossesse…', 'Weight loss, muscle, diabetes, pregnancy…', 'Fihenan\'ny lanja, hozatra, diabeta, fitondrana vohoka…')}</li>
@@ -49,7 +51,7 @@ function Connexion() {
       </ul>
     </section>
     <section class="cx-card card">
-      <div class="row between"><h2>${mode === 'signup' ? tr('Créer un compte', 'Create an account', 'Hamorona kaonty') : mode === 'reset' ? tr('Mot de passe oublié', 'Forgot password', 'Hadino ny teny miafina') : tr('Connexion', 'Sign in', 'Fidirana')}</h2><${LangSwitch} lang=${lang} onChange=${setLang} /></div>
+      <div class="row between"><h2>${mode === 'signup' ? tr('Créer un compte', 'Create an account', 'Hamorona kaonty') : mode === 'reset' ? tr('Mot de passe oublié', 'Forgot password', 'Hadino ny teny miafina') : tr('Connexion', 'Sign in', 'Fidirana')}</h2><span class="row gap"><${ThemeToggle} compact /><${LangSwitch} lang=${lang} onChange=${setLang} /></span></div>
       ${deco !== null && etat === 'form' && html`<p class="ok-box small">✓ ${deco === 'tous' ? tr('Vous êtes déconnecté de tous les appareils.', 'You are signed out of all devices.', 'Nivoaka tamin\'ny fitaovana rehetra ianao.') : tr('Vous êtes déconnecté.', 'You are signed out.', 'Nivoaka ianao.')}</p>`}
       ${etat === 'connecte' && moi ? html`<div class="col">
           <div class="deja"><span class="avatar big">${(moi.email || '?')[0].toUpperCase()}</span><div><small class="muted">${tr('Vous êtes connecté en tant que', 'You are signed in as', 'Tafiditra ho')}</small><b>${moi.email}</b><span class="badge muted">${moi.admin ? roleLabel('admin') : roleLabel(moi.livreur_id ? 'livreur' : moi.client_id ? 'client' : 'invite')}</span></div></div>

@@ -1,13 +1,14 @@
 // Livraisons du jour : génération à partir des abonnés, répartition entre livreurs, ordre optimisé, suivi en direct.
-import { html, useState, useMemo } from '../lib.js?v=202610290744';
-import { useApp, Badge, Empty, Card } from '../ui.js?v=202610290744';
-import { isoDate, addDays, uid } from '../calc.js?v=202610290744';
-import { tr, catName } from '../i18n.js?v=202610290744';
-import { MapView, optimiser, hasPos, heure, googleNav } from '../map.js?v=202610290744';
-import { STATUTS, CRENEAU_LABEL, COULEURS } from '../tournee.js?v=202610290744';
-import { param } from '../params.js?v=202610290744';
-import { depuis } from './livreurs.js?v=202610290744';
-import { aboCouvre, menuDuJour } from '../metier.js?v=202610290744';
+import { html, useState, useMemo } from '../lib.js?v=202610291028';
+import { useApp, Badge, Empty, Card } from '../ui.js?v=202610291028';
+import { isoDate, addDays, uid } from '../calc.js?v=202610291028';
+import { tr, catName } from '../i18n.js?v=202610291028';
+import { MapView, optimiser, hasPos, heure, googleNav } from '../map.js?v=202610291028';
+import { STATUTS, CRENEAU_LABEL, COULEURS } from '../tournee.js?v=202610291028';
+import { param } from '../params.js?v=202610291028';
+import { depuis } from './livreurs.js?v=202610291028';
+import { aboCouvre, menuDuJour } from '../metier.js?v=202610291028';
+import { incidentLabel } from '../client/social.js?v=202610291028';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 export function Livraisons() {
@@ -86,7 +87,7 @@ export function Livraisons() {
 
   const markers = [
     { ...depot, icon: 'kitchen', popup: depot.adresse },
-    ...jour.filter(hasPos).map((l) => ({ lat: l.lat, lng: l.lng, label: l.statut === 'livree' ? '✓' : (l.ordre ?? '•'), color: l.statut === 'livree' ? '#9e9e9e' : lvMap.get(l.livreur_id)?.couleur || '#757575', popup: `<b>${clMap.get(l.client_id)?.nom || l.client_id}</b><br>${l.adresse || ''}<br>${t3(STATUTS[l.statut])}${l.eta ? ' · ETA ' + heure(l.eta) : ''}` })),
+    ...jour.filter(hasPos).map((l) => ({ lat: l.lat, lng: l.lng, label: l.statut === 'livree' ? '✓' : (l.ordre ?? '•'), color: l.statut === 'livree' ? '#9e9e9e' : lvMap.get(l.livreur_id)?.couleur || '#757575', popup: `${clMap.get(l.client_id)?.nom || l.client_id}\n${l.adresse || ''}\n${t3(STATUTS[l.statut])}${l.eta ? ' · ETA ' + heure(l.eta) : ''}` })),
     ...livreurs.map((lv) => { const p = (data.positions || []).find((x) => x.livreur_id === lv.id); return p && Date.now() - Date.parse(p.updated_at) < 6 * 3600e3 ? { ...p, icon: 'moto', color: lv.couleur, popup: `${lv.nom} · ${depuis(p.updated_at)}` } : null; }).filter(Boolean),
   ];
   const sansGps = jour.filter((l) => !hasPos(l)).length;
@@ -107,6 +108,7 @@ export function Livraisons() {
       <button class="btn" disabled=${busy || !jour.length} onClick=${opti}>🧭 ${tr('Optimiser l\'ordre', 'Optimise order', 'Alamino ny filaharana')}</button>
       <select onChange=${(e) => { ajouter(e.target.value); e.target.value = ''; }} style="max-width:220px"><option value="">+ ${tr('Ajouter un client…', 'Add a customer…', 'Hanampy client…')}</option>${(data.clients || []).filter((c) => c.actif !== false).sort((a, b) => a.nom.localeCompare(b.nom)).map((c) => html`<option value=${c.id}>${c.nom}</option>`)}</select>
     </div>
+    ${(data.incidents || []).filter((i) => i.statut === 'en_cours').map((i) => html`<div class="incident-banner" key=${i.id}><span class="ib-ic">⚠️</span><div class="grow"><b>${incidentLabel(i.type)} — ${lvMap.get(i.livreur_id)?.nom || i.livreur_id}</b><p>${tr(`Signalé à ${heure(i.created_at)} · retard annoncé +${i.duree_min} min. Les clients ont reçu un message d'excuse automatique.`, `Reported at ${heure(i.created_at)} · delay +${i.duree_min} min. Customers were sent an apology.`, `Voalaza tamin'ny ${heure(i.created_at)} · tara +${i.duree_min} min. Efa nahazo fialan-tsiny ny client.`)}${i.description ? ' — ' + i.description : ''}</p></div><a class="btn small" href="#/avis">${tr('Gérer', 'Manage', 'Tantano')}</a></div>`)}
     ${sansGps > 0 && html`<p class="warn-box">📍 ${tr(`${sansGps} adresse(s) sans position GPS : complétez la fiche client (bouton « Ma position » ou lien Google Maps) pour l'itinéraire automatique.`, `${sansGps} address(es) without GPS: complete the customer record for automatic routing.`, `Adiresy ${sansGps} tsy misy GPS: fenoy ny fiche client mba hahafahana manao lalana mandeha ho azy.`)}</p>`}
     <${MapView} height=${360} markers=${markers} fitKey=${date + cren + jour.length} />
     ${jour.length === 0 ? html`<${Empty}>${tr('Aucune livraison pour ce jour. Cliquez sur « Générer depuis les abonnements ».', 'No delivery for this day. Click "Generate from subscriptions".', 'Tsy misy fanaterana androany. Tsindrio « Générer ».')}<//>`

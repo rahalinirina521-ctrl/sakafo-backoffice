@@ -1,12 +1,12 @@
 // Clients : objectif, calories cibles (avec calculateur), allergies, lien vers son planning.
-import { html, useState } from '../lib.js?v=202610290744';
-import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js?v=202610290744';
-import { nextId, fmt, toNum, isoDate, uid } from '../calc.js?v=202610290744';
-import { tr, catName } from '../i18n.js?v=202610290744';
-import { AddressField, MapLinks, hasGps } from '../address.js?v=202610290744';
-import { analyse, typeObjectif } from '../conseil.js?v=202610290744';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290744';
-import { aboStatut } from '../metier.js?v=202610290744';
+import { html, useState } from '../lib.js?v=202610291028';
+import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js?v=202610291028';
+import { nextId, fmt, toNum, isoDate, uid } from '../calc.js?v=202610291028';
+import { tr, catName } from '../i18n.js?v=202610291028';
+import { AddressField, MapLinks, hasGps } from '../address.js?v=202610291028';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291028';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291028';
+import { aboStatut } from '../metier.js?v=202610291028';
 export { aboStatut };
 
 export const FORMULES = () => [['livraison', tr('🛵 Livraison (repas cuisinés)', '🛵 Delivery (cooked meals)', '🛵 Fanaterana (sakafo masaka)')], ['conseil', tr('📋 Conseil seulement (le client cuisine)', '📋 Coaching only (customer cooks)', '📋 Torohevitra fotsiny (izy no mahandro)')]];

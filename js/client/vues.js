@@ -1,18 +1,19 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290744';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290744';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290744';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290744';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290744';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290744';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290744';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290744';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290744';
-import { Chat } from '../chat.js?v=202610290744';
-import { insertRow, updateRow, remove } from '../db.js?v=202610290744';
-import { param } from '../params.js?v=202610290744';
-import { AddressField } from '../address.js?v=202610290744';
-import { Thumb } from '../pickers.js?v=202610290744';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291028';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291028';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291028';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291028';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291028';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291028';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291028';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291028';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291028';
+import { Chat } from '../chat.js?v=202610291028';
+import { insertRow, updateRow, remove } from '../db.js?v=202610291028';
+import { param } from '../params.js?v=202610291028';
+import { AddressField } from '../address.js?v=202610291028';
+import { Thumb } from '../pickers.js?v=202610291028';
+import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291028';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());
@@ -20,8 +21,11 @@ export const objectifsVisibles = (data) => [...data.categories].filter((c) => c.
 const prenom = (n) => String(n || '').trim().split(/\s+/)[0] || '';
 
 // ---------- Plat (détail) ----------
-export function PlatModal({ plat, onClose, showCompo }) {
+export function PlatModal({ plat, onClose, showCompo, client }) {
   const { data, ingMap } = useApp();
+  const avisPlat = (data.avis || []).filter((a) => a.cible_type === 'plat' && a.cible_id === plat.id && !a.masque);
+  const moy = moyenne(avisPlat);
+  const [noter, setNoter] = useState(false);
   const t = platTotals(plat.id, data.composition, ingMap);
   const lines = data.composition.filter((c) => c.plat_id === plat.id).sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
   const det = plat.details || {};
@@ -29,6 +33,7 @@ export function PlatModal({ plat, onClose, showCompo }) {
   const allerg = [].concat(det.allergenes || []).filter(Boolean);
   return html`<${Modal} title=${platTitle(plat)} onClose=${onClose}>
     ${plat.image_url && html`<img class="plat-hero" src=${plat.image_url} alt=${platTitle(plat)} loading="lazy" />`}
+    ${moy && html`<div class="row gap"><${Etoiles} note=${Math.round(moy)} size=${16} /><b>${fmt(moy, 1)}</b><small class="muted">(${avisPlat.length} ${tr('avis', 'reviews', 'hevitra')})</small></div>`}
     ${platText(plat, 'marketing') && html`<p>${platText(plat, 'marketing')}</p>`}
     ${tags.length > 0 && html`<div class="row gap wrap">${tags.map((x) => html`<${Badge} tone="ok">${x}<//>`)}</div>`}
     <div class="kpis small-kpis">
@@ -44,6 +49,9 @@ export function PlatModal({ plat, onClose, showCompo }) {
       <ul class="ing-list">${lines.map((l) => html`<li><b>${fmt(l.quantite, (+l.quantite) % 1 ? 1 : 0)} ${unitLabel(l.unite || 'g')}</b> ${ingName(ingMap.get(l.ingredient_id))}${l.note ? html` <span class="muted">(${l.note})</span>` : null}</li>`)}</ul>
       ${plat.nb && html`<p class="small muted">📝 ${plat.nb}</p>`}`
       : html`<p class="small muted">🔒 ${tr('Ingrédients détaillés et quantités réservés à la formule « Conseil ».', 'Detailed ingredients and quantities are for the "Coaching" plan.', 'Ho an\'ny formule « Conseil » ny antsipirian\'ny akora.')}</p>`}
+    <h3>⭐ ${tr('Avis', 'Reviews', 'Hevitra')}</h3>
+    <${AvisListe} avis=${avisPlat} data=${data} max=${4} />
+    ${client && (noter ? html`<${AvisForm} client=${client} cible_type="plat" cible_id=${plat.id} onDone=${() => setNoter(false)} />` : html`<button class="btn" onClick=${() => setNoter(true)}>⭐ ${tr('Noter ce plat', 'Rate this dish', 'Hanome naoty')}</button>`)}
   <//>`;
 }
 
@@ -101,6 +109,7 @@ export function Accueil({ client, go }) {
 
     ${client.formule !== 'conseil' && liv && html`<section class="c-card clickable" onClick=${() => go('/livraison')}>
       <div class="row between"><h2>🛵 ${tr('Livraison', 'Delivery', 'Fanaterana')} · ${t3(CRENEAU_LABEL[liv.creneau] || [liv.creneau])}</h2><${Badge} tone=${STATUTS[liv.statut][3]}>${t3(STATUTS[liv.statut])}<//></div>
+      ${liv.statut !== 'livree' && html`<${IncidentBanner} incident=${incidentPour(data, liv.livreur_id)} />`}
       ${liv.statut === 'en_route' && liv.eta ? html`<p class="eta-big">${tr('Arrivée vers', 'Arriving around', 'Ho tonga manodidina ny')} <b>${heure(liv.eta)}</b></p>` : liv.statut === 'livree' ? html`<p>✓ ${tr('Livré à', 'Delivered at', 'Tonga tamin\'ny')} ${heure(liv.livree_at)}</p>` : html`<p class="small muted">${tr('Suivez votre livreur en direct dès son départ.', 'Track your courier live once they leave.', 'Arahina mivantana ny mpitondra rehefa miainga.')}</p>`}
     </section>`}
 
@@ -110,7 +119,7 @@ export function Accueil({ client, go }) {
       <button class="btn" onClick=${() => go('/messages')}>💬 ${tr('Écrire', 'Message', 'Hanoratra')}</button>
       <button class="btn" onClick=${() => go('/menus')}>📅 ${tr('Ma semaine', 'My week', 'Ny herinandro')}</button>
     </div>
-    ${plat && html`<${PlatModal} plat=${plat} onClose=${() => setPlat(null)} showCompo=${client.formule === 'conseil'} />`}
+    ${plat && html`<${PlatModal} plat=${plat} client=${client} onClose=${() => setPlat(null)} showCompo=${client.formule === 'conseil'} />`}
   </div>`;
 }
 
@@ -128,7 +137,7 @@ export function MenusSemaine({ client }) {
     <div class="day-strip">${jours.map((d) => { const x = new Date(d + 'T12:00:00'); return html`<button class=${'day' + (d === jour ? ' on' : '') + (menuDe(d) ? '' : ' empty')} onClick=${() => setJour(d)}><small>${x.toLocaleDateString('fr-FR', { weekday: 'short' })}</small><b>${x.getDate()}</b></button>`; })}</div>
     <section class="c-card"><${Repas} data=${data} menu=${menuDe(jour)} showCompo=${conseil} onPlat=${setPlat} /></section>
     ${conseil && html`<button class="btn primary big" onClick=${() => setCourses(true)}>🛒 ${tr('Liste de courses (7 jours)', 'Shopping list (7 days)', 'Lisitry ny entana (7 andro)')}</button>`}
-    ${plat && html`<${PlatModal} plat=${plat} onClose=${() => setPlat(null)} showCompo=${conseil} />`}
+    ${plat && html`<${PlatModal} plat=${plat} client=${client} onClose=${() => setPlat(null)} showCompo=${conseil} />`}
     ${courses && html`<${Courses} menus=${jours.map(menuDe).filter(Boolean)} onClose=${() => setCourses(false)} />`}
   </div>`;
 }
@@ -175,10 +184,12 @@ export function LivraisonLive({ client }) {
     <section class="c-card">
       <div class="steps">${etapes.map((e, i) => html`<div class=${'step' + (i <= idx ? ' done' : '') + (i === idx ? ' cur' : '')}><span>${i + 1}</span><small>${t3(STATUTS[e])}</small></div>`)}</div>
       ${liv.statut === 'en_route' && html`<div class="eta-box"><small>${tr('Votre repas arrive dans', 'Your meal arrives in', 'Ho tonga afaka')}</small><b>${minutes ? fmtDuree(minutes * 60) : '…'}</b><small>${etaMs ? tr('vers ', 'around ', 'manodidina ny ') + heure(etaMs) : ''}</small></div>`}
+      ${liv.statut !== 'livree' && html`<${IncidentBanner} incident=${incidentPour(data, liv.livreur_id)} />`}
       ${liv.statut === 'livree' && html`<p class="ok-box">✓ ${tr('Livré à', 'Delivered at', 'Tonga tamin\'ny')} ${heure(liv.livree_at)}. ${tr('Bon appétit !', 'Enjoy your meal!', 'Mazotoa homana!')}</p>`}
+      ${liv.statut === 'livree' && liv.livreur_id && client.id !== 'CL-DEMO' && html`<${AvisForm} client=${client} cible_type="livreur" cible_id=${liv.livreur_id} titre=${tr('Comment s\'est passée la livraison ?', 'How was the delivery?', 'Nahoana ny fanaterana?')} />`}
       ${liv.statut === 'prevue' && html`<p class="small muted">${tr(`Créneau ${t3(CRENEAU_LABEL[liv.creneau] || [liv.creneau]).toLowerCase()} · départ de la cuisine vers ${(param(data, 'departs') || {})[liv.creneau] || '—'}. La carte s'animera dès que le livreur partira.`, `${t3(CRENEAU_LABEL[liv.creneau] || [liv.creneau])} slot · leaves the kitchen around ${(param(data, 'departs') || {})[liv.creneau] || '—'}. The map goes live when the courier leaves.`, `Fotoana ${t3(CRENEAU_LABEL[liv.creneau] || [liv.creneau])} · miainga avy any an-dakozia manodidina ny ${(param(data, 'departs') || {})[liv.creneau] || '—'}.`)}</p>`}
       ${lv && html`<div class="row gap between wrap courier"><span>🛵 <b>${lv.nom}</b>${lv.vehicule ? html` <small class="muted">· ${lv.vehicule}</small>` : null}${pos ? html`<br/><small class="muted">${tr('position mise à jour', 'position updated', 'toerana navaozina')} ${heure(pos.updated_at)}</small>` : null}</span>
-        <span class="row gap">${lv.telephone && html`<a class="btn small" href=${'tel:' + lv.telephone}>📞 ${tr('Appeler', 'Call', 'Antsoy')}</a>`}<a class="btn small ghost" href="#/messages">💬</a></span></div>`}
+        <span class="row gap">${lv.telephone && html`<a class="btn small" href=${'tel:' + lv.telephone}>📞 ${tr('Appeler', 'Call', 'Antsoy')}</a>`}<a class="btn small" href=${'#/messages?c=livclient:' + client.id}>💬 ${tr('Écrire', 'Message', 'Hanoratra')}</a></span></div>`}
     </section>
     <${MapView} height=${340} fitKey=${liv.id + (pos ? 'p' : '')} line=${direct?.coords} markers=${[dest && { ...dest, icon: 'home', popup: tr('Chez vous', 'Your place', 'Any aminao') }, pos && liv.statut === 'en_route' && { ...pos, icon: 'moto', color: lv?.couleur, popup: lv?.nom }].filter(Boolean)} />
     ${!dest && html`<p class="warn-box small">📍 ${tr('Ajoutez votre position exacte dans « Profil » pour un suivi précis.', 'Add your exact location in "Profile" for precise tracking.', 'Ampio ny toerana misy anao ao amin\'ny « Profil ».')}</p>`}`}

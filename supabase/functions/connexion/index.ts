@@ -41,6 +41,14 @@ Deno.serve(async (req) => {
     const id = String(identifiant || "").trim().toLowerCase();
     if (!id || !password) return json({ error: ERREUR }, 400);
     const { data: cfg } = await admin.rpc("config_push");
+    // Anti force brute : 6 échecs en 15 min sur un même nom d'utilisateur → blocage 15 min
+    // (pas par adresse IP : à Madagascar beaucoup d'abonnés mobiles partagent la même IP)
+    const cles = ["u:" + id];
+    for (const k of id === "demo" ? [] : cles) {
+      const { data: t } = await admin.rpc("tentative", { p_cle: k, p_resultat: "verifier" });
+      if (t?.bloque) return json({ error: "Trop de tentatives. Réessayez dans 15 minutes ou utilisez « Mot de passe oublié »." }, 429);
+    }
+    const echec = async () => { for (const k of cles) await admin.rpc("tentative", { p_cle: k, p_resultat: "echec" }); };
     let email = id; let pwd = String(password);
     if (id === "demo") {
       if (pwd !== "demo") return json({ error: ERREUR }, 401);
@@ -48,15 +56,17 @@ Deno.serve(async (req) => {
       email = cfg.demo_email; pwd = cfg.demo_password;
     } else if (!id.includes("@")) {
       const { data: p } = await admin.from("profils").select("email").ilike("username", id).maybeSingle();
-      if (!p?.email) return json({ error: ERREUR }, 401);
+      if (!p?.email) { await echec(); return json({ error: ERREUR }, 401); }
       email = p.email;
     }
     const anon = createClient(URL_, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false } });
     const { data, error } = await anon.auth.signInWithPassword({ email, password: pwd });
     if (error || !data.session) {
       const msg = error?.message || "";
+      if (!/confirm/i.test(msg)) await echec();
       return json({ error: /confirm/i.test(msg) ? "Adresse e-mail pas encore confirmée : ouvrez l'e-mail reçu à l'inscription." : ERREUR }, 401);
     }
+    await admin.rpc("tentative", { p_cle: "u:" + id, p_resultat: "ok" });
     return json({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
   } catch (e) {
     return json({ error: String(e) }, 500);

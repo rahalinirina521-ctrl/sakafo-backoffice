@@ -1,9 +1,9 @@
 // Composants partagés (back-office + application client) : profil, objectif, avis automatique, courbe de poids.
-import { html } from './lib.js?v=202610290744';
-import { Field, Badge } from './ui.js?v=202610290744';
-import { tr } from './i18n.js?v=202610290744';
-import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610290744';
-import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610290744';
+import { html, useState, useRef } from './lib.js?v=202610291028';
+import { Field, Badge } from './ui.js?v=202610291028';
+import { tr } from './i18n.js?v=202610291028';
+import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610291028';
+import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610291028';
 
 const t3 = (l) => tr(l[0], l[1], l[2]);
 
@@ -55,29 +55,46 @@ export function AnalysePanel({ a, onUseKcal, showRefs }) {
   </div>`;
 }
 
-// Courbe : historique (points) + prévision (pointillés) + cible
-export function WeightChart({ mesures = [], prevision, cible, height = 180 }) {
+// Courbe interactive : historique (aire dégradée), prévision (pointillés), cible ; survol / toucher → info-bulle
+export function WeightChart({ mesures = [], prevision, cible, height = 200 }) {
+  const [sel, setSel] = useState(null);
+  const box = useRef(null);
   const histo = mesures.filter((m) => m.poids && m.date).map((m) => ({ date: m.date, poids: +m.poids })).sort((a, b) => a.date.localeCompare(b.date));
   const depuis = histo.length ? histo[histo.length - 1].date : isoDate(new Date());
   const prev = prevision ? courbePrevision({ ...prevision, depart: histo.length ? histo[histo.length - 1].poids : prevision.depart }, depuis) : [];
-  const all = [...histo, ...prev];
+  const all = [...histo, ...prev.slice(histo.length ? 1 : 0).map((p) => ({ ...p, prev: true }))];
   if (all.length < 2) return html`<p class="muted small">${tr('Ajoutez des pesées pour voir votre courbe.', 'Add weigh-ins to see your curve.', 'Ampidiro ny lanjanao mba hahitana ny fiolahana.')}</p>`;
-  const W = 600; const H = height; const P = { l: 34, r: 10, t: 10, b: 22 };
-  const ts = all.map((x) => Date.parse(x.date)); const t0 = Math.min(...ts); const t1 = Math.max(...ts) || t0 + 1;
+  const W = 600; const H = height; const P = { l: 36, r: 12, t: 14, b: 24 };
+  const ts = all.map((x) => Date.parse(x.date)); const t0 = Math.min(...ts); const t1 = Math.max(...ts);
   const vs = [...all.map((x) => x.poids), ...(cible ? [+cible] : [])]; const v0 = Math.floor(Math.min(...vs) - 1); const v1 = Math.ceil(Math.max(...vs) + 1);
   const X = (d) => P.l + ((Date.parse(d) - t0) / (t1 - t0 || 1)) * (W - P.l - P.r);
   const Y = (v) => P.t + (1 - (v - v0) / (v1 - v0 || 1)) * (H - P.t - P.b);
   const path = (pts) => pts.map((x, i) => (i ? 'L' : 'M') + X(x.date).toFixed(1) + ' ' + Y(x.poids).toFixed(1)).join(' ');
+  const aire = histo.length > 1 ? path(histo) + ` L${X(histo[histo.length - 1].date).toFixed(1)} ${H - P.b} L${X(histo[0].date).toFixed(1)} ${H - P.b} Z` : '';
   const ticks = [v0, Math.round((v0 + v1) / 2), v1];
   const months = [];
   for (let d = new Date(t0); d <= new Date(t1); d.setMonth(d.getMonth() + 1, 1)) months.push(isoDate(d));
-  return html`<svg class="wchart" viewBox=${`0 0 ${W} ${H}`} role="img" aria-label=${tr('Courbe de poids', 'Weight curve', 'Fiolahan\'ny lanja')}>
-    ${ticks.map((v) => html`<g><line x1=${P.l} x2=${W - P.r} y1=${Y(v)} y2=${Y(v)} class="grid" /><text x=${P.l - 4} y=${Y(v) + 4} text-anchor="end">${v}</text></g>`)}
+  function survol(e) {
+    const r = box.current.getBoundingClientRect();
+    const cx = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * W;
+    let best = null; let bd = Infinity;
+    all.forEach((p) => { const d = Math.abs(X(p.date) - cx); if (d < bd) { bd = d; best = p; } });
+    setSel(best);
+  }
+  return html`<div class="wchart-box" ref=${box} onMouseMove=${survol} onTouchStart=${survol} onTouchMove=${survol} onMouseLeave=${() => setSel(null)}>
+  <svg class="wchart" viewBox=${`0 0 ${W} ${H}`} role="img" aria-label=${tr('Courbe de poids', 'Weight curve', 'Fiolahan\'ny lanja')}>
+    <defs><linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--green)" stop-opacity=".32" /><stop offset="1" stop-color="var(--green)" stop-opacity="0" /></linearGradient></defs>
+    ${ticks.map((v) => html`<g><line x1=${P.l} x2=${W - P.r} y1=${Y(v)} y2=${Y(v)} class="grid" /><text x=${P.l - 6} y=${Y(v) + 4} text-anchor="end">${v}</text></g>`)}
     ${months.slice(0, 14).map((d) => html`<text x=${X(d)} y=${H - 6} text-anchor="middle">${new Date(d).toLocaleDateString('fr-FR', { month: 'short' })}</text>`)}
-    ${cible && html`<line x1=${P.l} x2=${W - P.r} y1=${Y(+cible)} y2=${Y(+cible)} class="target" /><text x=${W - P.r} y=${Y(+cible) - 4} text-anchor="end" class="target-t">${tr('objectif', 'goal', 'tanjona')} ${cible} kg</text>`}
+    ${cible && html`<line x1=${P.l} x2=${W - P.r} y1=${Y(+cible)} y2=${Y(+cible)} class="target" /><text x=${W - P.r} y=${Y(+cible) - 5} text-anchor="end" class="target-t">🎯 ${cible} kg</text>`}
+    ${aire && html`<path d=${aire} class="area" />`}
     ${prev.length > 1 && html`<path d=${path(prev)} class="prev" />`}
     ${histo.length > 1 && html`<path d=${path(histo)} class="real" />`}
-    ${histo.map((x) => html`<circle cx=${X(x.date)} cy=${Y(x.poids)} r="3.5" class="pt"><title>${fmtDate(x.date)} : ${x.poids} kg</title></circle>`)}
+    ${sel && html`<line x1=${X(sel.date)} x2=${X(sel.date)} y1=${P.t} y2=${H - P.b} class="hover-line" />`}
+    ${histo.map((x) => html`<circle cx=${X(x.date)} cy=${Y(x.poids)} r="4" class=${'pt' + (sel === x ? ' on' : '')} />`)}
+    ${sel && sel.prev && html`<circle cx=${X(sel.date)} cy=${Y(sel.poids)} r="5" class="pt on" style="stroke-dasharray:2 2" />`}
   </svg>
+  ${sel && html`<div class="wtip" style=${{ left: (X(sel.date) / W) * 100 + '%', top: (Y(sel.poids) / H) * 100 + '%' }}>${sel.prev ? '🔮 ' : ''}${fmt(sel.poids, 1)} kg · ${fmtDate(sel.date)}</div>`}
+  </div>
   <div class="legend small"><span class="lg real"></span> ${tr('Pesées', 'Weigh-ins', 'Lanja voarefy')} <span class="lg prev"></span> ${tr('Prévision', 'Forecast', 'Vinavina')} ${cible ? html`<span class="lg target"></span> ${tr('Objectif', 'Goal', 'Tanjona')}` : null}</div>`;
 }

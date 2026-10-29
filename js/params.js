@@ -7,6 +7,7 @@ export const PARAM_DEFAULTS = {
   telephone: '',
   whatsapp: '',
   message_accueil: '',
+  inactivite_min: 60,
   vapid_public: 'BDfFJZ9V5J43Ff3iZIJXSK8GSJRbn242jHSlRebXazd76g4wbYoqXz-fK363Ks_D9sgwIqxVZrwFlGrkVMn6udA',
 };
 export function param(data, k) {

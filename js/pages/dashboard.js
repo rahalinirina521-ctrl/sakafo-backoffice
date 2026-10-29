@@ -1,11 +1,34 @@
-import { html, useMemo } from '../lib.js?v=202610290744';
-import { useApp, Card, Badge } from '../ui.js?v=202610290744';
-import { platTotals, isComplete } from '../calc.js?v=202610290744';
-import { tr, ingName, platTitle } from '../i18n.js?v=202610290744';
-import { MODE } from '../db.js?v=202610290744';
+import { html, useMemo } from '../lib.js?v=202610291028';
+import { useApp, Card, Badge } from '../ui.js?v=202610291028';
+import { platTotals, isComplete, isoDate, addDays, fmt } from '../calc.js?v=202610291028';
+import { aboStatut } from '../metier.js?v=202610291028';
+import { nonLus } from '../chat.js?v=202610291028';
+import { moyenne } from '../client/social.js?v=202610291028';
+import { tr, ingName, platTitle } from '../i18n.js?v=202610291028';
+import { MODE } from '../db.js?v=202610291028';
 
 export function Dashboard() {
-  const { data, ingMap } = useApp();
+  const { data, ingMap, me } = useApp();
+  const auj = isoDate(new Date());
+  const biz = useMemo(() => {
+    const cl = data.clients || [];
+    const liv = data.livraisons || [];
+    const jours = Array.from({ length: 14 }, (_, i) => addDays(auj, i - 13));
+    const parJour = jours.map((d) => ({ d, n: liv.filter((l) => l.date === d && l.statut === 'livree').length, t: liv.filter((l) => l.date === d).length }));
+    const msgs = data.messages || [];
+    return {
+      actifs: cl.filter((c) => c.id !== 'CL-DEMO' && aboStatut(c).actif).length,
+      nouveaux: cl.filter((c) => c.created_at && Date.now() - Date.parse(c.created_at) < 7 * 864e5 && c.id !== 'CL-DEMO').length,
+      expirent: cl.filter((c) => { const a = aboStatut(c); return a.actif && a.jours <= 3; }).length,
+      livAuj: liv.filter((l) => l.date === auj && l.livreur_id !== 'LR-DEMO'),
+      parJour,
+      note: moyenne((data.avis || []).filter((a) => !a.masque)),
+      nbAvis: (data.avis || []).length,
+      nonLus: me ? [...new Set(msgs.map((m) => m.conversation))].reduce((n, c) => n + nonLus(msgs, c, me.id), 0) : 0,
+      incidents: (data.incidents || []).filter((i) => i.statut === 'en_cours').length,
+    };
+  }, [data]);
+  const maxJ = Math.max(1, ...biz.parJour.map((x) => x.t));
   const stats = useMemo(() => {
     const platsIncomplets = data.plats.filter((p) => {
       const t = platTotals(p.id, data.composition, ingMap);
@@ -25,13 +48,20 @@ export function Dashboard() {
   return html`<div class="page">
     <h1>${tr('Tableau de bord', 'Dashboard', 'Tableau de bord')}</h1>
     ${MODE === 'demo' && html`<p class="warn-box">${tr('Supabase n\'est pas encore connecté : les données restent dans ce navigateur. Suivez le README (config.js) pour enregistrer dans Supabase.', 'Supabase is not connected yet: data stays in this browser. Follow the README (config.js) to save to Supabase.', 'Mbola tsy mifandray amin\'ny Supabase: ato amin\'ity navigateur ity ihany ny données. Araho ny README (config.js) mba hitahiry ao amin\'ny Supabase.')}</p>`}
+    <div class="kpi-grid">
+      <a class="kpi-card" href="#/clients"><span class="kpi-ic">👥</span><small>${tr('Abonnés actifs', 'Active subscribers', 'Mpanjifa mavitrika')}</small><b>${biz.actifs}</b><small>${biz.nouveaux ? '🆕 ' + biz.nouveaux + ' ' + tr('inscrit(s) cette semaine', 'sign-up(s) this week', 'vao nisoratra') : '—'}${biz.expirent ? ' · ⏳ ' + biz.expirent + ' ' + tr('expirent bientôt', 'expiring soon', 'ho tapitra') : ''}</small></a>
+      <a class="kpi-card" href="#/livraisons"><span class="kpi-ic">🛵</span><small>${tr('Livraisons aujourd\'hui', 'Deliveries today', 'Fanaterana androany')}</small><b>${biz.livAuj.filter((l) => l.statut === 'livree').length}<span class="kpi-sub">/${biz.livAuj.length}</span></b>
+        <svg class="spark" viewBox="0 0 140 34" preserveAspectRatio="none">${biz.parJour.map((x, i) => html`<g><rect x=${i * 10 + 1} y=${34 - (x.t / maxJ) * 32} width="8" height=${(x.t / maxJ) * 32} rx="2" class="bar-t" /><rect x=${i * 10 + 1} y=${34 - (x.n / maxJ) * 32} width="8" height=${(x.n / maxJ) * 32} rx="2" class="bar-n" /><title>${x.d} : ${x.n}/${x.t}</title></g>`)}</svg></a>
+      <a class="kpi-card" href="#/avis"><span class="kpi-ic">⭐</span><small>${tr('Satisfaction', 'Satisfaction', 'Fahafaham-po')}</small><b>${biz.note ? fmt(biz.note, 1) : '—'}<span class="kpi-sub">/5</span></b><small>${biz.nbAvis} ${tr('avis', 'reviews', 'hevitra')}</small></a>
+      <a class=${'kpi-card' + (biz.nonLus ? ' hot' : '')} href="#/messages"><span class="kpi-ic">💬</span><small>${tr('Messages non lus', 'Unread messages', 'Hafatra tsy voavaky')}</small><b>${biz.nonLus}</b><small>${biz.incidents ? '⚠️ ' + biz.incidents + ' ' + tr('incident(s) en cours', 'open incident(s)', 'olana') : '✓ ' + tr('aucun incident', 'no incident', 'tsy misy olana')}</small></a>
+    </div>
     <div class="stats">
       <a class="stat" href="#/plats"><b>${stats.plats}</b><span>${tr('Plats', 'Dishes', 'Sakafo')}</span><small>${stats.voamarina} ${tr('validés', 'validated', 'voamarina')}</small></a>
       <a class="stat" href="#/ingredients"><b>${stats.ings}</b><span>${tr('Ingrédients', 'Ingredients', 'Ingrédients')}</span><small>${stats.ingsVerif} ${tr('à vérifier', 'to check', 'mbola hamarinina')}</small></a>
       <a class="stat" href="#/menus"><b>${stats.menus}</b><span>Menus</span><small>${tr('journées planifiées', 'planned days', 'andro voarafitra')}</small></a>
     </div>
 
-    <${Card} title=${tr('Comment ça marche', 'How it works', 'Fomba fiasa')}>
+    <details class="card howto"><summary><b>💡 ${tr('Comment ajouter un plat', 'How to add a dish', 'Ahoana no hampidirana sakafo')}</b></summary>
       <ol class="steps">
         <li>${tr(html`<b>Saisissez votre plat</b> : <a href="#/plats/vaovao">Nouveau plat</a> → nom (ex. M1), moment, catégorie et composition en g, ml ou pièces (fraise 50 g, œufs 2 pièces, café 150 ml). Ajoutez un <b>NB</b> si besoin : « sans sel », « sans sucre ».`,
           html`<b>Enter your dish</b>: <a href="#/plats/vaovao">New dish</a> → name (e.g. M1), meal time, category and composition in g, ml or pieces (strawberries 50 g, 2 eggs, coffee 150 ml). Add a <b>NB</b> if needed: "no salt", "no sugar".`,
@@ -45,7 +75,7 @@ export function Dashboard() {
         <li>${tr('Modifiez les quantités : les calories se recalculent aussitôt.', 'Change quantities: calories update instantly.', 'Ovay ny habetsahana: miova avy hatrany ny kcal.')}</li>
         <li>${tr(html`Plusieurs plats d'un coup (noms ou idées) : <a href="#/propositions">Ajout IA (Excel)</a> → prompt + Excel dans ChatGPT/Claude.ai, puis import.`, html`Several dishes at once (names or ideas): <a href="#/propositions">AI add (Excel)</a> → prompt + Excel in ChatGPT/Claude.ai, then import.`, html`Sakafo maromaro indray mandeha (anarana na hevitra): <a href="#/propositions">Ampiditra IA (Excel)</a> → prompt + Excel ao amin'ny ChatGPT/Claude.ai, dia import.`)}</li>
       </ol>
-    <//>
+    </details>
 
     <div class="grid2">
       <${Card} title=${tr('Plats à compléter', 'Dishes to complete', 'Sakafo mbola tsy feno')}>

@@ -1,13 +1,13 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290744';
-import { DEMO } from './seed.js?v=202610290744';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290744';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291028';
+import { DEMO } from './seed.js?v=202610291028';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610291028';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
-const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
 // clé primaire si ce n'est pas « id »
-export const PK = { positions: 'livreur_id', profils: 'user_id', push_abonnements: 'endpoint' };
+export const PK = { positions: 'livreur_id', profils: 'user_id', push_abonnements: 'endpoint', communaute: 'client_id' };
 const pk = (t) => PK[t] || 'id';
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
@@ -79,6 +79,8 @@ export async function loadAll() {
     let qy = c.from(t).select('*');
     if (t === 'messages') qy = qy.order('created_at', { ascending: false }).limit(800);
     if (t === 'notifications') qy = qy.order('created_at', { ascending: false }).limit(200);
+    if (t === 'publications') qy = qy.order('created_at', { ascending: false }).limit(300);
+    if (t === 'incidents') qy = qy.order('created_at', { ascending: false }).limit(100);
     if (t === 'livraisons') qy = qy.gte('date', new Date(Date.now() - 62 * 864e5).toISOString().slice(0, 10));
     const { data, error } = await qy;
     if (error) { if (OPTIONAL_TABLES.includes(t)) { out[t] = []; return; } throw error; }
@@ -305,4 +307,24 @@ export async function usernameLibre(u) {
   const c = await getClient();
   const { data } = await c.rpc('username_libre', { u });
   return !!data;
+}
+
+// Suppression par critères (tables à clé composée, ex. réactions)
+export async function supprimer(table, match) {
+  if (MODE === 'demo') { const d = demoLoad(); d[table] = (d[table] || []).filter((x) => !Object.entries(match).every(([k, v]) => x[k] === v)); demoSave(); return; }
+  const c = await getClient();
+  let q = c.from(table).delete();
+  for (const [k, v] of Object.entries(match)) q = q.eq(k, v);
+  const { error } = await q;
+  if (error) throw error;
+}
+// Lecture paginée (journal, sauvegardes…)
+export async function lire(table, { order = 'created_at', limit = 200, filtre } = {}) {
+  if (MODE === 'demo') return (demoLoad()[table] || []).slice(0, limit);
+  const c = await getClient();
+  let q = c.from(table).select('*').order(order, { ascending: false }).limit(limit);
+  if (filtre) q = filtre(q);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
 }

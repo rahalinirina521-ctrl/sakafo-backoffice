@@ -1,12 +1,12 @@
 // Ajouter des plats avec l'IA (gratuit) : noms de plats OU demande d'idées → prompt + Excel → ChatGPT / Claude.ai remplit → import.
-import { html, useState, useMemo, useEffect } from '../lib.js?v=202610290744';
-import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610290744';
-import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610290744';
-import { applyPlatTexts } from '../prompts.js?v=202610290744';
-import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290744';
-import { uploadPlatImage } from '../db.js?v=202610290744';
-import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames, isExisting } from '../ajout.js?v=202610290744';
-import { fitLabel } from './plats.js?v=202610290744';
+import { html, useState, useMemo, useEffect } from '../lib.js?v=202610291028';
+import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610291028';
+import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610291028';
+import { applyPlatTexts } from '../prompts.js?v=202610291028';
+import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610291028';
+import { uploadPlatImage } from '../db.js?v=202610291028';
+import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames, isExisting } from '../ajout.js?v=202610291028';
+import { fitLabel } from './plats.js?v=202610291028';
 
 const PENDING_KEY = 'sakafo_ajout_attente';
 const r10 = (x) => Math.round(x / 10) * 10;

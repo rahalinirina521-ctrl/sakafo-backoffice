@@ -1,6 +1,6 @@
 // Fanovana sary tsotra: manodina, manakaiky (zoom), mamindra, hazavana, contraste, loko.
-import { html, useState, useEffect, useRef } from './lib.js?v=202610290744';
-import { tr } from './i18n.js?v=202610290744';
+import { html, useState, useEffect, useRef } from './lib.js?v=202610291028';
+import { tr } from './i18n.js?v=202610291028';
 
 const OUT = 1200; // sary efamira 1200 × 1200
 

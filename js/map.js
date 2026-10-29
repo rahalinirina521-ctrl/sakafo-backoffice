@@ -1,6 +1,11 @@
 // Cartes (Leaflet + OpenStreetMap) et itinéraires (OSRM) — gratuits, sans clé.
 // OSRM ne connaît pas les embouteillages : on applique un « facteur trafic » (Antananarivo ≈ ×1,6 par défaut).
-import { html, useEffect, useRef } from './lib.js?v=202610290744';
+import { html, useEffect, useRef } from './lib.js?v=202610291028';
+import { useThemeSombre, isDark } from './theme.js?v=202610291028';
+// Fonds de carte modernes (CARTO, gratuits) : clair « Voyager » / sombre « Dark Matter »
+const tuiles = (d) => (d ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
+// Texte sûr pour les bulles de la carte (pas d'injection HTML)
+export const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
 const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
@@ -110,13 +115,15 @@ export const heure = (d) => (d ? new Date(d).toLocaleTimeString('fr-FR', { hour:
 // route : [[lat,lng],...]  ; fit : recadrer sur les marqueurs ; onPick({lat,lng}) : clic pour placer
 export function MapView({ markers = [], line = null, fitKey = '', onPick, height = 320, center = TANA, zoom = 13, className = '' }) {
   const box = useRef(null); const st = useRef({});
+  const sombre = useThemeSombre();
+  useEffect(() => { if (st.current.tiles) st.current.tiles.setUrl(tuiles(sombre)); }, [sombre]);
   useEffect(() => {
     let dead = false;
     loadLeaflet().then((L) => {
       if (dead || !box.current || st.current.map) return;
       const map = L.map(box.current, { zoomControl: true, attributionControl: true }).setView(center, zoom);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-      st.current = { L, map, layer: L.layerGroup().addTo(map), lineLayer: null, fitted: null };
+      const tiles = L.tileLayer(tuiles(isDark()), { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap · © CARTO' }).addTo(map);
+      st.current = { tiles, L, map, layer: L.layerGroup().addTo(map), lineLayer: null, fitted: null };
       if (onPick) map.on('click', (e) => st.current.onPick && st.current.onPick({ lat: e.latlng.lat, lng: e.latlng.lng }));
       setTimeout(() => map.invalidateSize(), 200);
       draw();
@@ -126,8 +133,8 @@ export function MapView({ markers = [], line = null, fitKey = '', onPick, height
   st.current.onPick = onPick;
   function icon(L, m) {
     const cls = 'mk mk-' + (m.icon || 'num');
-    const inner = m.icon === 'moto' ? '🛵' : m.icon === 'home' ? '🏠' : m.icon === 'kitchen' ? '🍳' : m.icon === 'me' ? '' : (m.label ?? '');
-    return L.divIcon({ className: '', html: `<div class="${cls}" style="${m.color ? `--mk:${m.color}` : ''}">${inner}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+    const inner = m.icon === 'moto' ? '🛵' : m.icon === 'home' ? '🏠' : m.icon === 'kitchen' ? '🍳' : m.icon === 'me' ? '' : esc(m.label ?? '');
+    return L.divIcon({ className: '', html: `<div class="${cls}" style="${m.color && /^#[0-9a-f]{3,8}$/i.test(m.color) ? `--mk:${m.color}` : ''}">${inner}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
   }
   function draw() {
     const { L, map, layer } = st.current; if (!map) return;
@@ -135,7 +142,7 @@ export function MapView({ markers = [], line = null, fitKey = '', onPick, height
     const pts = [];
     for (const m of markers.filter(hasPos)) {
       const mk = L.marker([+m.lat, +m.lng], { icon: icon(L, m), zIndexOffset: m.icon === 'moto' ? 1000 : 0 });
-      if (m.popup) mk.bindPopup(m.popup);
+      if (m.popup) mk.bindPopup(esc(m.popup).replace(/\n/g, '<br>')); // texte brut : aucune injection HTML possible
       mk.addTo(layer); pts.push([+m.lat, +m.lng]);
     }
     if (st.current.lineLayer) { st.current.lineLayer.remove(); st.current.lineLayer = null; }

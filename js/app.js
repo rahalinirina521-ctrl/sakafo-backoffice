@@ -1,47 +1,52 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290744';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290744';
-import { NewPassword, UserMenu, deconnecter } from './shell.js?v=202610290744';
-import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290744';
-import { nonLus } from './chat.js?v=202610290744';
-import { BRAND } from '../config.js?v=202610290744';
-import { AppCtx } from './ui.js?v=202610290744';
-import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610290744';
-import { registerCustomUnits } from './calc.js?v=202610290744';
-import { Dashboard } from './pages/dashboard.js?v=202610290744';
-import { PlatsList } from './pages/plats.js?v=202610290744';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290744';
-import { Ingredients } from './pages/ingredients.js?v=202610290744';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290744';
-import { Planning } from './pages/planning.js?v=202610290744';
-import { Clients } from './pages/clients.js?v=202610290744';
-import { Tarifs } from './pages/tarifs.js?v=202610290744';
-import { Propositions } from './pages/propositions.js?v=202610290744';
-import { Categories } from './pages/categories.js?v=202610290744';
-import { Backup } from './pages/backup.js?v=202610290744';
-import { Livraisons } from './pages/livraisons.js?v=202610290744';
-import { Livreurs } from './pages/livreurs.js?v=202610290744';
-import { Messages } from './pages/messages.js?v=202610290744';
-import { Notifications } from './pages/notifications.js?v=202610290744';
-import { Parametres } from './pages/parametres.js?v=202610290744';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610291028';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610291028';
+import { Logo } from './logo.js?v=202610291028';
+import { ThemeToggle } from './theme.js?v=202610291028';
+import { NewPassword, UserMenu, deconnecter } from './shell.js?v=202610291028';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610291028';
+import { nonLus } from './chat.js?v=202610291028';
+import { BRAND } from '../config.js?v=202610291028';
+import { AppCtx } from './ui.js?v=202610291028';
+import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610291028';
+import { registerCustomUnits } from './calc.js?v=202610291028';
+import { param } from './params.js?v=202610291028';
+import { Dashboard } from './pages/dashboard.js?v=202610291028';
+import { PlatsList } from './pages/plats.js?v=202610291028';
+import { PlatEdit } from './pages/plat-edit.js?v=202610291028';
+import { Ingredients } from './pages/ingredients.js?v=202610291028';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610291028';
+import { Planning } from './pages/planning.js?v=202610291028';
+import { Clients } from './pages/clients.js?v=202610291028';
+import { Tarifs } from './pages/tarifs.js?v=202610291028';
+import { Propositions } from './pages/propositions.js?v=202610291028';
+import { Categories } from './pages/categories.js?v=202610291028';
+import { Backup } from './pages/backup.js?v=202610291028';
+import { Livraisons } from './pages/livraisons.js?v=202610291028';
+import { Livreurs } from './pages/livreurs.js?v=202610291028';
+import { Messages } from './pages/messages.js?v=202610291028';
+import { Notifications } from './pages/notifications.js?v=202610291028';
+import { AvisAdmin } from './pages/avis.js?v=202610291028';
+import { Parametres } from './pages/parametres.js?v=202610291028';
 
-export const VERSION = '2026-10-29 07:44';
+export const VERSION = '2026-10-29 10:28';
 
 const nav = () => [
-  ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
-  ['/notifications', '🔔 ' + tr('Notifications', 'Notifications', 'Fampahafantarana')],
-  ['/plats', tr('Plats', 'Dishes', 'Sakafo')],
-  ['/menus', tr('Menus', 'Menus', 'Menus')],
-  ['/planning', tr('Planning', 'Planning', 'Planning')],
-  ['/clients', tr('Clients', 'Customers', 'Clients')],
-  ['/livraisons', '🛵 ' + tr('Livraisons', 'Deliveries', 'Fanaterana')],
-  ['/messages', '💬 ' + tr('Messages', 'Messages', 'Hafatra')],
-  ['/livreurs', tr('Livreurs', 'Couriers', 'Mpitondra')],
-  ['/tarifs', tr('Tarifs', 'Prices', 'Vidiny')],
-  ['/ingredients', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
-  ['/propositions', tr('Ajout IA (Excel)', 'AI add (Excel)', 'Ampiditra IA (Excel)')],
-  ['/categories', tr('Objectifs', 'Goals', 'Tanjona')],
-  ['/backup', tr('Sauvegarde Excel', 'Excel backup', 'Backup Excel')],
-  ['/parametres', '⚙️ ' + tr('Paramètres', 'Settings', 'Fikirana')],
+  ['/', '📊', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
+  ['/notifications', '🔔', tr('Notifications', 'Notifications', 'Fampahafantarana')],
+  ['/plats', '🍲', tr('Plats', 'Dishes', 'Sakafo')],
+  ['/menus', '📋', tr('Menus', 'Menus', 'Menus')],
+  ['/planning', '📅', tr('Planning', 'Planning', 'Planning')],
+  ['/clients', '👥', tr('Clients', 'Customers', 'Clients')],
+  ['/livraisons', '🛵', tr('Livraisons', 'Deliveries', 'Fanaterana')],
+  ['/messages', '💬', tr('Messages', 'Messages', 'Hafatra')],
+  ['/avis', '⭐', tr('Avis & communauté', 'Reviews & community', 'Hevitra & fiaraha-monina')],
+  ['/livreurs', '🏍️', tr('Livreurs', 'Couriers', 'Mpitondra')],
+  ['/tarifs', '💳', tr('Tarifs', 'Prices', 'Vidiny')],
+  ['/ingredients', '🥕', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
+  ['/propositions', '🤖', tr('Ajout IA (Excel)', 'AI add (Excel)', 'Ampiditra IA (Excel)')],
+  ['/categories', '🎯', tr('Objectifs', 'Goals', 'Tanjona')],
+  ['/backup', '💾', tr('Sauvegarde', 'Backup', 'Fitahirizana')],
+  ['/parametres', '⚙️', tr('Paramètres', 'Settings', 'Fikirana')],
 ];
 
 function useRoute() {
@@ -147,7 +152,19 @@ export function App() {
     if (!session) { setMe(null); return; }
     whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND, email: session.user?.email }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
   }, [session]);
-  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications']], [me?.admin]);
+  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications'], ['incidents'], ['avis'], ['publications']], [me?.admin]);
+  // Sécurité : déconnexion automatique après une période sans activité (Paramètres → minutes, 0 = jamais)
+  useEffect(() => {
+    if (!me?.admin || MODE !== 'supabase') return undefined;
+    const minutes = +param(data, 'inactivite_min') || 0;
+    if (!minutes) return undefined;
+    let dernier = Date.now();
+    const bouge = () => { dernier = Date.now(); };
+    const evts = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+    evts.forEach((e) => window.addEventListener(e, bouge, { passive: true }));
+    const t = setInterval(() => { if (Date.now() - dernier > minutes * 60000) deconnecter(); }, 30000);
+    return () => { clearInterval(t); evts.forEach((e) => window.removeEventListener(e, bouge)); };
+  }, [me?.admin, data && param(data, 'inactivite_min')]);
   // Page de connexion unique : chacun est envoyé vers son espace après connexion
   useEffect(() => {
     if (!me || me.admin || recovery) return;
@@ -257,6 +274,7 @@ export function App() {
   else if (parts[0] === 'messages') page = html`<${Messages} key=${route} />`;
   else if (parts[0] === 'parametres') page = html`<${Parametres} />`;
   else if (parts[0] === 'notifications') page = html`<${Notifications} />`;
+  else if (parts[0] === 'avis') page = html`<${AvisAdmin} />`;
   else page = html`<p>${tr('Page introuvable.', 'Page not found.', 'Pejy tsy hita.')}</p>`;
 
   const active = '/' + (parts[0] || '');
@@ -265,9 +283,10 @@ export function App() {
   return html`<${AppCtx.Provider} value=${api}>
     <div class="layout">
       <aside class=${'sidebar' + (menuOpen ? ' open' : '')}>
-        <div class="brand">${BRAND}<small>Back-office · ${tr('mise à jour', 'updated', 'navaozina')} ${VERSION}</small></div>
-        <${LangSwitch} lang=${lang} onChange=${changeLang} />
-        <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}${p === '/messages' && unread ? html` <span class="nav-badge">${unread}</span>` : null}${p === '/notifications' && notifNonLues ? html` <span class="nav-badge">${notifNonLues}</span>` : null}</a>`)}</nav>
+        <div class="brand"><${Logo} size=${38} titre /><small class="brand-ver">Back-office · ${VERSION}</small></div>
+        <div class="row gap wrap side-tools"><${ThemeToggle} compact />
+        <${LangSwitch} lang=${lang} onChange=${changeLang} /></div>
+        <nav>${nav().map(([p, ic, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}><span class="nav-ic">${ic}</span><span class="grow">${l}</span>${p === '/messages' && unread ? html` <span class="nav-badge">${unread}</span>` : null}${p === '/notifications' && notifNonLues ? html` <span class="nav-badge">${notifNonLues}</span>` : null}</a>`)}</nav>
         <div class="side-foot">
           ${MODE === 'demo'
             ? html`<div class="demo-note"><b>${tr('Mode démo', 'Demo mode', 'Mode démo')}</b><br/>${tr('Les données sont enregistrées uniquement dans ce navigateur.', 'Data is saved in this browser only.', 'Ao amin\'ity navigateur ity ihany no voatahiry ny données.')}<br/>
@@ -280,7 +299,7 @@ export function App() {
       ${menuOpen && html`<div class="backdrop" onClick=${() => setMenuOpen(false)}></div>`}
       <main>
         <${UpdateBanner} />
-        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰${notifNonLues + unread ? html`<i class="dot-badge">${notifNonLues + unread}</i>` : null}</button><span class="topbar-title">${BRAND}</span><a class="bell" href="#/notifications" aria-label="Notifications">🔔${notifNonLues ? html`<i class="dot-badge">${notifNonLues}</i>` : null}</a><${LangSwitch} lang=${lang} onChange=${changeLang} />${MODE !== 'demo' && html`<${UserMenu} nom=${tr('Administrateur', 'Administrator', 'Mpitantana')} email=${session.user?.email} role="admin" onCompte=${() => { location.hash = '#/parametres'; }} />`}</div>
+        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰${notifNonLues + unread ? html`<i class="dot-badge">${notifNonLues + unread}</i>` : null}</button><span class="topbar-title"><${Logo} size=${28} /></span><${ThemeToggle} compact /><a class="bell" href="#/notifications" aria-label="Notifications">🔔${notifNonLues ? html`<i class="dot-badge">${notifNonLues}</i>` : null}</a><${LangSwitch} lang=${lang} onChange=${changeLang} />${MODE !== 'demo' && html`<${UserMenu} nom=${tr('Administrateur', 'Administrator', 'Mpitantana')} email=${session.user?.email} role="admin" onCompte=${() => { location.hash = '#/parametres'; }} />`}</div>
         ${error && html`<p class="error banner">${error}</p>`}
         ${page}
       </main>

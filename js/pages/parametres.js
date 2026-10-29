@@ -1,13 +1,13 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState, useEffect } from '../lib.js?v=202610290744';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290744';
-import { tr } from '../i18n.js?v=202610290744';
-import { toNum } from '../calc.js?v=202610290744';
-import { param, paramRow } from '../params.js?v=202610290744';
-import { MapView } from '../map.js?v=202610290744';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290744';
-import { MODE } from '../db.js?v=202610290744';
-import { CompteCard } from '../shell.js?v=202610290744';
+import { html, useState, useEffect } from '../lib.js?v=202610291028';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610291028';
+import { tr } from '../i18n.js?v=202610291028';
+import { toNum } from '../calc.js?v=202610291028';
+import { param, paramRow } from '../params.js?v=202610291028';
+import { MapView } from '../map.js?v=202610291028';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291028';
+import { MODE } from '../db.js?v=202610291028';
+import { CompteCard } from '../shell.js?v=202610291028';
 
 export function Parametres() {
   const app = useApp();
@@ -19,12 +19,13 @@ export function Parametres() {
   const [tel, setTel] = useState(param(data, 'telephone'));
   const [wa, setWa] = useState(param(data, 'whatsapp'));
   const [accueil, setAccueil] = useState(param(data, 'message_accueil'));
+  const [inactivite, setInactivite] = useState(param(data, 'inactivite_min'));
   const base = location.href.split('#')[0].replace(/index\.html$/, '').replace(/[^/]*$/, '');
   const liens = [['🔐 ' + tr('Page de connexion (lien à partager)', 'Sign-in page (link to share)', 'Pejy fidirana (rohy hozaraina)'), base + 'connexion.html'], ['🙂 ' + tr('Application client', 'Customer app', 'App client'), base + 'client.html'], ['🛵 ' + tr('Application livreur', 'Courier app', 'App livreur'), base + 'livreur.html']];
 
   async function save() {
     try {
-      await app.save('options', [paramRow('depot', { ...depot, lat: toNum(depot.lat), lng: toNum(depot.lng) }), paramRow('trafic', toNum(trafic) || 1.6), paramRow('arret_min', toNum(arret) ?? 4), paramRow('departs', departs), paramRow('telephone', tel), paramRow('whatsapp', wa), paramRow('message_accueil', accueil)]);
+      await app.save('options', [paramRow('depot', { ...depot, lat: toNum(depot.lat), lng: toNum(depot.lng) }), paramRow('trafic', toNum(trafic) || 1.6), paramRow('arret_min', toNum(arret) ?? 4), paramRow('departs', departs), paramRow('telephone', tel), paramRow('whatsapp', wa), paramRow('message_accueil', accueil), paramRow('inactivite_min', toNum(inactivite) ?? 60)]);
       toast(tr('Paramètres enregistrés', 'Settings saved', 'Voatahiry ny fikirana'));
     } catch (e) { toast(e.message, 'bad'); }
   }
@@ -71,6 +72,16 @@ export function Parametres() {
         <${Field} label="WhatsApp"><input type="tel" value=${wa} onInput=${(e) => setWa(e.target.value)} placeholder="261340000000" /><//>
         <${Field} label=${tr('Message d\'accueil (application client)', 'Welcome message (customer app)', 'Hafatra fandraisana (app client)')} wide><textarea rows="2" value=${accueil} onInput=${(e) => setAccueil(e.target.value)}></textarea><//>
       </div>
+    <//>
+    <${Card} title=${'🛡️ ' + tr('Sécurité', 'Security', 'Fiarovana')}>
+      <div class="form-grid"><${Field} label=${tr('Déconnexion automatique du back-office après (minutes sans activité)', 'Auto sign-out of the back-office after (idle minutes)', 'Mivoaka ho azy aorian\'ny (minitra tsy miasa)')} hint=${tr('0 = jamais. Conseillé : 60.', '0 = never. Recommended: 60.', '0 = tsy mivoaka mihitsy. Atoro: 60.')}><input type="number" min="0" max="1440" value=${inactivite} onInput=${(e) => setInactivite(e.target.value)} /><//></div>
+      <ul class="small sec-list">
+        <li>✅ ${tr('Chaque client ne voit que ses propres données (règles de sécurité de la base).', 'Each customer only sees their own data (database security rules).', 'Ny azy ihany no hitan\'ny client tsirairay.')}</li>
+        <li>✅ ${tr('Blocage 15 min après 6 mots de passe erronés sur un même nom d\'utilisateur.', '15-min lock after 6 wrong passwords on a username.', 'Voasakana 15 min aorian\'ny diso 6.')}</li>
+        <li>✅ ${tr('Journal des modifications et corbeille (Sauvegarde).', 'Change log and bin (Backup).', 'Tantaran\'ny fanovana sy corbeille.')}</li>
+        <li>✅ ${tr('Sauvegarde automatique chaque nuit.', 'Automatic nightly backup.', 'Fitahirizana isan\'alina.')}</li>
+        <li>⚠️ ${tr('À activer une fois dans Supabase → Authentication → « Leaked password protection » (refuse les mots de passe piratés connus).', 'Enable once in Supabase → Authentication → "Leaked password protection".', 'Alefaso indray mandeha ao amin\'ny Supabase → Authentication → « Leaked password protection ».')}</li>
+      </ul>
     <//>
     <div class="row gap"><button class="btn primary" onClick=${save}>${tr('Enregistrer les paramètres', 'Save settings', 'Tehirizo ny fikirana')}</button></div>
 
