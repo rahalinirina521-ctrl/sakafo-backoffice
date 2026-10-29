@@ -1,15 +1,15 @@
 // Clients : objectif, calories cibles (avec calculateur), allergies, lien vers son planning.
-import { html, useState } from '../lib.js?v=202610291028';
-import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js?v=202610291028';
-import { nextId, fmt, toNum, isoDate, uid } from '../calc.js?v=202610291028';
-import { tr, catName } from '../i18n.js?v=202610291028';
-import { AddressField, MapLinks, hasGps } from '../address.js?v=202610291028';
-import { analyse, typeObjectif } from '../conseil.js?v=202610291028';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291028';
-import { aboStatut } from '../metier.js?v=202610291028';
+import { html, useState } from '../lib.js?v=202610291359';
+import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js?v=202610291359';
+import { nextId, fmt, toNum, isoDate, uid } from '../calc.js?v=202610291359';
+import { tr, catName } from '../i18n.js?v=202610291359';
+import { AddressField, MapLinks, hasGps } from '../address.js?v=202610291359';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291359';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291359';
+import { aboStatut } from '../metier.js?v=202610291359';
 export { aboStatut };
 
-export const FORMULES = () => [['livraison', tr('🛵 Livraison (repas cuisinés)', '🛵 Delivery (cooked meals)', '🛵 Fanaterana (sakafo masaka)')], ['conseil', tr('📋 Conseil seulement (le client cuisine)', '📋 Coaching only (customer cooks)', '📋 Torohevitra fotsiny (izy no mahandro)')]];
+export const FORMULES = () => [['livraison', tr('🛵 Livraison (repas cuisinés)', '🛵 Delivery (cooked meals)', '🛵 Fanaterana (sakafo masaka)')], ['conseil', tr('📋 Prescription sans livraison (le client cuisine)', '📋 Meal plan, no delivery (customer cooks)', '📋 Torolalana sakafo, tsy misy fanaterana (izy no mahandro)')]];
 export const CRENEAUX = () => [['matin', tr('Matin', 'Morning', 'Maraina')], ['midi', tr('Midi', 'Noon', 'Atoandro')], ['soir', tr('Soir', 'Evening', 'Hariva')]];
 
 
@@ -92,6 +92,7 @@ function ClientForm({ row, onClose, onSave, onDelete, isNew }) {
       <div class="form-grid">
         <${Field} label=${tr('E-mail du compte (application client)', 'Account e-mail (customer app)', 'Mailaka (app client)')} hint=${f.user_id ? '✓ ' + tr('Compte relié', 'Account linked', 'Kaonty mifandray') : tr('Le client s\'inscrit dans l\'application avec cet e-mail : son compte est relié automatiquement.', 'The customer signs up in the app with this e-mail: the account is linked automatically.', 'Misoratra amin\'ity mailaka ity ny client: mifandray ho azy ny kaontiny.')}><input type="email" value=${f.email || ''} onInput=${(e) => set('email', e.target.value.trim().toLowerCase())} /><//>
         ${!f.user_id && !isNew && html`<div class="field wide"><${CreerCompte} client=${f} onDone=${(email) => setF((x) => ({ ...x, email }))} /></div>`}
+        ${f.profil?.formule_souhaitee && html`<div class="field wide"><div class="info-box">🛎️ ${tr('Le client a demandé', 'Customer requested', 'Nangatahin\'ny client')} : <b>${f.profil.formule_souhaitee === 'conseil' ? '📋 ' + tr('Prescription', 'Meal plan', 'Torolalana') : '🛵 ' + tr('Livraison', 'Delivery', 'Fanaterana')}</b>${(data.offres || []).find((o) => o.id === f.profil.offre_souhaitee) ? ' · ' + (data.offres || []).find((o) => o.id === f.profil.offre_souhaitee).nom : ''} <button type="button" class="link-btn" onClick=${() => { const o = (data.offres || []).find((x) => x.id === f.profil.offre_souhaitee); setF((x) => ({ ...x, formule: f.profil.formule_souhaitee, ...(o ? { offre_id: o.id, abonnement_debut: isoDate(new Date()), abonnement_fin: isoDate(new Date(Date.now() + (o.nb_jours - 1) * 864e5)) } : {}) })); }}>${tr('Appliquer', 'Apply', 'Ampiharo')}</button></div></div>`}
         <${Field} label=${tr('Formule', 'Plan type', 'Karazana')}><select value=${f.formule || 'livraison'} onChange=${(e) => set('formule', e.target.value)}>${FORMULES().map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select><//>
         <${Field} label=${tr('Abonnement', 'Subscription', 'Abonnement')}><select value=${f.offre_id || ''} onChange=${(e) => { const o = (data.offres || []).find((x) => x.id === e.target.value); setF((x) => ({ ...x, offre_id: e.target.value || null, ...(o && !x.abonnement_debut ? { abonnement_debut: isoDate(new Date()), abonnement_fin: isoDate(new Date(Date.now() + (o.nb_jours - 1) * 864e5)) } : {}) })); }}><option value="">—</option>${(data.offres || []).filter((o) => o.actif !== false).map((o) => html`<option value=${o.id}>${o.nom} (${o.nb_jours} j)</option>`)}</select><//>
         <${Field} label=${tr('Début', 'Start', 'Fanombohana')}><input type="date" value=${f.abonnement_debut || ''} onInput=${(e) => set('abonnement_debut', e.target.value || null)} /><//>

@@ -1,18 +1,18 @@
 // Application livreur (PWA) : tournée du jour, ordre optimisé, carte, ETA, GPS partagé, messages.
-import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610291028';
-import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610291028';
-import { tr } from '../i18n.js?v=202610291028';
-import { isoDate } from '../calc.js?v=202610291028';
-import { loadAll, upsert, updateRow, insertRow } from '../db.js?v=202610291028';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291028';
-import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610291028';
-import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291028';
-import { Chat, ConvList, nonLus } from '../chat.js?v=202610291028';
-import { INCIDENT_TYPES, incidentLabel } from '../client/social.js?v=202610291028';
-import { Logo } from '../logo.js?v=202610291028';
-import { ThemeToggle } from '../theme.js?v=202610291028';
-import { param } from '../params.js?v=202610291028';
-import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291028';
+import { html, render, useState, useEffect, useMemo, useRef } from '../lib.js?v=202610291359';
+import { AppCtx, Badge, Modal, useApp as useAppL } from '../ui.js?v=202610291359';
+import { tr } from '../i18n.js?v=202610291359';
+import { isoDate } from '../calc.js?v=202610291359';
+import { loadAll, upsert, updateRow, insertRow } from '../db.js?v=202610291359';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291359';
+import { MapView, optimiser, hasPos, heure, fmtDuree, fmtDist, googleNav, haversine } from '../map.js?v=202610291359';
+import { calculerEtas, STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291359';
+import { Chat, ConvList, nonLus } from '../chat.js?v=202610291359';
+import { INCIDENT_TYPES, incidentLabel } from '../client/social.js?v=202610291359';
+import { Logo } from '../logo.js?v=202610291359';
+import { ThemeToggle } from '../theme.js?v=202610291359';
+import { param } from '../params.js?v=202610291359';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291359';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const DEMO_AS = { user_id: 'demo-livreur', admin: false, role: 'livreur', livreur_id: new URLSearchParams(location.search).get('as') || 'LR001' };

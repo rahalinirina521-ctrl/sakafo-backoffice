@@ -1,10 +1,10 @@
 // Page de connexion unique : nom d'utilisateur (ou e-mail) + mot de passe, inscription des clients, compte démo.
-import { html, render, useState, useEffect } from './lib.js?v=202610291028';
-import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610291028';
-import { tr, catName } from './i18n.js?v=202610291028';
-import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610291028';
-import { Logo } from './logo.js?v=202610291028';
-import { ThemeToggle } from './theme.js?v=202610291028';
+import { html, render, useState, useEffect } from './lib.js?v=202610291359';
+import { MODE, getSession, onAuthChange, whoami, connexion, signUp, resetPassword, usernameLibre, lireTable, seSouvenir } from './db.js?v=202610291359';
+import { tr, catName } from './i18n.js?v=202610291359';
+import { LangSwitch, useLang, NewPassword, deconnecter, roleLabel } from './shell.js?v=202610291359';
+import { Logo } from './logo.js?v=202610291359';
+import { ThemeToggle } from './theme.js?v=202610291359';
 
 const destination = (w) => (w.admin ? 'index.html' : w.livreur_id || w.role === 'livreur' ? 'livreur.html' : 'client.html');
 const nettoie = (u) => String(u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30);
@@ -78,6 +78,8 @@ function Login({ onOk, onSignup, onReset }) {
   const [souvenir, setSouvenir] = useState(true);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  // connexion.html?demo : entre directement dans le compte démo
+  useEffect(() => { if (new URLSearchParams(location.search).has('demo')) go('demo', 'demo'); }, []);
   async function go(i = id, p = pwd) {
     setBusy(true); setErr('');
     try { await connexion(i, p); seSouvenir(i === 'demo' ? false : souvenir); try { if (i !== 'demo') localStorage.setItem('sakafo_last_user', i.trim()); } catch (e) { /* */ } await onOk(); } catch (x) { setErr(x.message || String(x)); setBusy(false); }

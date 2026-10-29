@@ -1,9 +1,9 @@
 // Tarifs : prix de chaque plat (à l'unité) et formules d'abonnement, modifiables par l'admin.
-import { html, useState, useMemo } from '../lib.js?v=202610291028';
-import { useApp, Card, Badge } from '../ui.js?v=202610291028';
-import { platTotals, menuTotals, toNum, fmt } from '../calc.js?v=202610291028';
-import { tr, catName, fotLabel, platTitle } from '../i18n.js?v=202610291028';
-import { Thumb } from '../pickers.js?v=202610291028';
+import { html, useState, useMemo } from '../lib.js?v=202610291359';
+import { useApp, Card, Badge } from '../ui.js?v=202610291359';
+import { platTotals, menuTotals, toNum, fmt } from '../calc.js?v=202610291359';
+import { tr, catName, fotLabel, platTitle } from '../i18n.js?v=202610291359';
+import { Thumb } from '../pickers.js?v=202610291359';
 
 export function Tarifs() {
   const app = useApp();
@@ -52,7 +52,7 @@ export function Tarifs() {
 
     <${Card} title=${tr('Formules d\'abonnement', 'Subscription plans', 'Formule abonnement')} actions=${html`<button class="btn small" onClick=${addOffre}>+ ${tr('Formule', 'Plan', 'Formule')}</button>`}>
       <div class="table-wrap"><table class="table resp offres-t">
-        <thead><tr><th>${tr('Formule', 'Plan', 'Formule')}</th><th class="num">${tr('Jours', 'Days', 'Andro')}</th><th>${tr('Objectif', 'Goal', 'Tanjona')}</th><th class="num">${tr('Prix (Ar)', 'Price (Ar)', 'Vidiny (Ar)')}</th><th class="num">${tr('Par jour', 'Per day', 'Isan\'andro')}</th><th class="num">${tr('Suggestion', 'Suggestion', 'Soso-kevitra')}</th><th>${tr('Actif', 'Active', 'Mavitrika')}</th><th></th></tr></thead>
+        <thead><tr><th>${tr('Formule', 'Plan', 'Formule')}</th><th class="num">${tr('Jours', 'Days', 'Andro')}</th><th>${tr('Objectif', 'Goal', 'Tanjona')}</th><th>${tr('Type', 'Type', 'Karazana')}</th><th class="num">${tr('Prix (Ar)', 'Price (Ar)', 'Vidiny (Ar)')}</th><th class="num">${tr('Par jour', 'Per day', 'Isan\'andro')}</th><th class="num">${tr('Suggestion', 'Suggestion', 'Soso-kevitra')}</th><th>${tr('Actif', 'Active', 'Mavitrika')}</th><th></th></tr></thead>
         <tbody>${offres.map((o) => {
           const base = dayPrice.get(o.categorie_id || '');
           const remise = o.nb_jours >= 30 ? 0.15 : o.nb_jours >= 14 ? 0.1 : o.nb_jours >= 7 ? 0.07 : o.nb_jours >= 3 ? 0.03 : 0;
@@ -61,6 +61,7 @@ export function Tarifs() {
             <td><input value=${o.nom} onChange=${(e) => saveOffre(o, { nom: e.target.value })} /></td>
             <td class="num"><input class="num-input" type="number" min="1" value=${o.nb_jours} onChange=${(e) => saveOffre(o, { nb_jours: Math.max(1, toNum(e.target.value) || 1) })} /></td>
             <td><select value=${o.categorie_id || ''} onChange=${(e) => saveOffre(o, { categorie_id: e.target.value || null })}><option value="">${tr('Tous', 'All', 'Rehetra')}</option>${cats.map((c) => html`<option value=${c.id}>${catName(c)}</option>`)}</select></td>
+            <td><select value=${o.mode || ''} onChange=${(e) => saveOffre(o, { mode: e.target.value || null })}><option value="">${tr('Les deux', 'Both', 'Izy roa')}</option><option value="livraison">🛵 ${tr('Livraison', 'Delivery', 'Fanaterana')}</option><option value="conseil">📋 ${tr('Prescription', 'Meal plan', 'Torolalana')}</option></select></td>
             <td class="num"><input class="num-input wide" type="number" min="0" step="500" value=${o.prix ?? ''} placeholder=${sugg ? fmt(sugg) : ''} onChange=${(e) => saveOffre(o, { prix: toNum(e.target.value) })} /></td>
             <td class="num">${o.prix ? fmt(o.prix / o.nb_jours) + ' Ar' : '—'}</td>
             <td class="num">${sugg ? html`<button class="link-btn" title=${tr('Utiliser ce prix', 'Use this price', 'Ampiasao ity vidiny ity')} onClick=${() => saveOffre(o, { prix: sugg })}>${fmt(sugg)} Ar</button>${remise ? html`<small class="muted"> (−${Math.round(remise * 100)} %)</small>` : null}` : html`<span class="muted small">${tr('prix des plats ?', 'dish prices?', 'vidin\'ny sakafo?')}</span>`}</td>

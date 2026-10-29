@@ -1,6 +1,6 @@
 // Thème clair / sombre / automatique (suit le téléphone)
-import { html, useState, useEffect } from './lib.js?v=202610291028';
-import { tr } from './i18n.js?v=202610291028';
+import { html, useState, useEffect } from './lib.js?v=202610291359';
+import { tr } from './i18n.js?v=202610291359';
 
 const KEY = 'sakafo_theme';
 const mq = typeof window !== 'undefined' && window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;

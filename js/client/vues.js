@@ -1,19 +1,19 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291028';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291028';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291028';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291028';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291028';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291028';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291028';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291028';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291028';
-import { Chat } from '../chat.js?v=202610291028';
-import { insertRow, updateRow, remove } from '../db.js?v=202610291028';
-import { param } from '../params.js?v=202610291028';
-import { AddressField } from '../address.js?v=202610291028';
-import { Thumb } from '../pickers.js?v=202610291028';
-import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291028';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291359';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291359';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291359';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291359';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291359';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291359';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291359';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291359';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291359';
+import { Chat } from '../chat.js?v=202610291359';
+import { insertRow, updateRow, remove } from '../db.js?v=202610291359';
+import { param } from '../params.js?v=202610291359';
+import { AddressField } from '../address.js?v=202610291359';
+import { Thumb } from '../pickers.js?v=202610291359';
+import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291359';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());
@@ -92,7 +92,7 @@ export function Accueil({ client, go }) {
     ${!abo.actif && html`<div class="warn-box">${client.abonnement_fin ? tr('Votre abonnement est terminé.', 'Your subscription has ended.', 'Tapitra ny abonnement-nao.') : tr('Aucun abonnement actif.', 'No active subscription.', 'Tsy misy abonnement.')} <button class="link-btn" onClick=${() => go('/formules')}>${tr('Voir les formules →', 'See plans →', 'Jereo ny formules →')}</button></div>`}
     ${abo.actif && abo.jours <= 3 && html`<div class="warn-box">⏳ ${tr(`Votre abonnement se termine dans ${abo.jours} jour(s).`, `Your subscription ends in ${abo.jours} day(s).`, `Tapitra afaka ${abo.jours} andro ny abonnement-nao.`)} <button class="link-btn" onClick=${() => go('/messages')}>${tr('Renouveler', 'Renew', 'Havaozina')}</button></div>`}
 
-    <section class="c-card goal-card" onClick=${() => go('/suivi')}>
+    <section class="c-card goal-card clickable" onClick=${() => go('/programme')}>
       <div class="row between"><b>${cat?.icone || '🎯'} ${catName(cat)}</b><${Badge} tone=${abo.tone}>${client.formule === 'conseil' ? '📋 ' : '🛵 '}${abo.label}<//></div>
       ${actuel ? html`<div class="goal-nums"><div><small>${tr('Départ', 'Start', 'Fiandohana')}</small><b>${fmt(depart, 1)}</b></div><div class="big"><small>${tr('Actuel', 'Now', 'Ankehitriny')}</small><b>${fmt(actuel, 1)} kg</b></div><div><small>${tr('Objectif', 'Goal', 'Tanjona')}</small><b>${cible ? fmt(cible, 1) : '—'}</b></div></div>
         ${prog !== null && html`<div class="progress"><div style=${{ width: Math.round(prog * 100) + '%' }}></div></div><small class="muted">${Math.round(prog * 100)} % ${tr('du chemin', 'of the way', 'vita')}${a.tendance?.date ? ' · ' + tr('à ce rythme : ', 'at this pace: ', 'raha toy izao: ') + fmtDate(a.tendance.date) : a.prevision ? ' · ' + tr('prévu : ', 'forecast: ', 'vinavina: ') + fmtDate(a.prevision.date) : ''}</small>`}`
@@ -117,7 +117,7 @@ export function Accueil({ client, go }) {
     <div class="quick-row">
       <button class="btn" onClick=${() => go('/suivi')}>⚖️ ${tr('Me peser', 'Weigh in', 'Handanja')}</button>
       <button class="btn" onClick=${() => go('/messages')}>💬 ${tr('Écrire', 'Message', 'Hanoratra')}</button>
-      <button class="btn" onClick=${() => go('/menus')}>📅 ${tr('Ma semaine', 'My week', 'Ny herinandro')}</button>
+      <button class="btn" onClick=${() => go('/programme')}>📅 ${tr('Mon programme', 'My programme', 'Ny programako')}</button>
     </div>
     ${plat && html`<${PlatModal} plat=${plat} client=${client} onClose=${() => setPlat(null)} showCompo=${client.formule === 'conseil'} />`}
   </div>`;
@@ -141,7 +141,7 @@ export function MenusSemaine({ client }) {
     ${courses && html`<${Courses} menus=${jours.map(menuDe).filter(Boolean)} onClose=${() => setCourses(false)} />`}
   </div>`;
 }
-function Courses({ menus, onClose }) {
+export function Courses({ menus, onClose }) {
   const { data, ingMap, toast } = useApp();
   const [pers, setPers] = useState(1);
   const [coche, setCoche] = useState({});
@@ -203,12 +203,9 @@ export function Suivi({ client, onClient }) {
   const app = useApp();
   const { data, toast, setData, me } = app;
   const [f, setF] = useState({ date: today(), poids: '', tour_taille: '' });
-  const [edit, setEdit] = useState(false);
-  const [prof, setProf] = useState(client.profil || {});
-  const [catId, setCatId] = useState(client.categorie_id);
   const mesures = (data.mesures || []).filter((m) => m.client_id === client.id).sort((a, b) => a.date.localeCompare(b.date));
-  const cat = data.categories.find((c) => c.id === (edit ? catId : client.categorie_id));
-  const a = analyse(edit ? prof : client.profil || {}, typeObjectif(cat), mesures);
+  const cat = data.categories.find((c) => c.id === client.categorie_id);
+  const a = analyse(client.profil || {}, typeObjectif(cat), mesures);
   async function peser() {
     const poids = toNum(f.poids); if (!poids) return;
     const row = { id: 'MS-' + uid(), client_id: client.id, date: f.date, poids, tour_taille: toNum(f.tour_taille), notes: null };
@@ -223,17 +220,6 @@ export function Suivi({ client, onClient }) {
   async function delMesure(m) {
     try { await remove('mesures', [m.id]); setData((d) => ({ ...d, mesures: d.mesures.filter((x) => x.id !== m.id) })); } catch (e) { toast(e.message, 'bad'); }
   }
-  async function saveObj() {
-    try {
-      const profil = { ...prof, poids_depart: prof.poids_depart || client.profil?.poids_depart || prof.poids };
-      await updateRow('clients', client.id, { profil, categorie_id: catId });
-      onClient({ ...client, profil, categorie_id: catId });
-      const c2 = data.categories.find((c) => c.id === catId);
-      const a2 = analyse(profil, typeObjectif(c2), mesures);
-      await app.send('client:' + client.id, `📝 ${tr('Objectif mis à jour', 'Goal updated', 'Tanjona novaina')} : ${catName(c2)}${profil.poids_cible ? ' → ' + profil.poids_cible + ' kg' : ''}${profil.date_cible ? ' (' + fmtDate(profil.date_cible) + ')' : ''}. ${a2.verdict ? a2.verdict.titre : ''}`).catch(() => {});
-      setEdit(false); toast(tr('Objectif enregistré', 'Goal saved', 'Voatahiry ny tanjona'));
-    } catch (e) { toast(e.message, 'bad'); }
-  }
   return html`<div class="c-page">
     <h1>📈 ${tr('Mon suivi', 'My progress', 'Ny fandrosoako')}</h1>
     <section class="c-card">
@@ -246,13 +232,8 @@ export function Suivi({ client, onClient }) {
       </div>
       <p class="tiny muted">${tr('Conseil : pesez-vous le matin à jeun, 1 fois par semaine, le même jour.', 'Tip: weigh yourself in the morning before eating, once a week, same day.', 'Torohevitra: mandanja isan-kerinandro, maraina alohan\'ny hisakafo.')}</p>
     </section>
-    <section class="c-card">
-      <div class="row between"><h2>🎯 ${tr('Mon objectif', 'My goal', 'Ny tanjoko')}</h2>${!edit && html`<button class="btn small" onClick=${() => { setProf(client.profil || {}); setCatId(client.categorie_id); setEdit(true); }}>${tr('Modifier', 'Edit', 'Ovaina')}</button>`}</div>
-      ${edit && html`<${Field} label=${tr('Objectif', 'Goal', 'Tanjona')}><select value=${catId || ''} onChange=${(e) => setCatId(e.target.value)}>${objectifsVisibles(data).map((c) => html`<option value=${c.id}>${c.icone || ''} ${catName(c)}</option>`)}</select><//>
-        <${ProfilFields} profil=${prof} type=${typeObjectif(cat)} onChange=${setProf} />`}
-      <${AnalysePanel} a=${a} showRefs />
-      ${edit && html`<div class="row gap"><button class="btn primary" onClick=${saveObj}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button><button class="btn ghost" onClick=${() => setEdit(false)}>${tr('Annuler', 'Cancel', 'Aoka ihany')}</button></div>`}
-    </section>
+    <a class="c-card clickable row between" href="#/programme"><span>🎯 <b>${catName(cat)}</b>${a.ok ? html` · ${fmt(toNum(client.kcal_cible) || a.kcal)} kcal/${tr('jour', 'day', 'andro')}` : null}</span><small>${tr('Modifier mon objectif →', 'Edit my goal →', 'Hanova ny tanjona →')}</small></a>
+    ${a.tendance && html`<p class="small">📈 ${tr('Tendance réelle', 'Actual trend', 'Fandehany marina')} : <b>${a.tendance.rate > 0 ? '+' : ''}${fmt(a.tendance.rate, 1)} kg/${tr('semaine', 'week', 'herinandro')}</b>${a.tendance.date ? html` → ${tr('objectif vers le', 'goal around', 'tanjona manodidina ny')} <b>${fmtDate(a.tendance.date)}</b>` : null}</p>`}
     ${mesures.length > 0 && html`<section class="c-card"><h2>${tr('Historique des pesées', 'Weigh-in history', 'Tantaran\'ny lanja')}</h2>
       <ul class="hist">${[...mesures].reverse().map((m, i, arr) => { const prev = arr[i + 1]; const d = prev ? +m.poids - +prev.poids : null; return html`<li><span>${fmtDate(m.date)}</span><span><b>${fmt(m.poids, 1)} kg</b>${d !== null ? html` <small class=${d <= 0 ? 'ok-text' : 'warn-text'}>${d > 0 ? '+' : ''}${fmt(d, 1)}</small>` : null}${m.tour_taille ? html` · <small>${fmt(m.tour_taille, 1)} cm</small>` : null} <button class="link-btn small" onClick=${() => delMesure(m)}>✕</button></span></li>`; })}</ul></section>`}
   </div>`;

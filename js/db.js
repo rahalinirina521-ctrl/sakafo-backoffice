@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291028';
-import { DEMO } from './seed.js?v=202610291028';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610291028';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291359';
+import { DEMO } from './seed.js?v=202610291359';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610291359';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
@@ -58,7 +58,7 @@ const COLS = {
   positions: { livreur_id: null, lat: null, lng: null, precision: null, vitesse: null, cap: null, updated_at: null },
   calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
   suggestions: { id: null, statut: 'attente', categorie_id: null, fotoana: null, nom: null, plat_id: null, data: {} },
-  offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0 },
+  offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0, mode: null },
 };
 export function normalizeRow(table, r) {
   const def = COLS[table];

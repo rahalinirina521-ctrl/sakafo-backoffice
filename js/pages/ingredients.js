@@ -1,7 +1,7 @@
-import { html, useState, useMemo } from '../lib.js?v=202610291028';
-import { useApp, Badge, Field, Modal, SelectOrAdd } from '../ui.js?v=202610291028';
-import { isComplete, kcalCheck, nextId, fmt, toNum, optionList } from '../calc.js?v=202610291028';
-import { tr, ingName } from '../i18n.js?v=202610291028';
+import { html, useState, useMemo } from '../lib.js?v=202610291359';
+import { useApp, Badge, Field, Modal, SelectOrAdd } from '../ui.js?v=202610291359';
+import { isComplete, kcalCheck, nextId, fmt, toNum, optionList } from '../calc.js?v=202610291359';
+import { tr, ingName } from '../i18n.js?v=202610291359';
 
 const CATS = ['Féculent', 'Protéine', 'Légumineuse', 'Légume', 'Fruit', 'Boisson', 'Laitier', 'Matière grasse', 'Condiment', 'Autre'];
 const catLabel = (c) => ({
