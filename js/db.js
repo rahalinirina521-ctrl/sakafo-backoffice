@@ -1,13 +1,13 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291427';
-import { DEMO } from './seed.js?v=202610291427';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610291427';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291451';
+import { DEMO } from './seed.js?v=202610291451';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610291451';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
-const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents', 'commentaires', 'blocages', 'signalements', 'notifs_client'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents', 'commentaires', 'blocages', 'signalements', 'notifs_client'];
 // clé primaire si ce n'est pas « id »
-export const PK = { positions: 'livreur_id', profils: 'user_id', push_abonnements: 'endpoint', communaute: 'client_id' };
+export const PK = { positions: 'livreur_id', profils: 'user_id', push_abonnements: 'endpoint', communaute: 'client_id', blocages: 'bloque_id' };
 const pk = (t) => PK[t] || 'id';
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
@@ -80,6 +80,9 @@ export async function loadAll() {
     if (t === 'messages') qy = qy.order('created_at', { ascending: false }).limit(800);
     if (t === 'notifications') qy = qy.order('created_at', { ascending: false }).limit(200);
     if (t === 'publications') qy = qy.order('created_at', { ascending: false }).limit(300);
+    if (t === 'commentaires') qy = qy.order('created_at', { ascending: false }).limit(1500);
+    if (t === 'notifs_client') qy = qy.order('created_at', { ascending: false }).limit(150);
+    if (t === 'signalements') qy = qy.order('created_at', { ascending: false }).limit(200);
     if (t === 'incidents') qy = qy.order('created_at', { ascending: false }).limit(100);
     if (t === 'livraisons') qy = qy.gte('date', new Date(Date.now() - 62 * 864e5).toISOString().slice(0, 10));
     const { data, error } = await qy;
@@ -180,6 +183,16 @@ export async function uploadPlatImage(platId, file) {
   const { data } = c.storage.from('sary').getPublicUrl(path);
   return data.publicUrl + '?v=' + Date.now();
 }
+// Photo de la communauté (publication ou profil) : dossier = identifiant du client
+export async function uploadPhotoCommunaute(clientId, file) {
+  const blob = await resizeImage(file, MODE === 'demo' ? 600 : 1280, MODE === 'demo' ? 0.7 : 0.82);
+  if (MODE === 'demo') return blobToDataUrl(blob);
+  const c = await getClient();
+  const path = `${clientId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await c.storage.from('communaute').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+  if (error) throw error;
+  return c.storage.from('communaute').getPublicUrl(path).data.publicUrl;
+}
 export async function removePlatImage(platId) {
   if (MODE === 'demo') return;
   const c = await getClient();
@@ -225,6 +238,14 @@ export async function insertRow(table, row) {
   const { data, error } = await c.from(table).insert(row).select().single();
   if (error) throw error;
   return data;
+}
+
+// Insertion sans relecture (tables où le client peut écrire mais pas lire, ex. signalements)
+export async function insertSansRetour(table, row) {
+  if (MODE === 'demo') { const d = demoLoad(); (d[table] || (d[table] = [])).push({ created_at: new Date().toISOString(), ...row }); demoSave(); return; }
+  const c = await getClient();
+  const { error } = await c.from(table).insert(row);
+  if (error) throw error;
 }
 
 // ---------- Comptes ----------

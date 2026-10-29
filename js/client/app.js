@@ -1,22 +1,23 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291427';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291427';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291427';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291427';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291427';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291427';
-import { analyse, typeObjectif } from '../conseil.js?v=202610291427';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291427';
-import { aboStatut } from '../metier.js?v=202610291427';
-import { nonLus } from '../chat.js?v=202610291427';
-import { param } from '../params.js?v=202610291427';
-import { Thumb } from '../pickers.js?v=202610291427';
-import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291427';
-import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291427';
-import { MessagesHub, Communaute } from './social.js?v=202610291427';
-import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291427';
-import { Logo } from '../logo.js?v=202610291427';
-import { ThemeToggle } from '../theme.js?v=202610291427';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291451';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291451';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291451';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291451';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291451';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291451';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291451';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291451';
+import { aboStatut } from '../metier.js?v=202610291451';
+import { nonLus } from '../chat.js?v=202610291451';
+import { param } from '../params.js?v=202610291451';
+import { Thumb } from '../pickers.js?v=202610291451';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291451';
+import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291451';
+import { MessagesHub } from './social.js?v=202610291451';
+import { Communaute, nbNouveautes } from './reseau.js?v=202610291451';
+import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291451';
+import { Logo } from '../logo.js?v=202610291451';
+import { ThemeToggle } from '../theme.js?v=202610291451';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();
@@ -48,7 +49,7 @@ export function ClientApp() {
   const conv = client ? 'client:' + client.id : me ? 'user:' + me.id : null;
   const abonne = !!client && aboStatut(client).actif;
   const estDemo = client?.id === 'CL-DEMO';
-  useLive(setData, client ? [['messages'], ['livraisons', 'client_id=eq.' + client.id], ['positions'], ['incidents'], ['amis'], ['publications'], ['reactions']] : me ? [['messages', 'conversation=eq.' + conv]] : [], [conv]);
+  useLive(setData, client ? [['messages'], ['livraisons', 'client_id=eq.' + client.id], ['positions'], ['incidents'], ['amis'], ['publications'], ['reactions'], ['commentaires'], ['communaute'], ['blocages'], ['notifs_client', 'client_id=eq.' + client.id]] : me ? [['messages', 'conversation=eq.' + conv]] : [], [conv]);
 
   const ingMap = useMemo(() => { registerCustomUnits(data?.options || []); return new Map((data?.ingredients || []).map((i) => [i.id, i])); }, [data]);
   const meChat = me && { id: me.id, role: client ? 'client' : 'invite', nom: client?.nom || me.email || '' };
@@ -62,7 +63,7 @@ export function ClientApp() {
 
   const setClient = (c) => setData((d) => ({ ...d, clients: d.clients.map((x) => (x.id === c.id ? c : x)) }));
   const unread = me ? [...new Set((data.messages || []).map((m) => m.conversation))].reduce((n, c) => n + nonLus(data.messages, c, me.id), 0) : 0;
-  const demandesAmis = client ? (data.amis || []).filter((a) => a.a === client.id && a.statut === 'attente').length : 0;
+  const demandesAmis = nbNouveautes(data, client);
   const parts = route.split('?')[0];
   let tabs; let page;
   const logoutVers = async (url) => { if (me) await auth.logout(); location.href = url; };
@@ -93,7 +94,7 @@ export function ClientApp() {
       : html`<${Accueil} client=${client} go=${go} />`;
   } else if (aObjectif(client)) {
     // Inscrit avec objectif, pas encore abonné : résumé personnel, programme (aperçu), formules
-    tabs = [T.accueil, T.programme, T.suivi, T.formules, T.messages];
+    tabs = [T.accueil, T.programme, T.suivi, T.communaute, T.formules, T.messages];
     page = parts === '/programme' || parts === '/menus' || parts === '/objectif' ? html`<${Programme} client=${client} onClient=${setClient} />`
       : parts === '/suivi' ? html`<${Suivi} client=${client} onClient=${setClient} />`
       : parts === '/formules' ? formules()

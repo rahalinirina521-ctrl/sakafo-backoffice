@@ -1,19 +1,21 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291427';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291427';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291427';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291427';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291427';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291427';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291427';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291427';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291427';
-import { Chat } from '../chat.js?v=202610291427';
-import { insertRow, updateRow, remove } from '../db.js?v=202610291427';
-import { param } from '../params.js?v=202610291427';
-import { AddressField } from '../address.js?v=202610291427';
-import { Thumb } from '../pickers.js?v=202610291427';
-import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291427';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291451';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291451';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291451';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291451';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291451';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291451';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291451';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291451';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291451';
+import { Chat } from '../chat.js?v=202610291451';
+import { insertRow, updateRow, remove } from '../db.js?v=202610291451';
+import { param } from '../params.js?v=202610291451';
+import { AddressField } from '../address.js?v=202610291451';
+import { Thumb } from '../pickers.js?v=202610291451';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291451';
+import { CommunauteResume } from './reseau.js?v=202610291451';
+import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291451';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());
@@ -114,6 +116,7 @@ export function Accueil({ client, go }) {
     </section>`}
 
     ${conseilJour && html`<section class="c-card tip">💡 <b>${tr('Conseil du jour', 'Tip of the day', 'Torohevitra androany')}</b><p>${conseilJour}</p></section>`}
+    <${CommunauteResume} client=${client} />
     <div class="quick-row">
       <button class="btn" onClick=${() => go('/suivi')}>⚖️ ${tr('Me peser', 'Weigh in', 'Handanja')}</button>
       <button class="btn" onClick=${() => go('/messages')}>💬 ${tr('Écrire', 'Message', 'Hanoratra')}</button>
@@ -252,6 +255,23 @@ export function MessagesClient({ conversation }) {
   </div>`;
 }
 
+// ---------- Notifications push (réactions, commentaires, amis, messages) ----------
+function PushClient() {
+  const { data, toast } = useApp();
+  const [etat, setEtat] = useState('…');
+  useEffect(() => { etatPush().then(setEtat).catch(() => setEtat('impossible')); }, []);
+  async function basculer() {
+    try {
+      if (etat === 'actif') { await desactiverPush(); setEtat('inactif'); }
+      else { await activerPush(data); setEtat('actif'); toast(tr('Notifications activées 🔔', 'Notifications enabled 🔔', 'Mandeha ny fampandrenesana 🔔')); }
+    } catch (e) { toast(e.message, 'bad'); }
+  }
+  return html`<section class="c-card"><div class="row between wrap gap"><span>🔔 <b>${tr('Notifications sur ce téléphone', 'Notifications on this phone', 'Fampandrenesana amin\'ity finday ity')}</b><small class="muted d-block">${tr('Réactions, commentaires, demandes d\'ami…', 'Reactions, comments, friend requests…', 'Fihetseham-po, fanehoan-kevitra, namana…')}</small></span>
+    ${etat === 'impossible' || !pushPossible() ? html`<small class="muted">${tr('Sur iPhone : ajoutez d\'abord l\'application à l\'écran d\'accueil.', 'On iPhone: add the app to the home screen first.', 'iPhone: ampidiro aloha amin\'ny écran d\'accueil.')}</small>`
+      : etat === 'refuse' ? html`<small class="muted">${tr('Bloquées dans les réglages du navigateur', 'Blocked in browser settings', 'Voasakana ao amin\'ny navigateur')}</small>`
+      : html`<button class=${'btn small' + (etat === 'actif' ? '' : ' primary')} onClick=${basculer}>${etat === 'actif' ? tr('Désactiver', 'Turn off', 'Ajanony') : tr('Activer', 'Turn on', 'Alefaso')}</button>`}</div></section>`;
+}
+
 // ---------- Profil ----------
 export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi, onMoi, compte }) {
   const { toast } = useApp();
@@ -276,6 +296,7 @@ export function Profil({ client, onClient, logout, lang, onLang, LangSwitch, moi
     </div><button class="btn primary" onClick=${save}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button></section>
     ${moi && client.id !== 'CL-DEMO' && html`<section class="c-card"><${Field} label=${tr('Nom d\'utilisateur (pour se connecter)', 'Username (to sign in)', 'Anarana mpampiasa (hidirana)')}><div class="row gap"><input value=${username} onInput=${(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))} autocapitalize="none" /><button class="btn" onClick=${saveUsername}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button></div><//>
       <small class="muted">${tr('Vous pouvez aussi vous connecter avec votre e-mail.', 'You can also sign in with your e-mail.', 'Azonao ampiasaina koa ny mailakao.')}</small></section>`}
+    ${client.id !== 'CL-DEMO' && html`<${PushClient} />`}
     <section class="c-card"><div class="row between wrap gap"><span>${tr('Langue', 'Language', 'Fiteny')}</span><${LangSwitch} lang=${lang} onChange=${onLang} /></div></section>
     ${compte || html`<section class="c-card"><button class="btn ghost" onClick=${logout}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></section>`}
   </div>`;

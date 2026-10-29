@@ -1,7 +1,7 @@
 {
- "version": "2026-10-29 14:27",
- "tag": "202610291427",
- "date": "2026-10-29T14:27+03:00",
+ "version": "2026-10-29 14:51",
+ "tag": "202610291451",
+ "date": "2026-10-29T14:51+03:00",
  "files": [
   "client.html",
   "config.js",
@@ -15,6 +15,7 @@
   "js/chat.js",
   "js/client/app.js",
   "js/client/programme.js",
+  "js/client/reseau.js",
   "js/client/social.js",
   "js/client/vues.js",
   "js/connexion.js",

@@ -1,12 +1,12 @@
 // Avis, communauté (modération) et incidents livreurs — vue admin.
-import { html, useState } from '../lib.js?v=202610291427';
-import { useApp, Badge, Empty } from '../ui.js?v=202610291427';
-import { tr, platTitle } from '../i18n.js?v=202610291427';
-import { fmt } from '../calc.js?v=202610291427';
-import { updateRow, supprimer } from '../db.js?v=202610291427';
-import { Etoiles, moyenne, Avatar, incidentLabel } from '../client/social.js?v=202610291427';
-import { heure } from '../map.js?v=202610291427';
-import { depuis } from './livreurs.js?v=202610291427';
+import { html, useState } from '../lib.js?v=202610291451';
+import { useApp, Badge, Empty } from '../ui.js?v=202610291451';
+import { tr, platTitle } from '../i18n.js?v=202610291451';
+import { fmt } from '../calc.js?v=202610291451';
+import { updateRow, supprimer } from '../db.js?v=202610291451';
+import { Etoiles, moyenne, Avatar, incidentLabel } from '../client/social.js?v=202610291451';
+import { heure } from '../map.js?v=202610291451';
+import { depuis } from './livreurs.js?v=202610291451';
 
 export function AvisAdmin() {
   const app = useApp();
@@ -25,6 +25,11 @@ export function AvisAdmin() {
   const enCours = incidents.filter((i) => i.statut === 'en_cours').length;
   const pubs = (data.publications || []).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
   const pseudo = (cid) => (data.communaute || []).find((c) => c.client_id === cid)?.pseudo || client(cid);
+  const signals = (data.signalements || []).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const aTraiter = signals.filter((x) => !x.traite).length;
+  const coms = (data.commentaires || []).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const contenu = (x) => (x.cible_type === 'publication' ? (data.publications || []).find((p) => p.id === x.cible_id) : x.cible_type === 'commentaire' ? coms.find((c) => c.id === x.cible_id) : null);
+  const masquerCible = (x) => { const c = contenu(x); if (c) maj(x.cible_type === 'publication' ? 'publications' : 'commentaires', c.id, { masque: true }); maj('signalements', x.id, { traite: true }); };
   const stat = (t) => { const l = tous.filter((a) => a.cible_type === t); return { n: l.length, m: moyenne(l) }; };
 
   return html`<div class="page">
@@ -32,7 +37,7 @@ export function AvisAdmin() {
     <div class="kpis">${[['service', '🍽️', tr('Service', 'Service', 'Serivisy')], ['plat', '🍲', tr('Plats', 'Dishes', 'Sakafo')], ['livreur', '🛵', tr('Livraison', 'Delivery', 'Fanaterana')]].map(([t, ic, l]) => { const s = stat(t); return html`<div class="kpi"><small>${ic} ${l}</small><b>${s.m ? fmt(s.m, 1) + ' ★' : '—'}</b><small>${s.n} ${tr('avis', 'reviews', 'hevitra')}</small></div>`; })}
       <div class="kpi"><small>👥 ${tr('Membres', 'Members', 'Mpikambana')}</small><b>${(data.communaute || []).length}</b><small>${(data.amis || []).filter((a) => a.statut === 'accepte').length} ${tr('amitiés', 'friendships', 'fifandraisana')}</small></div>
       <div class=${'kpi' + (enCours ? ' kpi-alert' : '')}><small>⚠️ ${tr('Incidents en cours', 'Open incidents', 'Olana mbola misy')}</small><b>${enCours}</b></div></div>
-    <div class="seg big">${[['avis', '⭐ ' + tr('Avis', 'Reviews', 'Hevitra')], ['pubs', '📰 ' + tr('Publications', 'Posts', 'Lahatsoratra')], ['incidents', '⚠️ ' + tr('Incidents', 'Incidents', 'Olana'), enCours]].map(([k, l, n]) => html`<button class=${onglet === k ? 'on' : ''} onClick=${() => setOnglet(k)}>${l}${n ? html` <i class="wa-badge">${n}</i>` : null}</button>`)}</div>
+    <div class="seg big">${[['avis', '⭐ ' + tr('Avis', 'Reviews', 'Hevitra')], ['signal', '🚩 ' + tr('Signalements', 'Reports', 'Fitarainana'), aTraiter], ['pubs', '📰 ' + tr('Publications', 'Posts', 'Lahatsoratra')], ['coms', '💬 ' + tr('Commentaires', 'Comments', 'Fanehoan-kevitra')], ['incidents', '⚠️ ' + tr('Incidents', 'Incidents', 'Olana'), enCours]].map(([k, l, n]) => html`<button class=${onglet === k ? 'on' : ''} onClick=${() => setOnglet(k)}>${l}${n ? html` <i class="wa-badge">${n}</i>` : null}</button>`)}</div>
 
     ${onglet === 'avis' && html`
       <div class="filters row gap wrap"><select value=${type} onChange=${(e) => setType(e.target.value)} style="max-width:200px"><option value="">${tr('Tous les avis', 'All reviews', 'Hevitra rehetra')}</option><option value="service">🍽️ Service</option><option value="plat">🍲 ${tr('Plats', 'Dishes', 'Sakafo')}</option><option value="livreur">🛵 ${tr('Livraison', 'Delivery', 'Fanaterana')}</option></select>
@@ -50,7 +55,23 @@ export function AvisAdmin() {
     ${onglet === 'pubs' && (pubs.length === 0 ? html`<${Empty}>${tr('Aucune publication.', 'No posts.', 'Tsy misy.')}<//>` : pubs.map((p) => html`<section class=${'card' + (p.masque ? ' masque' : '')} key=${p.id}>
         <div class="row gap between wrap"><span class="row gap"><${Avatar} nom=${pseudo(p.client_id)} size=${32} /><b>${pseudo(p.client_id)}</b><small class="muted">${depuis(p.created_at)} · ${p.visibilite === 'communaute' ? '🌍' : '🤝'}</small></span>
           <span class="row gap"><button class="btn small" onClick=${() => maj('publications', p.id, { masque: !p.masque })}>${p.masque ? tr('Afficher', 'Show', 'Asehoy') : tr('Masquer', 'Hide', 'Afeno')}</button><button class="btn small ghost danger" onClick=${() => suppr('publications', p.id)}>🗑</button></span></div>
-        <p>${p.texte}</p><small class="muted">${(data.reactions || []).filter((r) => r.publication_id === p.id).map((r) => r.emoji).join(' ')}</small>
+        ${p.texte && html`<p>${p.texte}</p>`}${(p.photos || []).length > 0 && html`<div class="row gap wrap">${p.photos.map((u) => html`<a href=${u} target="_blank" rel="noopener"><img src=${u} alt="" style="width:90px;height:90px;object-fit:cover;border-radius:10px" loading="lazy" /></a>`)}</div>`}
+        <small class="muted">💬 ${coms.filter((c) => c.publication_id === p.id).length} · </small><small class="muted">${(data.reactions || []).filter((r) => r.publication_id === p.id).map((r) => r.emoji).join(' ')}</small>
+      </section>`))}
+
+    ${onglet === 'signal' && (signals.length === 0 ? html`<${Empty}>${tr('Aucun signalement. 👍', 'No reports. 👍', 'Tsy misy fitarainana. 👍')}<//>` : signals.map((x) => { const c = contenu(x); return html`<section class=${'card' + (x.traite ? ' masque' : ' incident-card live')} key=${x.id}>
+        <div class="row gap between wrap"><b>🚩 ${x.cible_type === 'publication' ? tr('Publication', 'Post', 'Lahatsoratra') : x.cible_type === 'commentaire' ? tr('Commentaire', 'Comment', 'Fanehoan-kevitra') : tr('Membre', 'Member', 'Mpikambana') + ' : ' + pseudo(x.cible_id)}</b><small class="muted">${tr('par', 'by', 'avy amin\'i')} ${pseudo(x.client_id)} · ${depuis(x.created_at)}</small></div>
+        ${x.motif && html`<p><b>${tr('Motif', 'Reason', 'Antony')} :</b> ${x.motif}</p>`}
+        ${c && html`<blockquote class="avis-rep">${pseudo(c.client_id)} : ${c.texte || '📷'}${c.masque ? ' (' + tr('déjà masqué', 'already hidden', 'efa nafenina') + ')' : ''}</blockquote>`}
+        <div class="row gap wrap">${!x.traite && c && !c.masque && html`<button class="btn small primary" onClick=${() => masquerCible(x)}>🙈 ${tr('Masquer le contenu', 'Hide content', 'Afeno')}</button>`}
+          ${!x.traite && html`<button class="btn small" onClick=${() => maj('signalements', x.id, { traite: true })}>✓ ${tr('Classer sans suite', 'Dismiss', 'Tsy misy atao')}</button>`}
+          <a class="btn small ghost" href=${'#/messages?c=client:' + (c ? c.client_id : x.cible_id)}>💬 ${tr('Écrire à l\'auteur', 'Message author', 'Hanoratra')}</a></div>
+      </section>`; }))}
+
+    ${onglet === 'coms' && (coms.length === 0 ? html`<${Empty}>${tr('Aucun commentaire.', 'No comments.', 'Tsy misy.')}<//>` : coms.slice(0, 200).map((c) => html`<section class=${'card' + (c.masque ? ' masque' : '')} key=${c.id}>
+        <div class="row gap between wrap"><span class="row gap"><${Avatar} nom=${pseudo(c.client_id)} size=${28} /><b>${pseudo(c.client_id)}</b><small class="muted">${depuis(c.created_at)}</small></span>
+          <span class="row gap"><button class="btn small" onClick=${() => maj('commentaires', c.id, { masque: !c.masque })}>${c.masque ? tr('Afficher', 'Show', 'Asehoy') : tr('Masquer', 'Hide', 'Afeno')}</button><button class="btn small ghost danger" onClick=${() => suppr('commentaires', c.id)}>🗑</button></span></div>
+        <p>${c.texte}</p><small class="muted">↳ ${((data.publications || []).find((p) => p.id === c.publication_id)?.texte || '📷').slice(0, 80)}</small>
       </section>`))}
 
     ${onglet === 'incidents' && (incidents.length === 0 ? html`<${Empty}>${tr('Aucun incident signalé.', 'No incident reported.', 'Tsy misy olana voalaza.')}<//>` : incidents.map((i) => html`<section class=${'card incident-card' + (i.statut === 'en_cours' ? ' live' : '')} key=${i.id}>

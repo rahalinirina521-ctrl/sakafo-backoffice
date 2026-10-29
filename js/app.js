@@ -1,34 +1,34 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610291427';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610291427';
-import { Logo } from './logo.js?v=202610291427';
-import { ThemeToggle } from './theme.js?v=202610291427';
-import { NewPassword, UserMenu, deconnecter } from './shell.js?v=202610291427';
-import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610291427';
-import { nonLus } from './chat.js?v=202610291427';
-import { BRAND } from '../config.js?v=202610291427';
-import { AppCtx } from './ui.js?v=202610291427';
-import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610291427';
-import { registerCustomUnits } from './calc.js?v=202610291427';
-import { param } from './params.js?v=202610291427';
-import { Dashboard } from './pages/dashboard.js?v=202610291427';
-import { PlatsList } from './pages/plats.js?v=202610291427';
-import { PlatEdit } from './pages/plat-edit.js?v=202610291427';
-import { Ingredients } from './pages/ingredients.js?v=202610291427';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610291427';
-import { Planning } from './pages/planning.js?v=202610291427';
-import { Clients } from './pages/clients.js?v=202610291427';
-import { Tarifs } from './pages/tarifs.js?v=202610291427';
-import { Propositions } from './pages/propositions.js?v=202610291427';
-import { Categories } from './pages/categories.js?v=202610291427';
-import { Backup } from './pages/backup.js?v=202610291427';
-import { Livraisons } from './pages/livraisons.js?v=202610291427';
-import { Livreurs } from './pages/livreurs.js?v=202610291427';
-import { Messages } from './pages/messages.js?v=202610291427';
-import { Notifications } from './pages/notifications.js?v=202610291427';
-import { AvisAdmin } from './pages/avis.js?v=202610291427';
-import { Parametres } from './pages/parametres.js?v=202610291427';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610291451';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610291451';
+import { Logo } from './logo.js?v=202610291451';
+import { ThemeToggle } from './theme.js?v=202610291451';
+import { NewPassword, UserMenu, deconnecter } from './shell.js?v=202610291451';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610291451';
+import { nonLus } from './chat.js?v=202610291451';
+import { BRAND } from '../config.js?v=202610291451';
+import { AppCtx } from './ui.js?v=202610291451';
+import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610291451';
+import { registerCustomUnits } from './calc.js?v=202610291451';
+import { param } from './params.js?v=202610291451';
+import { Dashboard } from './pages/dashboard.js?v=202610291451';
+import { PlatsList } from './pages/plats.js?v=202610291451';
+import { PlatEdit } from './pages/plat-edit.js?v=202610291451';
+import { Ingredients } from './pages/ingredients.js?v=202610291451';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610291451';
+import { Planning } from './pages/planning.js?v=202610291451';
+import { Clients } from './pages/clients.js?v=202610291451';
+import { Tarifs } from './pages/tarifs.js?v=202610291451';
+import { Propositions } from './pages/propositions.js?v=202610291451';
+import { Categories } from './pages/categories.js?v=202610291451';
+import { Backup } from './pages/backup.js?v=202610291451';
+import { Livraisons } from './pages/livraisons.js?v=202610291451';
+import { Livreurs } from './pages/livreurs.js?v=202610291451';
+import { Messages } from './pages/messages.js?v=202610291451';
+import { Notifications } from './pages/notifications.js?v=202610291451';
+import { AvisAdmin } from './pages/avis.js?v=202610291451';
+import { Parametres } from './pages/parametres.js?v=202610291451';
 
-export const VERSION = '2026-10-29 14:27';
+export const VERSION = '2026-10-29 14:51';
 
 const nav = () => [
   ['/', '📊', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -152,7 +152,7 @@ export function App() {
     if (!session) { setMe(null); return; }
     whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND, email: session.user?.email }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
   }, [session]);
-  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications'], ['incidents'], ['avis'], ['publications']], [me?.admin]);
+  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications'], ['incidents'], ['avis'], ['publications'], ['commentaires'], ['signalements']], [me?.admin]);
   // Sécurité : déconnexion automatique après une période sans activité (Paramètres → minutes, 0 = jamais)
   useEffect(() => {
     if (!me?.admin || MODE !== 'supabase') return undefined;

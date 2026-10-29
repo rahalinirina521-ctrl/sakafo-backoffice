@@ -1,6 +1,6 @@
 // Règles métier partagées (back-office, application client, application livreur).
-import { tr } from './i18n.js?v=202610291427';
-import { menuRepas, lineGrams } from './calc.js?v=202610291427';
+import { tr } from './i18n.js?v=202610291451';
+import { menuRepas, lineGrams } from './calc.js?v=202610291451';
 
 export function aboStatut(c) {
   if (!c || !c.abonnement_fin) return { label: tr('Sans abonnement', 'No subscription', 'Tsy misy abonnement'), tone: 'muted', actif: false };

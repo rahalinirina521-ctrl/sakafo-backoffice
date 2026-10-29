@@ -1,13 +1,13 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState, useEffect } from '../lib.js?v=202610291427';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610291427';
-import { tr } from '../i18n.js?v=202610291427';
-import { toNum } from '../calc.js?v=202610291427';
-import { param, paramRow } from '../params.js?v=202610291427';
-import { MapView } from '../map.js?v=202610291427';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291427';
-import { MODE } from '../db.js?v=202610291427';
-import { CompteCard } from '../shell.js?v=202610291427';
+import { html, useState, useEffect } from '../lib.js?v=202610291451';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610291451';
+import { tr } from '../i18n.js?v=202610291451';
+import { toNum } from '../calc.js?v=202610291451';
+import { param, paramRow } from '../params.js?v=202610291451';
+import { MapView } from '../map.js?v=202610291451';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291451';
+import { MODE } from '../db.js?v=202610291451';
+import { CompteCard } from '../shell.js?v=202610291451';
 
 export function Parametres() {
   const app = useApp();

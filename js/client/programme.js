@@ -1,16 +1,17 @@
 // Espace client « personnalisé » : accueil résumé (avant abonnement), onglet Programme (objectif + calendrier),
 // et page Formules (livraison ou prescription sans livraison, compte démo).
-import { html, useState } from '../lib.js?v=202610291427';
-import { useApp, Badge, Field } from '../ui.js?v=202610291427';
-import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291427';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291427';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291427';
-import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291427';
-import { aboStatut, menuDuJour } from '../metier.js?v=202610291427';
-import { updateRow } from '../db.js?v=202610291427';
-import { param } from '../params.js?v=202610291427';
-import { Thumb } from '../pickers.js?v=202610291427';
-import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291427';
+import { html, useState } from '../lib.js?v=202610291451';
+import { useApp, Badge, Field } from '../ui.js?v=202610291451';
+import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291451';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291451';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291451';
+import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291451';
+import { aboStatut, menuDuJour } from '../metier.js?v=202610291451';
+import { updateRow } from '../db.js?v=202610291451';
+import { param } from '../params.js?v=202610291451';
+import { Thumb } from '../pickers.js?v=202610291451';
+import { CommunauteResume } from './reseau.js?v=202610291451';
+import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291451';
 
 const today = () => isoDate(new Date());
 const prenom = (n) => String(n || '').trim().split(/\s+/)[0] || '';
@@ -89,6 +90,7 @@ export function AccueilDecouverte({ client }) {
       <a class="link-btn small" href="#/programme">📅 ${tr('Voir toute la semaine →', 'See the whole week →', 'Jereo ny herinandro →')}</a>
     </section>
     ${conseilJour && html`<section class="c-card tip">💡 <b>${tr('Conseil du jour', 'Tip of the day', 'Torohevitra androany')}</b><p>${conseilJour}</p></section>`}
+    <${CommunauteResume} client=${client} />
     <section class="c-card"><h2>${tr('Comment voulez-vous suivre ce programme ?', 'How do you want to follow this programme?', 'Ahoana no tianao hanarahana ity programa ity?')}</h2>
       <div class="mode-grid">${Object.entries(MODES()).map(([k, M]) => html`<a class="mode-card" href=${'#/formules?mode=' + k}><span>${M.icone}</span><b>${M.nom}</b><small>${M.sous}</small></a>`)}</div></section>
     <div class="quick-row"><a class="btn" href="#/programme">🎯 ${tr('Mon programme', 'My programme', 'Ny programako')}</a><a class="btn" href="#/messages">💬 ${tr('Écrire à l\'équipe', 'Message the team', 'Hanoratra')}</a></div>

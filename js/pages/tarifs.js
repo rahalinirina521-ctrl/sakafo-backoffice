@@ -1,9 +1,9 @@
 // Tarifs : prix de chaque plat (à l'unité) et formules d'abonnement, modifiables par l'admin.
-import { html, useState, useMemo } from '../lib.js?v=202610291427';
-import { useApp, Card, Badge } from '../ui.js?v=202610291427';
-import { platTotals, menuTotals, toNum, fmt } from '../calc.js?v=202610291427';
-import { tr, catName, fotLabel, platTitle } from '../i18n.js?v=202610291427';
-import { Thumb } from '../pickers.js?v=202610291427';
+import { html, useState, useMemo } from '../lib.js?v=202610291451';
+import { useApp, Card, Badge } from '../ui.js?v=202610291451';
+import { platTotals, menuTotals, toNum, fmt } from '../calc.js?v=202610291451';
+import { tr, catName, fotLabel, platTitle } from '../i18n.js?v=202610291451';
+import { Thumb } from '../pickers.js?v=202610291451';
 
 export function Tarifs() {
   const app = useApp();
