@@ -1,8 +1,8 @@
 // Moteur de conseil « semi-IA » (règles nutritionnelles publiées, sans IA payante).
 // Il analyse le profil et l'objectif d'un client : faisabilité, kcal/jour, macros, prévision, alertes médicales.
 // Ce n'est pas un avis médical : il oriente vers un professionnel dès qu'une situation le demande.
-import { tr, getLang } from './i18n.js?v=202610290636';
-import { ACTIVITES, toNum, isoDate, addDays } from './calc.js?v=202610290636';
+import { tr, getLang } from './i18n.js?v=202610290637';
+import { ACTIVITES, toNum, isoDate, addDays } from './calc.js?v=202610290637';
 
 const n = toNum;
 const KCAL_PAR_KG = 7700; // énergie approx. d'1 kg de masse grasse

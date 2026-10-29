@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290636';
-import { DEMO } from './seed.js?v=202610290636';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290636';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290637';
+import { DEMO } from './seed.js?v=202610290637';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290637';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];

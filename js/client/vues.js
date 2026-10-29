@@ -1,18 +1,18 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290636';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290636';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290636';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290636';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290636';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290636';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290636';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290636';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290636';
-import { Chat } from '../chat.js?v=202610290636';
-import { insertRow, updateRow, remove } from '../db.js?v=202610290636';
-import { param } from '../params.js?v=202610290636';
-import { AddressField } from '../address.js?v=202610290636';
-import { Thumb } from '../pickers.js?v=202610290636';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610290637';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610290637';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610290637';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610290637';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610290637';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610290637';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610290637';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610290637';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610290637';
+import { Chat } from '../chat.js?v=202610290637';
+import { insertRow, updateRow, remove } from '../db.js?v=202610290637';
+import { param } from '../params.js?v=202610290637';
+import { AddressField } from '../address.js?v=202610290637';
+import { Thumb } from '../pickers.js?v=202610290637';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());

@@ -1,28 +1,28 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290636';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290636';
-import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290636';
-import { nonLus } from './chat.js?v=202610290636';
-import { BRAND } from '../config.js?v=202610290636';
-import { AppCtx } from './ui.js?v=202610290636';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290636';
-import { registerCustomUnits } from './calc.js?v=202610290636';
-import { Dashboard } from './pages/dashboard.js?v=202610290636';
-import { PlatsList } from './pages/plats.js?v=202610290636';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290636';
-import { Ingredients } from './pages/ingredients.js?v=202610290636';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290636';
-import { Planning } from './pages/planning.js?v=202610290636';
-import { Clients } from './pages/clients.js?v=202610290636';
-import { Tarifs } from './pages/tarifs.js?v=202610290636';
-import { Propositions } from './pages/propositions.js?v=202610290636';
-import { Categories } from './pages/categories.js?v=202610290636';
-import { Backup } from './pages/backup.js?v=202610290636';
-import { Livraisons } from './pages/livraisons.js?v=202610290636';
-import { Livreurs } from './pages/livreurs.js?v=202610290636';
-import { Messages } from './pages/messages.js?v=202610290636';
-import { Parametres } from './pages/parametres.js?v=202610290636';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290637';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290637';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290637';
+import { nonLus } from './chat.js?v=202610290637';
+import { BRAND } from '../config.js?v=202610290637';
+import { AppCtx } from './ui.js?v=202610290637';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290637';
+import { registerCustomUnits } from './calc.js?v=202610290637';
+import { Dashboard } from './pages/dashboard.js?v=202610290637';
+import { PlatsList } from './pages/plats.js?v=202610290637';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290637';
+import { Ingredients } from './pages/ingredients.js?v=202610290637';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290637';
+import { Planning } from './pages/planning.js?v=202610290637';
+import { Clients } from './pages/clients.js?v=202610290637';
+import { Tarifs } from './pages/tarifs.js?v=202610290637';
+import { Propositions } from './pages/propositions.js?v=202610290637';
+import { Categories } from './pages/categories.js?v=202610290637';
+import { Backup } from './pages/backup.js?v=202610290637';
+import { Livraisons } from './pages/livraisons.js?v=202610290637';
+import { Livreurs } from './pages/livreurs.js?v=202610290637';
+import { Messages } from './pages/messages.js?v=202610290637';
+import { Parametres } from './pages/parametres.js?v=202610290637';
 
-export const VERSION = '2026-10-29 06:36';
+export const VERSION = '2026-10-29 06:37';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
