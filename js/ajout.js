@@ -1,7 +1,7 @@
 // Ajout de plats en lot par l'IA (gratuit) : prompt + Excel à remplir dans ChatGPT / Claude.ai, puis import.
-import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290520';
-import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290520';
-import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290520';
+import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290527';
+import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290527';
+import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290527';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const ING_CATS = 'Féculent / Protéine / Légumineuse / Légume / Fruit / Boisson / Laitier / Matière grasse / Condiment';
@@ -14,20 +14,36 @@ export const NEW_ING_COLS = ['nom_fr', 'nom_mg', 'nom_en', 'categorie', 'etat', 
 
 export const parseNames = (txt) => String(txt || '').split(/\n|;/).map((x) => x.replace(/^[-•*\d.)\s]+/, '').trim()).filter(Boolean);
 
+// Lisitry ny sakafo efa misy (ny an'ilay objectif aloha), mba tsy hanolorany azy indray
+export function existingList(data, categorie) {
+  if (!data.plats.length) return '(aucun)';
+  const mine = (p) => (p.categories || []).includes(categorie);
+  const sorted = [...data.plats].sort((a, b) => mine(b) - mine(a));
+  return sorted.map((p) => '- ' + p.nom + (p.nom_commercial && norm(p.nom_commercial) !== norm(p.nom) ? ' (' + p.nom_commercial + ')' : '')).join('\n');
+}
+export const isExisting = (data, nom, nomCommercial) => {
+  const k = (x) => norm(x).replace(/^[a-z]{0,3}\d+[a-z]?\s+/, ''); // esorina ny code (M0, A1…) eo aloha
+  const keys = new Set(data.plats.flatMap((p) => [p.nom, p.nom_commercial]).filter(Boolean).map(k));
+  return [nom, nomCommercial].some((x) => x && keys.has(k(x)));
+};
+
 // ---------- Prompt ----------
 export function promptAjout(opts, data) {
   const cat = data.categories.find((c) => c.id === opts.categorie);
   const names = parseNames(opts.noms);
   const ingList = data.ingredients.map((i) => `${i.id} | ${i.nom_fr || i.nom_mg}${i.nom_mg && i.nom_mg !== i.nom_fr ? ' (' + i.nom_mg + ')' : ''}`).join('\n');
-  const existing = data.plats.map((p) => p.nom_commercial || p.nom).join(' ; ') || '(aucun)';
+  const existing = existingList(data, opts.categorie);
   const moment = FOT_FR[opts.fotoana] || opts.fotoana;
   const what = opts.mode === 'noms'
     ? `PLATS À DOCUMENTER (${names.length}) — un plat par nom, garde ces noms comme « nom » :\n${names.map((n, i) => `${i + 1}. ${n}`).join('\n') || '(aucun nom fourni)'}\n${opts.fotoana ? `Moment par défaut : ${moment} (corrige si un plat est clairement d'un autre moment).` : 'Moment : choisis le bon moment pour chaque plat.'}`
-    : `PROPOSE ${opts.isa} NOUVEAUX PLATS :\n- Moment : ${moment || 'au choix'}\n- Cible par portion : environ ${opts.kcal || '?'} kcal (± 10 %)${opts.prot ? ', protéines au moins ' + opts.prot + ' g' : ''}\n- Budget maximum par portion : ${opts.budget ? opts.budget + ' Ar' : 'raisonnable pour Madagascar'}\n- Style : ${opts.style || '60 % plats malgaches revisités, 40 % plats du monde adaptés aux produits locaux'}\n- Ne propose PAS ces plats qui existent déjà : ${existing}`;
+    : `PROPOSE ${opts.isa} NOUVEAUX PLATS :\n- Moment : ${moment || 'au choix'}\n- Cible par portion : environ ${opts.kcal || '?'} kcal (± 10 %)${opts.prot ? ', protéines au moins ' + opts.prot + ' g' : ''}\n- Budget maximum par portion : ${opts.budget ? opts.budget + ' Ar' : 'raisonnable pour Madagascar'}\n- Style : ${opts.style || '60 % plats malgaches revisités, 40 % plats du monde adaptés aux produits locaux'}\n- Exactement ${opts.isa} plats, tous différents entre eux (bases, protéines et cuissons variées).`;
 
   return `Tu es nutritionniste diplômé, chef cuisinier et expert en marketing culinaire, pour un service de repas sur mesure livrés à Antananarivo (Madagascar).
 
 ${what}
+
+PLATS QUI EXISTENT DÉJÀ DANS MA CARTE (${data.plats.length}) — ${opts.mode === 'noms' ? 'si un nom ci-dessus correspond à l\'un d\'eux, ne le remplis pas' : 'ne les propose PAS, ni une simple variante (même plat avec un autre nom)'} :
+${existing}
 
 OBJECTIF CLIENT : ${cat?.nom || 'Normal'}${cat?.regles ? ' — règles : ' + cat.regles : ''}
 ${opts.remarques ? 'REMARQUES : ' + opts.remarques + '\n' : ''}Ingrédients faciles à trouver sur les marchés d'Antananarivo. Portions réalistes pour 1 personne.
@@ -67,7 +83,7 @@ export async function exportAjout(opts, data) {
     ['Onglet "Plats" : une ligne par plat (textes FR / EN / MG, allergènes, étiquettes).'],
     ['Onglet "Composition" : une ligne par ingrédient de chaque plat (plat_ref = ref du plat).'],
     ['Onglet "Nouveaux_ingredients" : uniquement les ingrédients absents de "Ingredients_existants", valeurs pour 100 g.'],
-    ['Onglet "Ingredients_existants" : liste de référence, ne pas modifier.'],
+    ['Onglets "Ingredients_existants" et "Plats_existants" : listes de référence, ne pas modifier. Ne propose aucun plat déjà dans "Plats_existants".'],
     ['Ne pas changer les en-têtes (ligne 1).'],
   ];
   X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(guide), 'Torolalana');
@@ -77,6 +93,7 @@ export async function exportAjout(opts, data) {
   X.utils.book_append_sheet(wb, sheetFromRows(X, PLAT_COLS, rows), 'Plats');
   X.utils.book_append_sheet(wb, sheetFromRows(X, COMPO_COLS, []), 'Composition');
   X.utils.book_append_sheet(wb, sheetFromRows(X, NEW_ING_COLS, []), 'Nouveaux_ingredients');
+  X.utils.book_append_sheet(wb, sheetFromRows(X, ['id', 'nom', 'nom_commercial'], data.plats.map((p) => ({ id: p.id, nom: p.nom, nom_commercial: p.nom_commercial || null }))), 'Plats_existants');
   X.utils.book_append_sheet(wb, sheetFromRows(X, ['id', 'nom_fr', 'nom_mg'], data.ingredients.map((i) => ({ id: i.id, nom_fr: i.nom_fr, nom_mg: i.nom_mg }))), 'Ingredients_existants');
   X.writeFile(wb, 'ajout_plats.xlsx');
 }
@@ -164,7 +181,8 @@ export function buildProps(raw, data, opts) {
     const texts = normalizePlatTexts(p);
     return {
       ref: p.ref, nom: p.nom || texts.texts.fr.nom_commercial || p.ref, fotoana: momentOf(p.moment || p.fotoana, opts.fotoana || 'Atoandro'),
-      nb: p.nb || '', texts, lines, totals: sumLines(lines, temp), selected: true,
+      nb: p.nb || '', texts, lines, totals: sumLines(lines, temp),
+      doublon: isExisting(data, p.nom, texts.texts.fr.nom_commercial), etat: null, // null = mbola tsy voavaly, 'ok' = validé, 'non' = refusé
     };
   });
 }

@@ -1,7 +1,7 @@
-import { html, useState } from '../lib.js?v=202610290520';
-import { useApp, Card, Field } from '../ui.js?v=202610290520';
-import { fmt, toNum } from '../calc.js?v=202610290520';
-import { tr, catName } from '../i18n.js?v=202610290520';
+import { html, useState } from '../lib.js?v=202610290527';
+import { useApp, Card, Field } from '../ui.js?v=202610290527';
+import { fmt, toNum } from '../calc.js?v=202610290527';
+import { tr, catName } from '../i18n.js?v=202610290527';
 
 export function Categories() {
   const app = useApp();

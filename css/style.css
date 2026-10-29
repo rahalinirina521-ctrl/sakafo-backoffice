@@ -142,6 +142,12 @@ textarea { resize: vertical; }
 .prop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .prop { border: 2px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; background: #fff; display: flex; flex-direction: column; gap: 6px; }
 .prop.on { border-color: var(--green); background: #f5faf4; }
+.prop { cursor: default; }
+.prop.doublon { border-color: var(--warn); background: #fffaf2; }
+.prop-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+.prop-actions .btn { flex: 1; justify-content: center; }
+.prop-group + .prop-group { margin-top: 18px; }
+.prop-group-head { justify-content: space-between; align-items: center; margin-bottom: 8px; } .prop-group-head h3 { margin: 0; }
 .prop header { display: flex; gap: 8px; align-items: flex-start; } .prop header input { width: auto; margin-top: 3px; }
 .prop h3 { margin: 0; }
 .ing-list { margin: 0; padding-left: 18px; }

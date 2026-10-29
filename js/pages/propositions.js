@@ -1,12 +1,14 @@
 // Ajouter des plats avec l'IA (gratuit) : noms de plats OU demande d'idées → prompt + Excel → ChatGPT / Claude.ai remplit → import.
-import { html, useState, useMemo } from '../lib.js?v=202610290520';
-import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610290520';
-import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610290520';
-import { applyPlatTexts } from '../prompts.js?v=202610290520';
-import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290520';
-import { uploadPlatImage } from '../db.js?v=202610290520';
-import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames } from '../ajout.js?v=202610290520';
-import { fitLabel } from './plats.js?v=202610290520';
+import { html, useState, useMemo } from '../lib.js?v=202610290527';
+import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610290527';
+import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610290527';
+import { applyPlatTexts } from '../prompts.js?v=202610290527';
+import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290527';
+import { uploadPlatImage } from '../db.js?v=202610290527';
+import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames } from '../ajout.js?v=202610290527';
+import { fitLabel } from './plats.js?v=202610290527';
+
+const PENDING_KEY = 'sakafo_ajout_attente';
 
 export function Propositions() {
   const app = useApp();
@@ -14,10 +16,11 @@ export function Propositions() {
   const cats = [...data.categories].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
   const [opts, setOpts] = useState(() => {
     const c = cats[0];
-    return { mode: 'noms', noms: '', categorie: c?.id || '', fotoana: 'Atoandro', kcal: c?.kcal_cible ? Math.round(c.kcal_cible * SLOT_SHARE.Atoandro) : 500, isa: 6, prot: '', budget: '', style: '', remarques: '' };
+    return { mode: 'idees', noms: '', categorie: c?.id || '', fotoana: 'Atoandro', kcal: c?.kcal_cible ? Math.round(c.kcal_cible * SLOT_SHARE.Atoandro) : 500, isa: 10, prot: '', budget: '', style: '', remarques: '' };
   });
   const [text, setText] = useState('');
-  const [props, setProps] = useState([]);
+  const [props, setProps] = useState(() => { try { return JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { return []; } });
+  const savePending = (list) => { setProps(list); try { if (list.length) localStorage.setItem(PENDING_KEY, JSON.stringify(list)); else localStorage.removeItem(PENDING_KEY); } catch (e) { /* tsy voatery */ } };
   const [image, setImage] = useState(null);
   const [busy, setBusy] = useState(false);
   const category = data.categories.find((c) => c.id === opts.categorie);
@@ -39,9 +42,11 @@ export function Propositions() {
   function show(raw) {
     const list = buildProps(raw, data, opts);
     if (!list.length) throw new Error(tr('Aucun plat trouvé dans la réponse.', 'No dish found in the answer.', 'Tsy misy sakafo hita.'));
-    setProps(list);
+    const ex = new Set(props.map((p) => p.ref));
+    const stamp = Date.now().toString(36);
+    savePending([...props, ...list.map((p) => ({ ...p, ref: ex.has(p.ref) ? p.ref + '-' + stamp : p.ref, categorie: opts.categorie }))]);
     setImage(raw.image || null);
-    toast(tr(`${list.length} plat(s) lus : vérifiez puis ajoutez.`, `${list.length} dish(es) read: check, then add.`, `Sakafo ${list.length} voavaky: hamarino dia ampidiro.`));
+    toast(tr(`${list.length} plat(s) à valider ci-dessous`, `${list.length} dish(es) to approve below`, `Sakafo ${list.length} hamarinina eto ambany`));
     setTimeout(() => document.querySelector('.prop-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }
   async function onFile(e) {
@@ -54,19 +59,20 @@ export function Propositions() {
     try { show(readAjoutJson(text)); } catch (x) { toast(tr('Réponse illisible : ', 'Unreadable answer: ', 'Tsy voavaky ny valiny: ') + x.message, 'bad'); }
   }
 
-  async function importSelected() {
-    const chosen = props.filter((p) => p.selected);
-    if (!chosen.length) { toast(tr('Sélectionnez au moins un plat', 'Select at least one dish', 'Misafidiana sakafo iray farafahakeliny'), 'bad'); return; }
+  // Manampy sakafo iray na maromaro ao amin'ny "Plats" (rehefa voamarina)
+  async function addPlats(chosen) {
     setBusy(true);
     try {
       const ingPool = [...data.ingredients];
       const platPool = [...data.plats];
+      const key = (x) => String(x || '').trim().toLowerCase();
       const created = new Map(); // NEW:<nom> → id
       const newIngs = []; const newPlats = []; const newLines = [];
       for (const p of chosen) {
         const platId = nextId('SK', platPool);
+        const catId = p.categorie || opts.categorie;
         const base = {
-          id: platId, nom: p.nom, nom_commercial: '', marketing: '', avantages: '', nom_en: '', fotoana: p.fotoana, categories: opts.categorie ? [opts.categorie] : [],
+          id: platId, nom: p.nom, nom_commercial: '', marketing: '', avantages: '', nom_en: '', fotoana: p.fotoana, categories: catId ? [catId] : [],
           nb: p.nb || '', traductions: {}, details: {}, image_url: '', prix_vente: null, statut: 'Voamarina', notes: tr('Ajouté avec l\'IA', 'Added with AI', 'Nampidirina tamin\'ny IA'),
         };
         const plat = applyPlatTexts(base, p.texts);
@@ -74,7 +80,9 @@ export function Propositions() {
         p.lines.forEach((l, i) => {
           let ingId = l.ingredient_id;
           if (l.nouvel) {
+            const same = ingPool.find((x) => [x.nom_fr, x.nom_mg].some((n) => n && [l.nouvel.nom_fr, l.nouvel.nom_mg].some((m) => m && key(n) === key(m))));
             if (created.has(ingId)) ingId = created.get(ingId);
+            else if (same) { created.set(ingId, same.id); ingId = same.id; } // efa nampidirina tamin'ny sakafo teo aloha
             else {
               const ing = { ...l.nouvel, id: nextId('I', ingPool, 3), a_verifier: true };
               ingPool.push(ing); newIngs.push(ing); created.set(l.ingredient_id, ing.id); ingId = ing.id;
@@ -87,18 +95,20 @@ export function Propositions() {
       if (newIngs.length) await app.save('ingredients', newIngs);
       await app.save('plats', newPlats);
       if (newLines.length) await app.save('composition', newLines);
-      if (image && newPlats.length === 1) {
+      if (image && newPlats.length === 1 && props.length === 1) {
         try { const url = await uploadPlatImage(newPlats[0].id, image); await app.save('plats', { ...newPlats[0], image_url: url }); } catch (e) { /* sary tsy voatery */ }
       }
-      toast(tr(`${newPlats.length} plat(s) ajouté(s)`, `${newPlats.length} dish(es) added`, `Sakafo ${newPlats.length} nampidirina`) + (newIngs.length ? ' + ' + newIngs.length + ' ' + tr('ingrédient(s)', 'ingredient(s)', 'ingrédient') : ''));
-      setProps((ps) => ps.filter((p) => !p.selected));
-      if (newPlats.length === 1) navigate('/plats/' + newPlats[0].id);
+      toast(tr(`${newPlats.length} plat(s) validé(s) et ajouté(s)`, `${newPlats.length} dish(es) approved and added`, `Sakafo ${newPlats.length} voamarina sy nampidirina`) + (newIngs.length ? ' + ' + newIngs.length + ' ' + tr('ingrédient(s)', 'ingredient(s)', 'ingrédient') : ''));
+      const refs = new Set(chosen.map((p) => p.ref));
+      savePending(props.filter((p) => !refs.has(p.ref)));
     } catch (e) { toast(tr('Erreur : ', 'Error: ', 'Nisy olana: ') + (e.message || e), 'bad'); } finally { setBusy(false); }
   }
+  function refuse(ref) { savePending(props.filter((p) => p.ref !== ref)); }
+  function clearAll() {
+    if (confirm(tr('Refuser toutes les suggestions restantes ?', 'Reject all remaining suggestions?', 'Lavina daholo ve ny soso-kevitra sisa?'))) savePending([]);
+  }
 
-  const target = slotTarget(category, opts.fotoana);
   const L = getLang();
-  const nbSel = props.filter((p) => p.selected).length;
 
   return html`<div class="page">
     <h1>${tr('Ajouter des plats avec l\'IA', 'Add dishes with AI', 'Hampiditra sakafo amin\'ny IA')}</h1>
@@ -106,9 +116,10 @@ export function Propositions() {
 
     <${Card} title=${'1. ' + tr('Que voulez-vous ajouter ?', 'What do you want to add?', 'Inona no hampidirina?')}>
       <div class="tabs">
-        <button class=${'tab' + (opts.mode === 'noms' ? ' on' : '')} onClick=${() => set('mode', 'noms')}>${tr('J\'ai les noms des plats', 'I have the dish names', 'Manana ny anaran\'ny sakafo aho')}</button>
         <button class=${'tab' + (opts.mode === 'idees' ? ' on' : '')} onClick=${() => set('mode', 'idees')}>${tr('Je veux des idées', 'I want ideas', 'Mila hevitra aho')}</button>
+        <button class=${'tab' + (opts.mode === 'noms' ? ' on' : '')} onClick=${() => set('mode', 'noms')}>${tr('J\'ai les noms des plats', 'I have the dish names', 'Manana ny anaran\'ny sakafo aho')}</button>
       </div>
+      <p class="small muted">💡 ${tr(`Le prompt et l'Excel contiennent vos ${data.plats.length} plats existants : l'IA ne les proposera pas à nouveau.`, `The prompt and Excel list your ${data.plats.length} existing dishes: the AI won't suggest them again.`, `Ao anatin'ny prompt sy Excel ireo sakafo ${data.plats.length} efa misy: tsy haroson'ny IA indray izy ireo.`)}</p>
       <div class="form-grid">
         ${opts.mode === 'noms' && html`<${Field} label=${tr('Noms des plats (un par ligne)', 'Dish names (one per line)', 'Anaran\'ny sakafo (iray isaky ny andalana)')} wide hint=${names.length ? names.length + ' ' + tr('plat(s)', 'dish(es)', 'sakafo') : ''}>
           <textarea rows="5" value=${opts.noms} placeholder=${tr('Romazava au bœuf\nSalade de lentilles\nPorridge avoine banane', 'Beef romazava\nLentil salad\nOat banana porridge', 'Romazava hena omby\nSalady lentilles\nPorridge avoine akondro')} onInput=${(e) => set('noms', e.target.value)}></textarea><//>`}
@@ -148,25 +159,37 @@ export function Propositions() {
       <button class="btn" disabled=${!text.trim()} onClick=${onJson}>${tr('Lire la réponse', 'Read the answer', 'Vakio ny valiny')}</button>
     <//>
 
-    ${props.length > 0 && html`<${Card} title=${'4. ' + tr('Choisissez les plats à ajouter', 'Choose the dishes to add', 'Safidio ny sakafo ampidirina') + ' (' + nbSel + '/' + props.length + ')'}
-      actions=${html`<button class="btn small ghost" onClick=${() => setProps((ps) => ps.map((p) => ({ ...p, selected: nbSel < ps.length })))}>${nbSel < props.length ? tr('Tout cocher', 'Select all', 'Safidio daholo') : tr('Tout décocher', 'Unselect all', 'Esory daholo')}</button>`}>
-      <div class="prop-grid">${props.map((p, idx) => {
-        const fit = fitStatus(p.totals.kcal, slotTarget(category, p.fotoana) || target, category?.tolerance);
-        const tx = p.texts.texts[L] && Object.keys(p.texts.texts[L]).length ? p.texts.texts[L] : p.texts.texts.fr;
-        return html`<article class=${'prop' + (p.selected ? ' on' : '')} onClick=${() => setProps((ps) => ps.map((x, j) => (j === idx ? { ...x, selected: !x.selected } : x)))}>
-          <header><input type="checkbox" checked=${p.selected} /><div><h3>${tx.nom_commercial || p.nom}</h3><small class="muted">${p.nom} · ${fotLabel(p.fotoana)}</small></div></header>
-          ${tx.marketing && html`<p class="small">${tx.marketing}</p>`}
-          <div class="row gap wrap"><b>${fmt(p.totals.kcal)} kcal</b><span>P ${fmt(p.totals.proteines)} g</span><span>G ${fmt(p.totals.glucides)} g</span><span>L ${fmt(p.totals.lipides)} g</span>${fit.label !== '—' && html`<${Badge} tone=${fit.tone}>${fitLabel(fit)}<//>`}</div>
-          <ul class="small ing-list">${p.lines.map((l) => html`<li>${l.nouvel ? html`<${Badge} tone="warn">${tr('nouveau', 'new', 'vaovao')}<//> ${ingName(l.nouvel)}` : ingName(ingMap.get(l.ingredient_id))} — ${fmt(l.quantite, l.quantite % 1 ? 1 : 0)} ${l.unite}${l.note ? ' (' + l.note + ')' : ''}</li>`)}</ul>
-          ${p.lines.length === 0 && html`<p class="small warn-text">${tr('Pas de composition dans la réponse.', 'No composition in the answer.', 'Tsy misy composition ao amin\'ny valiny.')}</p>`}
-          ${p.totals.missing > 0 && html`<p class="small warn-text">${tr('Un ingrédient n\'a pas de valeurs ou de poids : calcul incomplet (à compléter ensuite).', 'An ingredient has no values or weight: incomplete (complete later).', 'Misy ingrédient tsy misy valeur na lanja: tsy feno (fenoina aorian\'izay).')}</p>`}
-          ${tx.avantages && html`<p class="small muted pre">${tx.avantages}</p>`}
-        </article>`;
-      })}</div>
-      <div class="row gap wrap" style="margin-top:12px">
-        <button class="btn primary" disabled=${busy || !nbSel} onClick=${importSelected}>${busy ? tr('Ajout…', 'Adding…', 'Mampiditra…') : tr(`Ajouter ${nbSel} plat(s) à « Plats »`, `Add ${nbSel} dish(es) to "Dishes"`, `Ampidiro ao amin'ny "Sakafo" ireo ${nbSel}`)}</button>
-        <span class="muted small">${tr('Vous pourrez ensuite ajuster chaque plat, ajouter le prix et la photo.', 'You can then adjust each dish, add the price and the photo.', 'Azonao amboarina avy eo ny sakafo tsirairay, ampiana vidiny sy sary.')}</span>
-      </div>
+    ${props.length > 0 && html`<${Card} title=${'4. ' + tr('Plats à valider', 'Dishes to approve', 'Sakafo hamarinina') + ' (' + props.length + ')'}
+      actions=${html`<button class="btn small ghost danger" onClick=${clearAll}>✕ ${tr('Tout refuser', 'Reject all', 'Lavina daholo')}</button>`}>
+      <p class="small muted">${tr('Les suggestions restent ici (même si vous quittez la page) jusqu\'à ce que vous les validiez ou refusiez. Seuls les plats validés vont dans « Plats ».', 'Suggestions stay here (even if you leave the page) until you approve or reject them. Only approved dishes go to "Dishes".', 'Mijanona eto ny soso-kevitra (na dia miala amin\'ny pejy aza ianao) mandra-pamarinanao na handavanao azy. Ny sakafo voamarina ihany no miditra ao amin\'ny « Plats ».')}</p>
+      ${[...new Set(props.map((p) => p.categorie || ''))].map((cid) => {
+        const cat = data.categories.find((c) => c.id === cid);
+        const group = props.filter((p) => (p.categorie || '') === cid);
+        const valid = group.filter((p) => !p.doublon);
+        return html`<div class="prop-group" key=${cid}>
+          <div class="row gap wrap prop-group-head"><h3>🎯 ${cat ? catName(cat) : tr('Sans objectif', 'No goal', 'Tsy misy tanjona')} <span class="muted">(${group.length})</span></h3>
+            ${valid.length > 1 && html`<button class="btn small" disabled=${busy} onClick=${() => addPlats(valid)}>✓ ${tr(`Valider les ${valid.length}`, `Approve all ${valid.length}`, `Hamarino ireo ${valid.length}`)}</button>`}</div>
+          <div class="prop-grid">${group.map((p) => {
+            const fit = fitStatus(p.totals.kcal, slotTarget(cat, p.fotoana), cat?.tolerance);
+            const tx = p.texts.texts[L] && Object.keys(p.texts.texts[L]).length ? p.texts.texts[L] : p.texts.texts.fr;
+            return html`<article class=${'prop' + (p.doublon ? ' doublon' : '')} key=${p.ref}>
+              <header><div><h3>${tx.nom_commercial || p.nom}</h3><small class="muted">${p.nom} · ${fotLabel(p.fotoana)}</small></div></header>
+              ${p.doublon && html`<p class="small warn-text">⚠ ${tr('Ce plat existe déjà dans « Plats ».', 'This dish already exists in "Dishes".', 'Efa misy ao amin\'ny « Plats » ity sakafo ity.')}</p>`}
+              ${tx.marketing && html`<p class="small">${tx.marketing}</p>`}
+              <div class="row gap wrap"><b>${fmt(p.totals.kcal)} kcal</b><span>P ${fmt(p.totals.proteines)} g</span><span>G ${fmt(p.totals.glucides)} g</span><span>L ${fmt(p.totals.lipides)} g</span>${fit.label !== '—' && html`<${Badge} tone=${fit.tone}>${fitLabel(fit)}<//>`}</div>
+              <ul class="small ing-list">${p.lines.map((l) => html`<li>${l.nouvel ? html`<${Badge} tone="warn">${tr('nouveau', 'new', 'vaovao')}<//> ${ingName(l.nouvel)}` : ingName(ingMap.get(l.ingredient_id))} — ${fmt(l.quantite, l.quantite % 1 ? 1 : 0)} ${l.unite}${l.note ? ' (' + l.note + ')' : ''}</li>`)}</ul>
+              ${p.lines.length === 0 && html`<p class="small warn-text">${tr('Pas de composition dans la réponse.', 'No composition in the answer.', 'Tsy misy composition ao amin\'ny valiny.')}</p>`}
+              ${p.totals.missing > 0 && html`<p class="small warn-text">${tr('Un ingrédient n\'a pas de valeurs ou de poids : calcul incomplet (à compléter ensuite).', 'An ingredient has no values or weight: incomplete (complete later).', 'Misy ingrédient tsy misy valeur na lanja: tsy feno (fenoina aorian\'izay).')}</p>`}
+              ${tx.avantages && html`<p class="small muted pre">${tx.avantages}</p>`}
+              <div class="prop-actions">
+                <button class="btn primary small" disabled=${busy} onClick=${() => addPlats([p])}>✓ ${p.doublon ? tr('Ajouter quand même', 'Add anyway', 'Ampidiro ihany') : tr('Valider', 'Approve', 'Marina')}</button>
+                <button class="btn ghost small danger" disabled=${busy} onClick=${() => refuse(p.ref)}>✕ ${tr('Refuser', 'Reject', 'Lavina')}</button>
+              </div>
+            </article>`;
+          })}</div>
+        </div>`;
+      })}
+      <p class="hint">${tr('Après validation, vous pouvez ajuster chaque plat, ajouter le prix et la photo dans « Plats ».', 'After approval, adjust each dish, add the price and the photo in "Dishes".', 'Rehefa voamarina, azonao amboarina ao amin\'ny « Plats » ny sakafo tsirairay, ampiana vidiny sy sary.')}</p>
     <//>`}
   </div>`;
 }

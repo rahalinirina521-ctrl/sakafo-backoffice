@@ -1,6 +1,6 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
-import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290520';
-import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290520';
+import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290527';
+import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290527';
 
 let XLSX = null;
 async function lib() {
