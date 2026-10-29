@@ -1,7 +1,7 @@
 // Éléments communs aux applications client et livreur : session, connexion / inscription, langue, toast, mise à jour.
-import { html, useState, useEffect, useCallback } from './lib.js?v=202610290637';
-import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword } from './db.js?v=202610290637';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290637';
+import { html, useState, useEffect, useCallback } from './lib.js?v=202610290705';
+import { MODE, getSession, signIn, signUp, resetPassword, onAuthChange, whoami, loadAll, signOut, updatePassword } from './db.js?v=202610290705';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290705';
 
 export function LangSwitch({ lang, onChange }) {
   return html`<div class="lang-switch" role="group" aria-label="Langue">
@@ -59,9 +59,9 @@ export function useData(enabled) {
   return { data, setData, error, reload };
 }
 
-export function AuthScreen({ titre, sousTitre, lang, onLang, onGuest, allowSignup = true, children }) {
+export function AuthScreen({ titre, sousTitre, lang, onLang, onGuest, allowSignup = true, children, app = 'client', objectifs = [] }) {
   const [mode, setMode] = useState('login');
-  const [f, setF] = useState({ email: '', pwd: '', nom: '' });
+  const [f, setF] = useState({ email: '', pwd: '', nom: '', telephone: '', objectif: '' });
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -71,8 +71,8 @@ export function AuthScreen({ titre, sousTitre, lang, onLang, onGuest, allowSignu
       if (mode === 'login') await signIn(f.email.trim(), f.pwd);
       else if (mode === 'signup') {
         if (f.pwd.length < 8) throw new Error(tr('Mot de passe : 8 caractères minimum.', 'Password: at least 8 characters.', 'Teny miafina: litera 8 farafahakeliny.'));
-        const r = await signUp(f.email.trim(), f.pwd, f.nom.trim());
-        if (!r.session) setMsg({ ok: true, t: tr('Compte créé ! Ouvrez l\'e-mail de confirmation que nous venons d\'envoyer, puis connectez-vous.', 'Account created! Open the confirmation e-mail we just sent, then sign in.', 'Vita ny kaonty! Sokafy ny mailaka fanamarinana nalefanay, dia midira.') });
+        const r = await signUp(f.email.trim(), f.pwd, { nom: f.nom.trim(), telephone: f.telephone.trim(), objectif: f.objectif || null, app });
+        if (!r.session) { setMsg({ ok: true, t: tr('Compte créé ! Ouvrez l\'e-mail de confirmation que nous venons d\'envoyer (regardez aussi dans « Spam »), puis connectez-vous.', 'Account created! Open the confirmation e-mail we just sent (check Spam too), then sign in.', 'Vita ny kaonty! Sokafy ny mailaka fanamarinana nalefanay (jereo koa ao amin\'ny « Spam »), dia midira.') }); setMode('login'); }
       } else {
         await resetPassword(f.email.trim());
         setMsg({ ok: true, t: tr('E-mail envoyé : suivez le lien pour choisir un nouveau mot de passe.', 'E-mail sent: follow the link to choose a new password.', 'Lasa ny mailaka: araho ny rohy hisafidianana teny miafina vaovao.') });
@@ -88,6 +88,8 @@ export function AuthScreen({ titre, sousTitre, lang, onLang, onGuest, allowSignu
       ${allowSignup && html`<div class="tabs">${[['login', tr('Se connecter', 'Sign in', 'Hiditra')], ['signup', tr('Créer un compte', 'Create account', 'Hamorona kaonty')]].map(([k, l]) => html`<button class=${'tab' + (mode === k ? ' on' : '')} onClick=${() => { setMode(k); setMsg(null); }}>${l}</button>`)}</div>`}
       <form onSubmit=${submit} class="col">
         ${mode === 'signup' && html`<label class="field"><span class="field-label">${tr('Nom et prénom', 'Full name', 'Anarana feno')}</span><input required value=${f.nom} onInput=${set('nom')} autocomplete="name" /></label>`}
+        ${mode === 'signup' && html`<label class="field"><span class="field-label">${tr('Téléphone', 'Phone', 'Finday')}</span><input type="tel" required value=${f.telephone} onInput=${set('telephone')} autocomplete="tel" placeholder="034 00 000 00" /></label>`}
+        ${mode === 'signup' && objectifs.length > 0 && html`<label class="field"><span class="field-label">${tr('Votre objectif', 'Your goal', 'Ny tanjonao')}</span><select value=${f.objectif} onChange=${set('objectif')}><option value="">—</option>${objectifs.map((c) => html`<option value=${c.id}>${c.icone || ''} ${c.nom_label || c.nom}</option>`)}</select></label>`}
         <label class="field"><span class="field-label">E-mail</span><input type="email" required value=${f.email} onInput=${set('email')} autocomplete="username" /></label>
         ${mode !== 'reset' && html`<label class="field"><span class="field-label">${tr('Mot de passe', 'Password', 'Teny miafina')}</span><input type="password" required minlength=${mode === 'signup' ? 8 : undefined} value=${f.pwd} onInput=${set('pwd')} autocomplete=${mode === 'signup' ? 'new-password' : 'current-password'} /></label>`}
         ${msg && html`<p class=${msg.ok ? 'ok-box' : 'error'}>${msg.t}</p>`}

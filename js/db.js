@@ -1,13 +1,13 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290637';
-import { DEMO } from './seed.js?v=202610290637';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290637';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290705';
+import { DEMO } from './seed.js?v=202610290705';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290705';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];
-const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications'];
 // clé primaire si ce n'est pas « id »
-export const PK = { positions: 'livreur_id', profils: 'user_id' };
+export const PK = { positions: 'livreur_id', profils: 'user_id', push_abonnements: 'endpoint' };
 const pk = (t) => PK[t] || 'id';
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
@@ -53,6 +53,8 @@ const COLS = {
   livreurs: { id: null, nom: '', telephone: null, email: null, vehicule: null, couleur: null, actif: true },
   livraisons: { id: null, date: null, creneau: 'midi', client_id: null, livreur_id: null, statut: 'prevue', ordre: null, adresse: null, repere: null, lat: null, lng: null, eta: null, depart_at: null, livree_at: null, menu_id: null, note_livreur: null },
   mesures: { id: null, client_id: null, date: null, poids: null, tour_taille: null, notes: null },
+  push_abonnements: { endpoint: null, p256dh: null, auth: null, appareil: null },
+  notifications: { id: null, type: 'info', titre: '', texte: null, lien: null, lu: false },
   positions: { livreur_id: null, lat: null, lng: null, precision: null, vitesse: null, cap: null, updated_at: null },
   calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
   suggestions: { id: null, statut: 'attente', categorie_id: null, fotoana: null, nom: null, plat_id: null, data: {} },
@@ -76,6 +78,7 @@ export async function loadAll() {
   await Promise.all(TABLES.map(async (t) => {
     let qy = c.from(t).select('*');
     if (t === 'messages') qy = qy.order('created_at', { ascending: false }).limit(800);
+    if (t === 'notifications') qy = qy.order('created_at', { ascending: false }).limit(200);
     if (t === 'livraisons') qy = qy.gte('date', new Date(Date.now() - 62 * 864e5).toISOString().slice(0, 10));
     const { data, error } = await qy;
     if (error) { if (OPTIONAL_TABLES.includes(t)) { out[t] = []; return; } throw error; }
@@ -199,9 +202,9 @@ export async function insertRow(table, row) {
 }
 
 // ---------- Comptes ----------
-export async function signUp(email, password, nom) {
+export async function signUp(email, password, meta = {}) {
   const c = await getClient();
-  const { data, error } = await c.auth.signUp({ email, password, options: { data: { nom }, emailRedirectTo: location.href.split('#')[0] } });
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: meta, emailRedirectTo: location.href.split('#')[0] } });
   if (error) throw error;
   return data;
 }
@@ -239,4 +242,21 @@ export async function subscribe(table, filter, cb) {
     .on('postgres_changes', { event: '*', schema: 'public', table, ...(filter ? { filter } : {}) }, (p) => cb(p))
     .subscribe();
   return () => { c.removeChannel(ch); };
+}
+
+// Lecture simple d'une table (ex. objectifs pour le formulaire d'inscription, sans être connecté)
+export async function lireTable(table, cols = '*') {
+  if (MODE === 'demo') return JSON.parse(JSON.stringify(demoLoad()[table] || []));
+  const c = await getClient();
+  const { data, error } = await c.from(table).select(cols);
+  if (error) throw error;
+  return data || [];
+}
+// Appel d'une fonction Edge avec la session de l'utilisateur
+export async function appelFonction(nom, body) {
+  if (MODE === 'demo') throw new Error('Indisponible en mode démo');
+  const c = await getClient();
+  const { data, error } = await c.functions.invoke(nom, { body });
+  if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (e) { /* */ } throw new Error(m); }
+  return data;
 }

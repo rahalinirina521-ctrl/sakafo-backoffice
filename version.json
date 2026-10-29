@@ -1,7 +1,7 @@
 {
- "version": "2026-10-29 06:37",
- "tag": "202610290637",
- "date": "2026-10-29T06:37+03:00",
+ "version": "2026-10-29 07:05",
+ "tag": "202610290705",
+ "date": "2026-10-29T07:05+03:00",
  "files": [
   "client.html",
   "config.js",
@@ -34,6 +34,7 @@
   "js/pages/livreurs.js",
   "js/pages/menus.js",
   "js/pages/messages.js",
+  "js/pages/notifications.js",
   "js/pages/parametres.js",
   "js/pages/planning.js",
   "js/pages/plat-edit.js",
@@ -44,6 +45,7 @@
   "js/photo-editor.js",
   "js/pickers.js",
   "js/prompts.js",
+  "js/push.js",
   "js/seed.js",
   "js/shell.js",
   "js/tournee.js",

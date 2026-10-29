@@ -1,31 +1,35 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290637';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290637';
-import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290637';
-import { nonLus } from './chat.js?v=202610290637';
-import { BRAND } from '../config.js?v=202610290637';
-import { AppCtx } from './ui.js?v=202610290637';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290637';
-import { registerCustomUnits } from './calc.js?v=202610290637';
-import { Dashboard } from './pages/dashboard.js?v=202610290637';
-import { PlatsList } from './pages/plats.js?v=202610290637';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290637';
-import { Ingredients } from './pages/ingredients.js?v=202610290637';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290637';
-import { Planning } from './pages/planning.js?v=202610290637';
-import { Clients } from './pages/clients.js?v=202610290637';
-import { Tarifs } from './pages/tarifs.js?v=202610290637';
-import { Propositions } from './pages/propositions.js?v=202610290637';
-import { Categories } from './pages/categories.js?v=202610290637';
-import { Backup } from './pages/backup.js?v=202610290637';
-import { Livraisons } from './pages/livraisons.js?v=202610290637';
-import { Livreurs } from './pages/livreurs.js?v=202610290637';
-import { Messages } from './pages/messages.js?v=202610290637';
-import { Parametres } from './pages/parametres.js?v=202610290637';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290705';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290705';
+import { AuthScreen, NewPassword } from './shell.js?v=202610290705';
+import { lireTable } from './db.js?v=202610290705';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290705';
+import { nonLus } from './chat.js?v=202610290705';
+import { BRAND } from '../config.js?v=202610290705';
+import { AppCtx } from './ui.js?v=202610290705';
+import { tr, getLang, setLang, LANGS, LANG_SHORT, catName } from './i18n.js?v=202610290705';
+import { registerCustomUnits } from './calc.js?v=202610290705';
+import { Dashboard } from './pages/dashboard.js?v=202610290705';
+import { PlatsList } from './pages/plats.js?v=202610290705';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290705';
+import { Ingredients } from './pages/ingredients.js?v=202610290705';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290705';
+import { Planning } from './pages/planning.js?v=202610290705';
+import { Clients } from './pages/clients.js?v=202610290705';
+import { Tarifs } from './pages/tarifs.js?v=202610290705';
+import { Propositions } from './pages/propositions.js?v=202610290705';
+import { Categories } from './pages/categories.js?v=202610290705';
+import { Backup } from './pages/backup.js?v=202610290705';
+import { Livraisons } from './pages/livraisons.js?v=202610290705';
+import { Livreurs } from './pages/livreurs.js?v=202610290705';
+import { Messages } from './pages/messages.js?v=202610290705';
+import { Notifications } from './pages/notifications.js?v=202610290705';
+import { Parametres } from './pages/parametres.js?v=202610290705';
 
-export const VERSION = '2026-10-29 06:37';
+export const VERSION = '2026-10-29 07:05';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
+  ['/notifications', '🔔 ' + tr('Notifications', 'Notifications', 'Fampahafantarana')],
   ['/plats', tr('Plats', 'Dishes', 'Sakafo')],
   ['/menus', tr('Menus', 'Menus', 'Menus')],
   ['/planning', tr('Planning', 'Planning', 'Planning')],
@@ -56,26 +60,6 @@ function LangSwitch({ lang, onChange }) {
   return html`<div class="lang-switch" role="group" aria-label="Langue">
     ${LANGS.map(([l, name]) => html`<button class=${'lang' + (l === lang ? ' on' : '')} title=${name} onClick=${() => onChange(l)}>${LANG_SHORT[l]}</button>`)}
   </div>`;
-}
-
-function Login({ lang, onLang }) {
-  const [email, setEmail] = useState('');
-  const [pwd, setPwd] = useState('');
-  const [err, setErr] = useState('');
-  const [busy, setBusy] = useState(false);
-  const submit = async (e) => {
-    e.preventDefault(); setBusy(true); setErr('');
-    try { await signIn(email, pwd); } catch (x) { setErr(tr('Échec : ', 'Failed: ', 'Tsy nety: ') + (x.message || x)); }
-    setBusy(false);
-  };
-  return html`<div class="login-wrap"><form class="card login" onSubmit=${submit}>
-    <div class="row between"><h1>${BRAND}</h1><${LangSwitch} lang=${lang} onChange=${onLang} /></div>
-    <p class="muted">${tr('Back-office — connexion', 'Back-office — sign in', 'Back-office — midira')}</p>
-    <label class="field"><span class="field-label">Email</span><input type="email" required value=${email} onInput=${(e) => setEmail(e.target.value)} autocomplete="username" /></label>
-    <label class="field"><span class="field-label">${tr('Mot de passe', 'Password', 'Teny miafina')}</span><input type="password" required value=${pwd} onInput=${(e) => setPwd(e.target.value)} autocomplete="current-password" /></label>
-    ${err && html`<p class="error">${err}</p>`}
-    <button class="btn primary" disabled=${busy}>${busy ? tr('Patientez…', 'Please wait…', 'Miandrasa…') : tr('Se connecter', 'Sign in', 'Hiditra')}</button>
-  </form></div>`;
 }
 
 // ---------- Fanavaozana (mise à jour) ----------
@@ -133,6 +117,8 @@ export function App() {
   const [toastMsg, setToastMsg] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [me, setMe] = useState(null);
+  const [recovery, setRecovery] = useState(false);
+  const [objectifs, setObjectifs] = useState([]);
 
   const changeLang = (l) => { setLang(l); setLangState(l); };
 
@@ -154,7 +140,7 @@ export function App() {
         setSession(s || null);
         if (MODE === 'supabase') {
           const c = await getClient();
-          c.auth.onAuthStateChange((_ev, s2) => setSession(s2 || null));
+          c.auth.onAuthStateChange((ev, s2) => { if (ev === 'PASSWORD_RECOVERY') setRecovery(true); setSession(s2 || null); });
         }
       } catch (e) { setError(e.message || String(e)); setSession(null); }
     })();
@@ -163,7 +149,30 @@ export function App() {
     if (!session) { setMe(null); return; }
     whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
   }, [session]);
-  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils']], [me?.admin]);
+  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils'], ['notifications']], [me?.admin]);
+  // Page de connexion unique : chacun est envoyé vers son espace après connexion
+  useEffect(() => {
+    if (!me || me.admin || recovery) return;
+    location.replace(me.livreur_id || me.role === 'livreur' ? 'livreur.html' : 'client.html');
+  }, [me, recovery]);
+  useEffect(() => {
+    if (session !== null) return;
+    lireTable('categories').then((cs) => setObjectifs(cs.filter((c) => c.statut !== 'attente').sort((a, b) => (a.ordre || 0) - (b.ordre || 0)).map((c) => ({ ...c, nom_label: catName(c) })))).catch(() => {});
+  }, [session, lang]);
+  // Nouvelle notification reçue en direct → message à l'écran (+ notification du navigateur si l'onglet est caché)
+  const vu = useMemo(() => ({ init: false, ids: new Set() }), []);
+  useEffect(() => {
+    if (!data) return;
+    const list = data.notifications || [];
+    if (!vu.init) { vu.init = true; list.forEach((n) => vu.ids.add(n.id)); return; }
+    for (const n of list) {
+      if (vu.ids.has(n.id)) continue;
+      vu.ids.add(n.id);
+      if (n.lu) continue;
+      toast(n.titre + (n.texte ? ' — ' + n.texte : ''));
+      try { if (document.hidden && 'Notification' in window && Notification.permission === 'granted') new Notification(n.titre, { body: n.texte || '', icon: 'icons/icon-192.png', tag: n.id }); } catch (e) { /* */ }
+    }
+  }, [data?.notifications]);
 
   const ingMap = useMemo(() => {
     registerCustomUnits(data?.options || []);
@@ -223,15 +232,12 @@ export function App() {
   }), [data, ingMap, toast, reload, lang, me]);
 
   if (session === undefined) return html`<div class="center muted">${tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
-  if (!session) return html`<${Login} lang=${lang} onLang=${changeLang} />`;
+  if (recovery) return html`<div class="auth-wrap"><${NewPassword} onDone=${() => { setRecovery(false); toast(tr('Mot de passe modifié', 'Password changed', 'Voaova ny teny miafina')); }} /></div>`;
+  if (!session) return html`<${AuthScreen} titre=${BRAND} sousTitre=${tr('Connexion — clients, livreurs, administration', 'Sign in — customers, couriers, admin', 'Fidirana — client, mpitondra, mpitantana')} lang=${lang} onLang=${changeLang} objectifs=${objectifs} onGuest=${() => { location.href = 'client.html?invite=1'; }}>
+    <p class="auth-pitch">${tr('Repas sur mesure livrés à Antananarivo : perte de poids, muscle, diabète, grossesse… Un seul compte pour tout : menus, suivi, livraison en direct et messages.', 'Tailored meals delivered in Antananarivo. One account for everything: menus, tracking, live delivery and messages.', 'Sakafo natao ho anao aterina eto Antananarivo. Kaonty iray ho an\'ny zavatra rehetra: menu, fanaraha-maso, fanaterana mivantana ary hafatra.')}</p>
+  <//>${toastMsg && html`<div class=${'toast ' + toastMsg.tone}>${toastMsg.msg}</div>`}`;
   if (!me) return html`<div class="center muted">${error ? html`<span class="error">${error}</span>` : tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
-  if (!me.admin) {
-    return html`<div class="center"><div class="card login"><h2>${tr('Ce compte n\'est pas administrateur', 'This account is not an administrator', 'Tsy mpitantana ity kaonty ity')}</h2>
-      <p class="muted">${session.user?.email}</p>
-      <p>${tr('Utilisez l\'application qui vous correspond :', 'Use the app that matches your account:', 'Ampiasao ny application mifanaraka aminao:')}</p>
-      <div class="col"><a class="btn primary" href="client.html">🙂 ${tr('Application client', 'Customer app', 'App client')}</a><a class="btn" href="livreur.html">🛵 ${tr('Application livreur', 'Courier app', 'App livreur')}</a>
-      <button class="btn ghost" onClick=${async () => { await signOut(); setSession(null); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></div></div></div>`;
-  }
+  if (!me.admin) return html`<div class="center muted">${tr('Ouverture de votre espace…', 'Opening your space…', 'Manokatra ny toeranao…')}</div>`;
   if (error && !data) {
     return html`<div class="center"><div class="card"><h2>${tr('Un problème est survenu', 'Something went wrong', 'Nisy olana')}</h2><p class="error">${error}</p>
       <p class="muted">${tr('Vérifiez config.js et les tables Supabase (voir le README).', 'Check config.js and the Supabase tables (see the README).', 'Hamarino ny config.js sy ny tables ao amin\'ny Supabase (jereo ny README).')}</p>
@@ -257,16 +263,18 @@ export function App() {
   else if (parts[0] === 'livreurs') page = html`<${Livreurs} />`;
   else if (parts[0] === 'messages') page = html`<${Messages} key=${route} />`;
   else if (parts[0] === 'parametres') page = html`<${Parametres} />`;
+  else if (parts[0] === 'notifications') page = html`<${Notifications} />`;
   else page = html`<p>${tr('Page introuvable.', 'Page not found.', 'Pejy tsy hita.')}</p>`;
 
   const active = '/' + (parts[0] || '');
   const unread = [...new Set((data.messages || []).map((m) => m.conversation))].reduce((n, c) => n + nonLus(data.messages, c, me.id), 0);
+  const notifNonLues = (data.notifications || []).filter((n) => !n.lu).length;
   return html`<${AppCtx.Provider} value=${api}>
     <div class="layout">
       <aside class=${'sidebar' + (menuOpen ? ' open' : '')}>
         <div class="brand">${BRAND}<small>Back-office · ${tr('mise à jour', 'updated', 'navaozina')} ${VERSION}</small></div>
         <${LangSwitch} lang=${lang} onChange=${changeLang} />
-        <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}${p === '/messages' && unread ? html` <span class="nav-badge">${unread}</span>` : null}</a>`)}</nav>
+        <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}${p === '/messages' && unread ? html` <span class="nav-badge">${unread}</span>` : null}${p === '/notifications' && notifNonLues ? html` <span class="nav-badge">${notifNonLues}</span>` : null}</a>`)}</nav>
         <div class="side-foot">
           ${MODE === 'demo'
             ? html`<div class="demo-note"><b>${tr('Mode démo', 'Demo mode', 'Mode démo')}</b><br/>${tr('Les données sont enregistrées uniquement dans ce navigateur.', 'Data is saved in this browser only.', 'Ao amin\'ity navigateur ity ihany no voatahiry ny données.')}<br/>
@@ -277,7 +285,7 @@ export function App() {
       ${menuOpen && html`<div class="backdrop" onClick=${() => setMenuOpen(false)}></div>`}
       <main>
         <${UpdateBanner} />
-        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰</button><span class="topbar-title">${BRAND}</span><${LangSwitch} lang=${lang} onChange=${changeLang} /></div>
+        <div class="topbar"><button class="btn ghost" onClick=${() => setMenuOpen(!menuOpen)} aria-label="Menu">☰${notifNonLues + unread ? html`<i class="dot-badge">${notifNonLues + unread}</i>` : null}</button><span class="topbar-title">${BRAND}</span><a class="bell" href="#/notifications" aria-label="Notifications">🔔${notifNonLues ? html`<i class="dot-badge">${notifNonLues}</i>` : null}</a><${LangSwitch} lang=${lang} onChange=${changeLang} /></div>
         ${error && html`<p class="error banner">${error}</p>`}
         ${page}
       </main>

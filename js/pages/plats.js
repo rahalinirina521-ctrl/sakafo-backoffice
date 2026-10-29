@@ -1,8 +1,8 @@
-import { html, useState, useMemo } from '../lib.js?v=202610290637';
-import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js?v=202610290637';
-import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js?v=202610290637';
-import { tr, fotLabel, catName, platTitle, platText } from '../i18n.js?v=202610290637';
-import { Thumb } from '../pickers.js?v=202610290637';
+import { html, useState, useMemo } from '../lib.js?v=202610290705';
+import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js?v=202610290705';
+import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js?v=202610290705';
+import { tr, fotLabel, catName, platTitle, platText } from '../i18n.js?v=202610290705';
+import { Thumb } from '../pickers.js?v=202610290705';
 
 export const fitLabel = (f) => ({
   Mety: tr('Adapté', 'Fits', 'Mety'),

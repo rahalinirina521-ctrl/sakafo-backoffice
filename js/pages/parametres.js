@@ -1,11 +1,12 @@
 // Paramètres : cuisine (point de départ), trafic, horaires, contacts, liens des applications, comptes.
-import { html, useState } from '../lib.js?v=202610290637';
-import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290637';
-import { tr } from '../i18n.js?v=202610290637';
-import { toNum } from '../calc.js?v=202610290637';
-import { param, paramRow } from '../params.js?v=202610290637';
-import { MapView } from '../map.js?v=202610290637';
-import { MODE } from '../db.js?v=202610290637';
+import { html, useState, useEffect } from '../lib.js?v=202610290705';
+import { useApp, Card, Field, Badge, copyText } from '../ui.js?v=202610290705';
+import { tr } from '../i18n.js?v=202610290705';
+import { toNum } from '../calc.js?v=202610290705';
+import { param, paramRow } from '../params.js?v=202610290705';
+import { MapView } from '../map.js?v=202610290705';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610290705';
+import { MODE } from '../db.js?v=202610290705';
 
 export function Parametres() {
   const app = useApp();
@@ -42,6 +43,8 @@ export function Parametres() {
       ${MODE === 'supabase' && html`<p class="warn-box small">${tr('Important (une seule fois) : dans Supabase → Authentication → URL Configuration, mettez « Site URL » = ', 'Important (once): in Supabase → Authentication → URL Configuration, set "Site URL" = ', 'Zava-dehibe (indray mandeha): ao amin\'ny Supabase → Authentication → URL Configuration, apetraho ny « Site URL » = ')}<b class="mono">${base}</b>${tr(' et ajoutez ', ' and add ', ' ary ampio ')}<b class="mono">${base}*</b>${tr(' dans « Redirect URLs », sinon les e-mails de confirmation renvoient vers une mauvaise adresse.', ' to "Redirect URLs", otherwise confirmation e-mails point to a wrong address.', ' ao amin\'ny « Redirect URLs », raha tsy izany dia diso adiresy ny mailaka fanamarinana.')}</p>`}
     <//>
 
+    <${PushCard} />
+
     <${Card} title=${'🍳 ' + tr('Cuisine (point de départ des livraisons)', 'Kitchen (delivery start point)', 'Lakozia (fiaingan\'ny fanaterana)')}>
       <div class="form-grid">
         <${Field} label=${tr('Adresse', 'Address', 'Adiresy')} wide><input value=${depot.adresse || ''} onInput=${(e) => setDepot({ ...depot, adresse: e.target.value })} /><//>
@@ -76,4 +79,20 @@ export function Parametres() {
           <td>${p.role === 'invite' ? html`<a href=${'#/messages?c=user:' + p.user_id}>💬</a>` : null}</td></tr>`)}</tbody></table></div>
     <//>
   </div>`;
+}
+
+function PushCard() {
+  const { data, toast } = useApp();
+  const [etat, setEtat] = useState('…');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { etatPush().then(setEtat).catch(() => setEtat('impossible')); }, []);
+  async function on() { setBusy(true); try { await activerPush(data); setEtat('actif'); toast(tr('Notifications activées sur cet appareil 🔔', 'Notifications enabled on this device 🔔', 'Mandeha ny fampahafantarana 🔔')); } catch (e) { toast(e.message, 'bad'); } setBusy(false); }
+  async function off() { setBusy(true); try { await desactiverPush(); setEtat('inactif'); } catch (e) { toast(e.message, 'bad'); } setBusy(false); }
+  return html`<${Card} title=${'🔔 ' + tr('Notifications sur ce téléphone / ordinateur', 'Notifications on this phone / computer', 'Fampahafantarana amin\'ity finday / ordinateur ity')}>
+    <p class="small">${tr('Recevez une alerte à chaque nouvelle inscription et à chaque message d\'un client ou d\'un livreur, même quand le back-office est fermé. À activer sur chaque appareil (téléphone, PC).', 'Get an alert for every new sign-up and every message, even when the back-office is closed. Enable on each device.', 'Mahazo fampahafantarana isaky ny misy misoratra vaovao na hafatra, na mikatona aza ny back-office. Alefaso isaky ny fitaovana (finday, PC).')}</p>
+    ${etat === 'actif' ? html`<div class="row gap wrap"><${Badge} tone="ok">✓ ${tr('Activées sur cet appareil', 'Enabled on this device', 'Mandeha eto')}<//><button class="btn small ghost" disabled=${busy} onClick=${off}>${tr('Désactiver', 'Disable', 'Ajanony')}</button></div>`
+      : etat === 'refuse' ? html`<p class="warn-box small">${tr('Les notifications sont bloquées pour ce site dans le navigateur : autorisez-les dans les réglages du site (icône 🔒 à côté de l\'adresse).', 'Notifications are blocked for this site: allow them in the site settings.', 'Voasakana ny fampahafantarana: avelao ao amin\'ny fikirana ny site (🔒 eo akaikin\'ny adiresy).')}</p>`
+      : etat === 'impossible' ? html`<p class="warn-box small">${tr('Ce navigateur ne gère pas les notifications push. Sur iPhone : Safari → Partager → « Sur l\'écran d\'accueil », puis ouvrez le site depuis l\'icône.', 'This browser does not support push. On iPhone: Safari → Share → "Add to Home Screen", then open from the icon.', 'Tsy mahavita push ity navigateur ity. iPhone: Safari → Partager → « Sur l\'écran d\'accueil », dia sokafy avy amin\'ny icône.')}</p>`
+      : html`<button class="btn primary" disabled=${busy || MODE !== 'supabase'} onClick=${on}>🔔 ${tr('Activer les notifications sur cet appareil', 'Enable notifications on this device', 'Alefaso eto ny fampahafantarana')}</button>`}
+  <//>`;
 }

@@ -1,7 +1,7 @@
 // Prompts hadika ao amin'ny ChatGPT na Claude (frantsay foana, satria tsara kokoa ny valin'ny IA).
 // Ny IA dia manoratra ny texte amin'ny teny telo: fr, en, mg.
-import { isComplete, fmt, qtyLabel, needsPieceWeight, lineGrams } from './calc.js?v=202610290637';
-import { PLAT_TEXT_FIELDS } from './i18n.js?v=202610290637';
+import { isComplete, fmt, qtyLabel, needsPieceWeight, lineGrams } from './calc.js?v=202610290705';
+import { PLAT_TEXT_FIELDS } from './i18n.js?v=202610290705';
 
 export { PLAT_TEXT_FIELDS };
 export const ING_FIELDS = ['id', 'nom_mg', 'nom_fr', 'nom_en', 'categorie', 'etat', 'kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'poids_piece', 'densite', 'source'];

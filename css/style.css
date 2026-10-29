@@ -556,3 +556,13 @@ body.app-client, body.app-livreur { background: #f4f6f1; }
 @media (max-width: 420px) { .lv-sum { grid-template-columns: repeat(2, 1fr); } .stop-act { grid-template-columns: repeat(3, 1fr); } }
 .c-app input, .c-app select, .c-app textarea { font-size: 16px; }
 .c-app .modal { max-height: 88vh; }
+.notif-list { display: flex; flex-direction: column; gap: 6px; }
+.notif { font: inherit; text-align: left; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; width: 100%; }
+.notif.new { border-color: var(--green); background: #f3faf2; } .notif.new b::after { content: ' •'; color: var(--bad); }
+.notif-ic { font-size: 20px; } .notif-body { display: flex; flex-direction: column; min-width: 0; } .notif-body small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.bell { position: relative; font-size: 20px; text-decoration: none; margin-left: auto; margin-right: 8px; }
+.topbar .btn { position: relative; }
+.inner-box { border: 1px dashed #c5cdbf; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.inner-box pre { white-space: pre-wrap; margin: 0; background: #f6f8f3; padding: 8px; border-radius: 8px; }
+.welcome { border-left: 4px solid var(--green); }
+.auth-card > .row { flex-wrap: wrap; gap: 8px; }
