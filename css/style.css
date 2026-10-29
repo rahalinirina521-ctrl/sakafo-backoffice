@@ -386,3 +386,8 @@ img { max-width: 100%; }
 .range-in { display: flex; align-items: center; gap: 6px; }
 .range-in input { flex: 1; min-width: 0; }
 .range-in span { color: var(--muted); }
+.prop.valide { border-color: var(--green); background: #f5faf4; }
+.prop header { justify-content: space-between; }
+.sugg-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.sugg-filters input, .sugg-filters select { flex: 1 1 180px; width: auto; }
+.sugg-filters .tabs { margin: 0; flex: 1 1 100%; }

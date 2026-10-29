@@ -1,11 +1,11 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290532';
-import { DEMO } from './seed.js?v=202610290532';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290532';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290543';
+import { DEMO } from './seed.js?v=202610290543';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290543';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres'];
-const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions'];
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
 let client = null;
@@ -24,7 +24,7 @@ function demoLoad() {
   if (memory) return memory;
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY));
-    if (saved && saved.ingredients) { memory = saved; for (const t of ['options', 'clients', 'calendrier', 'offres']) if (!memory[t]) memory[t] = t === 'offres' ? JSON.parse(JSON.stringify(DEMO.offres)) : []; return memory; }
+    if (saved && saved.ingredients) { memory = saved; for (const t of ['options', 'clients', 'calendrier', 'offres', 'suggestions']) if (!memory[t]) memory[t] = t === 'offres' ? JSON.parse(JSON.stringify(DEMO.offres)) : []; return memory; }
   } catch (e) { /* tsy misy localStorage */ }
   memory = JSON.parse(JSON.stringify(DEMO));
   demoSave();
@@ -48,6 +48,7 @@ const COLS = {
   menus: { id: null, nom: '', categorie_id: null, repas: [], andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
   clients: { id: null, nom: '', telephone: null, adresse: null, repere: null, lat: null, lng: null, maps_url: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true },
   calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
+  suggestions: { id: null, statut: 'attente', categorie_id: null, fotoana: null, nom: null, plat_id: null, data: {} },
   offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0 },
 };
 export function normalizeRow(table, r) {
