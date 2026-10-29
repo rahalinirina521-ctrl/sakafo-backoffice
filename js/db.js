@@ -46,7 +46,7 @@ const COLS = {
   composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
   options: { id: null, type: '', valeur: '', base: null, facteur: null, ordre: 0 },
   menus: { id: null, nom: '', categorie_id: null, repas: [], andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
-  clients: { id: null, nom: '', telephone: null, adresse: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true },
+  clients: { id: null, nom: '', telephone: null, adresse: null, repere: null, lat: null, lng: null, maps_url: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true },
   calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
   offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0 },
 };

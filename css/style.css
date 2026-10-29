@@ -358,3 +358,12 @@ img { max-width: 100%; }
   .view-toggle { margin-left: 0; flex: 0 0 auto !important; }
 }
 @media (max-width: 380px) { .plat-grid { grid-template-columns: 1fr; } }
+
+/* ===== Adresse / Google Maps ===== */
+.address-field { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
+.gps-box { border: 1px dashed #cfd5ca; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; background: #fafbf8; }
+.small-input { font-size: 13px; }
+.map-preview { width: 100%; height: 220px; border: 0; border-radius: 10px; }
+.map-links .btn { text-decoration: none; }
+.addr-cell { display: block; margin-bottom: 4px; }
+@media (max-width: 760px) { .small-input { font-size: 16px; } .map-preview { height: 200px; } }

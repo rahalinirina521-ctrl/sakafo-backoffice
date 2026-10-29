@@ -138,3 +138,9 @@ drop policy if exists "sary_update" on storage.objects;
 create policy "sary_update" on storage.objects for update to authenticated using (bucket_id = 'sary' and (select private.is_admin()));
 drop policy if exists "sary_delete" on storage.objects;
 create policy "sary_delete" on storage.objects for delete to authenticated using (bucket_id = 'sary' and (select private.is_admin()));
+
+-- Localisation des clients (livraison)
+alter table if exists clients add column if not exists repere text;
+alter table if exists clients add column if not exists lat double precision;
+alter table if exists clients add column if not exists lng double precision;
+alter table if exists clients add column if not exists maps_url text;

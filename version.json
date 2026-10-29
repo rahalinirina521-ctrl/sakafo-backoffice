@@ -1,10 +1,11 @@
 {
- "version": "2026-10-29 04:28",
- "date": "2026-10-29T04:28+03:00",
+ "version": "2026-10-29 04:43",
+ "date": "2026-10-29T04:43+03:00",
  "files": [
   "config.js",
   "css/style.css",
   "index.html",
+  "js/address.js",
   "js/app.js",
   "js/calc.js",
   "js/db.js",

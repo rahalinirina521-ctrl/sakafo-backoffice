@@ -3,6 +3,7 @@ import { html, useState } from '../lib.js';
 import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js';
 import { nextId, besoinKcal, ACTIVITES, fmt, toNum } from '../calc.js';
 import { tr, catName } from '../i18n.js';
+import { AddressField, MapLinks, hasGps } from '../address.js';
 
 const AJUST = { 'perte-de-poids': -0.2, 'prise-de-masse': 0.15 };
 const actLabel = (a) => ({
@@ -39,10 +40,11 @@ export function Clients() {
     <div class="filters"><input type="search" placeholder=${tr('Rechercher…', 'Search…', 'Hikaroka…')} value=${q} onInput=${(e) => setQ(e.target.value)} /></div>
     ${clients.length === 0 ? html`<${Empty}>${tr('Aucun client. Ajoutez vos abonnés pour leur faire un menu personnalisé.', 'No customer yet. Add your subscribers to give them a personal menu.', 'Mbola tsy misy client. Ampidiro ny mpanjifa mba hanaovana menu manokana ho azy.')}<//>` : html`
     <div class="table-wrap"><table class="table resp">
-      <thead><tr><th>${tr('Nom', 'Name', 'Anarana')}</th><th>${tr('Téléphone', 'Phone', 'Finday')}</th><th>${tr('Objectif', 'Goal', 'Tanjona')}</th><th class="num">${tr('Kcal / jour', 'Kcal / day', 'Kcal / andro')}</th><th>${tr('Allergies', 'Allergies', 'Allergies')}</th><th>${tr('Planning', 'Planning', 'Planning')}</th></tr></thead>
+      <thead><tr><th>${tr('Nom', 'Name', 'Anarana')}</th><th>${tr('Téléphone', 'Phone', 'Finday')}</th><th>${tr('Adresse', 'Address', 'Adiresy')}</th><th>${tr('Objectif', 'Goal', 'Tanjona')}</th><th class="num">${tr('Kcal / jour', 'Kcal / day', 'Kcal / andro')}</th><th>${tr('Allergies', 'Allergies', 'Allergies')}</th><th>${tr('Planning', 'Planning', 'Planning')}</th></tr></thead>
       <tbody>${clients.map((c) => html`<tr class="clickable" onClick=${() => setEdit({ ...c, profil: c.profil || {} })}>
         <td><b>${c.nom}</b>${c.actif === false ? html` <${Badge}>${tr('inactif', 'inactive', 'tsy mavitrika')}<//>` : null}</td>
-        <td>${c.telephone || '—'}</td>
+        <td>${c.telephone ? html`<a href=${'tel:' + c.telephone} onClick=${(e) => e.stopPropagation()}>${c.telephone}</a>` : '—'}</td>
+        <td class="small"><span class="addr-cell">${c.adresse || '—'}${c.repere ? html`<span class="muted"> · ${c.repere}</span>` : null}${hasGps(c) ? html` <span class="badge ok">GPS</span>` : null}</span><${MapLinks} o=${c} /></td>
         <td>${catName(data.categories.find((x) => x.id === c.categorie_id))}</td>
         <td class="num">${fmt(c.kcal_cible)}</td>
         <td class="small">${c.allergies || '—'}</td>
@@ -64,7 +66,7 @@ function ClientForm({ row, onClose, onSave, onDelete, isNew }) {
     <div class="form-grid">
       <${Field} label=${tr('Nom', 'Name', 'Anarana')}><input value=${f.nom || ''} onInput=${(e) => set('nom', e.target.value)} /><//>
       <${Field} label=${tr('Téléphone', 'Phone', 'Finday')}><input type="tel" value=${f.telephone || ''} onInput=${(e) => set('telephone', e.target.value)} /><//>
-      <${Field} label=${tr('Adresse de livraison', 'Delivery address', 'Adiresy hanaterana')} wide><input value=${f.adresse || ''} onInput=${(e) => set('adresse', e.target.value)} /><//>
+      <${AddressField} value=${{ adresse: f.adresse, repere: f.repere, lat: f.lat, lng: f.lng, maps_url: f.maps_url }} onChange=${(a) => setF((x) => ({ ...x, ...a }))} />
       <${Field} label=${tr('Objectif', 'Goal', 'Tanjona')}><select value=${f.categorie_id || ''} onChange=${(e) => set('categorie_id', e.target.value || null)}>${[...data.categories].sort((a, b) => (a.ordre || 0) - (b.ordre || 0)).map((c) => html`<option value=${c.id}>${catName(c)}</option>`)}</select><//>
       <${Field} label=${tr('Calories cibles / jour', 'Target calories / day', 'Kcal tanjona / andro')} hint=${tr('Vide = cible de l\'objectif', 'Empty = goal target', 'Foana = an\'ny tanjona')}><input type="number" value=${f.kcal_cible ?? ''} onInput=${(e) => set('kcal_cible', e.target.value)} /><//>
     </div>
