@@ -1,10 +1,10 @@
-import { html, useState } from '../lib.js';
-import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd } from '../ui.js';
-import { FOTOANA, SLOT_SHARE, sumLines, slotTarget, fitStatus, nextId, uid, fmt, toNum, NUTR } from '../calc.js';
-import { promptPropositions, extractJson, normalizePlatTexts, applyPlatTexts } from '../prompts.js';
-import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js';
-import { callAI } from '../db.js';
-import { fitLabel } from './plats.js';
+import { html, useState } from '../lib.js?v=202610290504';
+import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd } from '../ui.js?v=202610290504';
+import { FOTOANA, SLOT_SHARE, sumLines, slotTarget, fitStatus, nextId, uid, fmt, toNum, NUTR } from '../calc.js?v=202610290504';
+import { promptPropositions, extractJson, normalizePlatTexts, applyPlatTexts } from '../prompts.js?v=202610290504';
+import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290504';
+import { callAI } from '../db.js?v=202610290504';
+import { fitLabel } from './plats.js?v=202610290504';
 
 const EMPTY_ING = { nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true };
 

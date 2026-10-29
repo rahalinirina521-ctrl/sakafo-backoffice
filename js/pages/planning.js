@@ -1,10 +1,10 @@
 // Planning : on place les menus sur les jours, par objectif (menu général) ou par client (menu personnalisé).
-import { html, useState, useMemo } from '../lib.js';
-import { useApp, Badge, Card, Empty, pctBadge } from '../ui.js';
-import { menuTotals, menuStatus, isoDate, addDays, mondayOf, fmt } from '../calc.js';
-import { tr, catName, getLang } from '../i18n.js';
-import { MenuPicker } from '../pickers.js';
-import { statusLabel } from './menus.js';
+import { html, useState, useMemo } from '../lib.js?v=202610290504';
+import { useApp, Badge, Card, Empty, pctBadge } from '../ui.js?v=202610290504';
+import { menuTotals, menuStatus, isoDate, addDays, mondayOf, fmt } from '../calc.js?v=202610290504';
+import { tr, catName, getLang } from '../i18n.js?v=202610290504';
+import { MenuPicker } from '../pickers.js?v=202610290504';
+import { statusLabel } from './menus.js?v=202610290504';
 
 const locale = () => ({ fr: 'fr-FR', en: 'en-GB', mg: 'fr-FR' }[getLang()] || 'fr-FR');
 const dayName = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString(locale(), { weekday: 'long' });

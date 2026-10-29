@@ -1,9 +1,9 @@
 // Clients : objectif, calories cibles (avec calculateur), allergies, lien vers son planning.
-import { html, useState } from '../lib.js';
-import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js';
-import { nextId, besoinKcal, ACTIVITES, fmt, toNum } from '../calc.js';
-import { tr, catName } from '../i18n.js';
-import { AddressField, MapLinks, hasGps } from '../address.js';
+import { html, useState } from '../lib.js?v=202610290504';
+import { useApp, Card, Field, Badge, Empty, Modal } from '../ui.js?v=202610290504';
+import { nextId, besoinKcal, ACTIVITES, fmt, toNum } from '../calc.js?v=202610290504';
+import { tr, catName } from '../i18n.js?v=202610290504';
+import { AddressField, MapLinks, hasGps } from '../address.js?v=202610290504';
 
 const AJUST = { 'perte-de-poids': -0.2, 'prise-de-masse': 0.15 };
 const actLabel = (a) => ({

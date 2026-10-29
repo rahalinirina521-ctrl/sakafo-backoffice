@@ -1,22 +1,22 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo } from './db.js';
-import { BRAND } from '../config.js';
-import { AppCtx } from './ui.js';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js';
-import { registerCustomUnits } from './calc.js';
-import { Dashboard } from './pages/dashboard.js';
-import { PlatsList } from './pages/plats.js';
-import { PlatEdit } from './pages/plat-edit.js';
-import { Ingredients } from './pages/ingredients.js';
-import { Menus, MenuEdit } from './pages/menus.js';
-import { Planning } from './pages/planning.js';
-import { Clients } from './pages/clients.js';
-import { Tarifs } from './pages/tarifs.js';
-import { Propositions } from './pages/propositions.js';
-import { Categories } from './pages/categories.js';
-import { Backup } from './pages/backup.js';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290504';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo } from './db.js?v=202610290504';
+import { BRAND } from '../config.js?v=202610290504';
+import { AppCtx } from './ui.js?v=202610290504';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290504';
+import { registerCustomUnits } from './calc.js?v=202610290504';
+import { Dashboard } from './pages/dashboard.js?v=202610290504';
+import { PlatsList } from './pages/plats.js?v=202610290504';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290504';
+import { Ingredients } from './pages/ingredients.js?v=202610290504';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290504';
+import { Planning } from './pages/planning.js?v=202610290504';
+import { Clients } from './pages/clients.js?v=202610290504';
+import { Tarifs } from './pages/tarifs.js?v=202610290504';
+import { Propositions } from './pages/propositions.js?v=202610290504';
+import { Categories } from './pages/categories.js?v=202610290504';
+import { Backup } from './pages/backup.js?v=202610290504';
 
-export const VERSION = '2026-10-29 04:55';
+export const VERSION = '2026-10-29 05:04';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -75,8 +75,9 @@ async function fetchVersion() {
   return r.json();
 }
 async function applyUpdate(v) {
-  // Avaozina ao amin'ny cache ny fichier rehetra, vao alaina indray ny pejy
-  const files = [...(v.files || []), 'index.html'];
+  // Avaozina ny index.html sy ny fichier rehetra ao amin'ny cache, vao alaina indray ny pejy
+  try { sessionStorage.setItem('sakafo_update_try', v.version); } catch (e) { /* */ }
+  const files = ['index.html', './', ...(v.files || [])];
   await Promise.all(files.map((f) => fetch(f, { cache: 'reload' }).catch(() => null)));
   location.reload();
 }
@@ -89,7 +90,10 @@ function UpdateBanner() {
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let alive = true;
-    const check = () => fetchVersion().then((v) => { if (alive && v.version && v.version !== VERSION) setUpd(v); }).catch(() => {});
+    const check = () => fetchVersion().then((v) => {
+      if (!alive || !v.version || v.version === VERSION) return;
+      setUpd(v);
+    }).catch(() => {});
     check();
     const t = setInterval(check, 60000);
     const onVis = () => { if (document.visibilityState === 'visible') check(); };
@@ -97,10 +101,16 @@ function UpdateBanner() {
     return () => { alive = false; clearInterval(t); document.removeEventListener('visibilitychange', onVis); };
   }, []);
   if (!upd) return null;
+  let tried = false;
+  try { tried = sessionStorage.getItem('sakafo_update_try') === upd.version; } catch (e) { /* */ }
   const d = fmtDate(upd.date);
   return html`<div class="update-banner" role="status">
-    <span><b>${tr('Nouvelle version disponible', 'New version available', 'Misy version vaovao')}</b> — ${tr('mise à jour du', 'updated on', 'navaozina ny')} ${d.day} ${tr('à', 'at', 'tamin\'ny')} ${d.time}. ${tr('Enregistrez votre travail puis mettez à jour.', 'Save your work, then update.', 'Tehirizo aloha ny asanao dia avaozy.')}</span>
-    <button class="btn small primary" disabled=${busy} onClick=${() => { setBusy(true); applyUpdate(upd); }}>${busy ? tr('Mise à jour…', 'Updating…', 'Manavao…') : tr('Mettre à jour maintenant', 'Update now', 'Avaozy izao')}</button>
+    <span><b>${tr('Nouvelle version disponible', 'New version available', 'Misy version vaovao')}</b> — ${tr('mise à jour du', 'updated on', 'navaozina ny')} ${d.day} ${tr('à', 'at', 'tamin\'ny')} ${d.time}.
+      ${tried ? tr(' Si elle ne s\'applique pas, fermez l\'onglet et rouvrez le site.', ' If it does not apply, close the tab and reopen the site.', ' Raha tsy miova, hidio ny onglet dia sokafy indray ny site.') : tr(' Enregistrez votre travail puis mettez à jour.', ' Save your work, then update.', ' Tehirizo aloha ny asanao dia avaozy.')}</span>
+    <span class="row gap">
+      <button class="btn small primary" disabled=${busy} onClick=${() => { setBusy(true); applyUpdate(upd); }}>${busy ? tr('Mise à jour…', 'Updating…', 'Manavao…') : tr('Mettre à jour maintenant', 'Update now', 'Avaozy izao')}</button>
+      <button class="btn small ghost" onClick=${() => setUpd(null)} aria-label=${tr('Plus tard', 'Later', 'Afaka kelikely')}>✕</button>
+    </span>
   </div>`;
 }
 
