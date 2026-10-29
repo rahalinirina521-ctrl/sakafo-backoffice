@@ -1,14 +1,14 @@
-import { html, useState, useMemo, useEffect } from '../lib.js?v=202610291451';
-import { useApp, Card, Badge, Field, CopyBox, Modal, navigate, pctBadge, SelectOrAdd } from '../ui.js?v=202610291451';
+import { html, useState, useMemo, useEffect } from '../lib.js?v=202610291512';
+import { useApp, Card, Badge, Field, CopyBox, Modal, navigate, pctBadge, SelectOrAdd } from '../ui.js?v=202610291512';
 import {
   FOTOANA, UNITES, lineValues, lineGrams, sumLines, slotTarget, fitStatus, nextId, uid, fmt, pct, toNum, kcalCheck, NUTR,
-} from '../calc.js?v=202610291451';
-import { promptHameno, photoBrief, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js?v=202610291451';
-import { exportHameno, importHameno } from '../excel.js?v=202610291451';
-import { uploadPlatImage, removePlatImage, MODE } from '../db.js?v=202610291451';
-import { tr, fotLabel, unitLabel, ingName, catName, PLAT_TEXT_FIELDS, LANG_SHORT, getLang } from '../i18n.js?v=202610291451';
-import { fitLabel } from './plats.js?v=202610291451';
-import { PhotoEditor } from '../photo-editor.js?v=202610291451';
+} from '../calc.js?v=202610291512';
+import { promptHameno, photoBrief, extractJson, ingredientsToFill, normalizePlatTexts, applyPlatTexts, TEXT_LANGS } from '../prompts.js?v=202610291512';
+import { exportHameno, importHameno } from '../excel.js?v=202610291512';
+import { uploadPlatImage, removePlatImage, MODE } from '../db.js?v=202610291512';
+import { tr, fotLabel, unitLabel, ingName, catName, PLAT_TEXT_FIELDS, LANG_SHORT, getLang } from '../i18n.js?v=202610291512';
+import { fitLabel } from './plats.js?v=202610291512';
+import { PhotoEditor } from '../photo-editor.js?v=202610291512';
 
 const NEW_ING = { nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true };
 

@@ -1,21 +1,21 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291451';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291451';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291451';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291451';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291451';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291451';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291451';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291451';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291451';
-import { Chat } from '../chat.js?v=202610291451';
-import { insertRow, updateRow, remove } from '../db.js?v=202610291451';
-import { param } from '../params.js?v=202610291451';
-import { AddressField } from '../address.js?v=202610291451';
-import { Thumb } from '../pickers.js?v=202610291451';
-import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291451';
-import { CommunauteResume } from './reseau.js?v=202610291451';
-import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291451';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291512';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291512';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291512';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291512';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291512';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291512';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291512';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291512';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291512';
+import { Chat } from '../chat.js?v=202610291512';
+import { insertRow, updateRow, remove } from '../db.js?v=202610291512';
+import { param } from '../params.js?v=202610291512';
+import { AddressField } from '../address.js?v=202610291512';
+import { Thumb } from '../pickers.js?v=202610291512';
+import { pushPossible, etatPush, activerPush, desactiverPush } from '../push.js?v=202610291512';
+import { CommunauteResume } from './reseau.js?v=202610291512';
+import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291512';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());

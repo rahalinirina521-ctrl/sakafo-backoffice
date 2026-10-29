@@ -1,8 +1,8 @@
-import { html, useState } from '../lib.js?v=202610291451';
-import { useApp, Card, Field, Badge } from '../ui.js?v=202610291451';
-import { fmt, toNum } from '../calc.js?v=202610291451';
-import { tr, catName } from '../i18n.js?v=202610291451';
-import { OBJECTIF_TYPES, typeObjectif, typeLabel } from '../conseil.js?v=202610291451';
+import { html, useState } from '../lib.js?v=202610291512';
+import { useApp, Card, Field, Badge } from '../ui.js?v=202610291512';
+import { fmt, toNum } from '../calc.js?v=202610291512';
+import { tr, catName } from '../i18n.js?v=202610291512';
+import { OBJECTIF_TYPES, typeObjectif, typeLabel } from '../conseil.js?v=202610291512';
 
 export function Categories() {
   const app = useApp();

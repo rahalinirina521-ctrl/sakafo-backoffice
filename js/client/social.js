@@ -1,11 +1,12 @@
 // Communauté (amis, fil d'actualité, encouragements), avis, messagerie par interlocuteur, incidents de livraison.
-import { html, useState, useMemo } from '../lib.js?v=202610291451';
-import { useApp, Modal, Badge } from '../ui.js?v=202610291451';
-import { tr, platTitle } from '../i18n.js?v=202610291451';
-import { fmt, isoDate } from '../calc.js?v=202610291451';
-import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291451';
-import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291451';
-import { heure } from '../map.js?v=202610291451';
+import { html, useState, useMemo, useEffect, useRef } from '../lib.js?v=202610291512';
+import { useApp, Modal, Badge } from '../ui.js?v=202610291512';
+import { tr, platTitle, platText } from '../i18n.js?v=202610291512';
+import { fmt, isoDate, platTotals, menuRepas } from '../calc.js?v=202610291512';
+import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291512';
+import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291512';
+import { Thumb } from '../pickers.js?v=202610291512';
+import { heure } from '../map.js?v=202610291512';
 
 export const depuis = (iso) => {
   const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
@@ -58,10 +59,12 @@ export function AvisForm({ client, cible_type, cible_id = '', titre, onDone }) {
   </div>`;
 }
 // Liste d'avis publics
-export function AvisListe({ avis, data, max = 5 }) {
+export function AvisListe({ avis, data, max = 5, cibles }) {
   if (!avis.length) return html`<p class="muted small">${tr('Pas encore d\'avis.', 'No reviews yet.', 'Mbola tsy misy hevitra.')}</p>`;
   return html`<div class="avis-list">${[...avis].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, max).map((a) => html`<div class="avis-item">
     <div class="row gap"><${Avatar} nom=${a.auteur || '?'} size=${30} /><b>${a.auteur || tr('Client', 'Customer', 'Client')}</b><${Etoiles} note=${a.note} size=${14} /><small class="muted">${depuis(a.created_at)}</small></div>
+    ${cibles && a.cible_type === 'plat' && (() => { const pl = data.plats.find((x) => x.id === a.cible_id); return pl ? html`<div class="avis-cible"><${Thumb} plat=${pl} size=${36} /><span>${platTitle(pl)}</span></div>` : null; })()}
+    ${cibles && a.cible_type === 'livreur' && html`<div class="avis-cible">🛵 <span>${tr('Livraison', 'Delivery', 'Fanaterana')}</span></div>`}
     ${a.commentaire && html`<p>${a.commentaire}</p>`}
     ${a.reponse && html`<p class="avis-rep">🧑‍🍳 <b>Sakafo :</b> ${a.reponse}</p>`}
   </div>`)}</div>`;
@@ -148,20 +151,49 @@ function NouvelleDiscussion({ client, amis, onOpen, onClose }) {
 export function AvisClient({ client }) {
   const { data } = useApp();
   const [plat, setPlat] = useState('');
+  const [q, setQ] = useState('');
   const derLiv = (data.livraisons || []).filter((l) => l.client_id === client.id && l.statut === 'livree' && l.livreur_id).sort((a, b) => b.date.localeCompare(a.date))[0];
   const platsVus = useMemo(() => {
     const ids = new Set();
-    for (const c of data.calendrier || []) { const m = (data.menus || []).find((x) => x.id === c.menu_id); (m?.repas || []).forEach((r) => r.plat_id && ids.add(r.plat_id)); }
-    return data.plats.filter((p) => ids.has(p.id));
-  }, [data.calendrier, data.menus]);
+    for (const c of data.calendrier || []) { const m = (data.menus || []).find((x) => x.id === c.menu_id); if (m) menuRepas(m).forEach((r) => r.plat_id && ids.add(r.plat_id)); }
+    const vus = data.plats.filter((p) => ids.has(p.id));
+    const publies = data.plats.filter((p) => p.statut !== 'Draft');
+    return (vus.length ? vus : publies.length ? publies : data.plats).sort((a, b) => (b.image_url ? 1 : 0) - (a.image_url ? 1 : 0));
+  }, [data.calendrier, data.menus, data.plats]);
   const publics = (data.avis || []).filter((a) => !a.masque);
   const moy = moyenne(publics.filter((a) => a.cible_type === 'service'));
   return html`
     <section class="c-card"><${AvisForm} client=${client} cible_type="service" titre=${'🍽️ ' + tr('Votre avis sur Sakafo Sur Mesure', 'Your review of Sakafo Sur Mesure', 'Ny hevitrao momba ny Sakafo')} /></section>
     ${derLiv && html`<section class="c-card"><${AvisForm} client=${client} cible_type="livreur" cible_id=${derLiv.livreur_id} titre=${'🛵 ' + tr('La livraison du ', 'Delivery of ', 'Ny fanaterana tamin\'ny ') + new Date(derLiv.date).toLocaleDateString('fr-FR')} /></section>`}
-    <section class="c-card"><b>🍲 ${tr('Noter un plat', 'Rate a dish', 'Hanome naoty sakafo')}</b>
-      <select value=${plat} onChange=${(e) => setPlat(e.target.value)}><option value="">—</option>${platsVus.map((p) => html`<option value=${p.id}>${platTitle(p)}</option>`)}</select>
-      ${plat && html`<${AvisForm} client=${client} cible_type="plat" cible_id=${plat} key=${plat} />`}</section>
+    <section class="c-card"><h2>🍲 ${tr('Noter un plat', 'Rate a dish', 'Hanome naoty sakafo')}</h2>
+      <p class="small muted">${tr('Touchez un plat que vous avez goûté.', 'Tap a dish you have tasted.', 'Tsindrio ny sakafo efa nohaninao.')}</p>
+      <input type="search" placeholder=${tr('Rechercher un plat…', 'Search a dish…', 'Hitady sakafo…')} value=${q} onInput=${(e) => setQ(e.target.value)} />
+      <div class="plat-strip">${platsVus.filter((p) => !q || platTitle(p).toLowerCase().includes(q.toLowerCase())).map((p) => { const av = (data.avis || []).filter((a) => a.cible_type === 'plat' && a.cible_id === p.id && !a.masque); const m = moyenne(av); const mien = (data.avis || []).some((a) => a.cible_type === 'plat' && a.cible_id === p.id && a.client_id === client.id);
+        return html`<button class=${'plat-tile' + (plat === p.id ? ' on' : '')} onClick=${() => setPlat(plat === p.id ? '' : p.id)}>${p.image_url ? html`<img src=${p.image_url} alt="" loading="lazy" />` : html`<span class="pt-ph">${platTitle(p).charAt(0)}</span>`}
+          ${mien && html`<i class="pt-ok">✓</i>`}<b>${platTitle(p)}</b><small>${m ? '★ ' + fmt(m, 1) + ' (' + av.length + ')' : tr('Pas encore noté', 'Not rated yet', 'Mbola tsy misy naoty')}</small></button>`; })}</div>
+    </section>
+    ${plat && html`<${PlatAvisCarte} plat=${data.plats.find((p) => p.id === plat)} client=${client} key=${plat} onClose=${() => setPlat('')} />`}
     <section class="c-card"><div class="row between"><h2>💬 ${tr('Avis des clients', 'Customer reviews', 'Hevitry ny mpanjifa')}</h2>${moy && html`<span class="row gap"><${Etoiles} note=${Math.round(moy)} size=${16} /><b>${fmt(moy, 1)}</b></span>`}</div>
-      <${AvisListe} avis=${publics} data=${data} max=${15} /></section>`;
+      <${AvisListe} avis=${publics} data=${data} max=${15} cibles /></section>`;
+}
+
+// Fiche d'un plat présentée comme une publication, puis le formulaire de note
+function PlatAvisCarte({ plat, client, onClose }) {
+  const { data, ingMap } = useApp();
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, []);
+  if (!plat) return null;
+  const av = (data.avis || []).filter((a) => a.cible_type === 'plat' && a.cible_id === plat.id && !a.masque);
+  const m = moyenne(av);
+  const t = platTotals(plat.id, data.composition, ingMap);
+  const txt = platText(plat, 'marketing');
+  const tags = [].concat(plat.details?.regimes || []).filter(Boolean).slice(0, 4);
+  return html`<article class="c-card post plat-post" ref=${ref}>
+    <header class="post-h"><span class="pp-ic">🍲</span><div class="grow"><b>${platTitle(plat)}</b><small class="muted d-block">${m ? html`<${Etoiles} note=${Math.round(m)} size=${13} /> ${fmt(m, 1)} · ${av.length} ${tr('avis', 'reviews', 'hevitra')}` : tr('Soyez le premier à le noter !', 'Be the first to rate it!', 'Aoka ho ianao no voalohany!')}</small></div><button class="icon-btn" onClick=${onClose} aria-label=${tr('Fermer', 'Close', 'Hidio')}>✕</button></header>
+    ${plat.image_url ? html`<img class="pp-hero" src=${plat.image_url} alt=${platTitle(plat)} loading="lazy" />` : html`<div class="pp-hero pp-ph"><span>${platTitle(plat).charAt(0)}</span><b>${platTitle(plat)}</b></div>`}
+    <div class="pp-chips"><span>🔥 ${fmt(t.kcal)} kcal</span><span>💪 ${fmt(t.proteines)} g ${tr('protéines', 'protein', 'proteinina')}</span><span>🌾 ${fmt(t.fibres)} g ${tr('fibres', 'fibre', 'fibres')}</span>${tags.map((x) => html`<span>✓ ${x}</span>`)}</div>
+    ${txt && html`<p class="post-txt">${txt}</p>`}
+    ${av.length > 0 && html`<${AvisListe} avis=${av} data=${data} max=${2} />`}
+    <div class="pp-form"><${AvisForm} client=${client} cible_type="plat" cible_id=${plat.id} titre=${tr('Votre note', 'Your rating', 'Ny naotinao')} /></div>
+  </article>`;
 }

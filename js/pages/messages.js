@@ -1,8 +1,8 @@
 // Messagerie admin : clients, livreurs, invités — liste à gauche, conversation à droite (une seule colonne sur téléphone).
-import { html, useState } from '../lib.js?v=202610291451';
-import { useApp } from '../ui.js?v=202610291451';
-import { tr } from '../i18n.js?v=202610291451';
-import { Chat, ConvList, convLabel } from '../chat.js?v=202610291451';
+import { html, useState } from '../lib.js?v=202610291512';
+import { useApp } from '../ui.js?v=202610291512';
+import { tr } from '../i18n.js?v=202610291512';
+import { Chat, ConvList, convLabel } from '../chat.js?v=202610291512';
 
 export function Messages() {
   const app = useApp();

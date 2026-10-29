@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291451';
-import { DEMO } from './seed.js?v=202610291451';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610291451';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610291512';
+import { DEMO } from './seed.js?v=202610291512';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610291512';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents', 'commentaires', 'blocages', 'signalements', 'notifs_client'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils', 'notifications', 'communaute', 'amis', 'publications', 'reactions', 'avis', 'incidents', 'commentaires', 'blocages', 'signalements', 'notifs_client'];

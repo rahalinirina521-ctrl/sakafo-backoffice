@@ -1,12 +1,12 @@
 // Communauté façon réseau social : fil d'actualité, publications avec photos, réactions, commentaires,
 // profils des membres, amis, notifications, blocage et signalement.
-import { html, useState, useEffect, useRef, useMemo } from '../lib.js?v=202610291451';
-import { useApp, Modal, Badge } from '../ui.js?v=202610291451';
-import { tr, catName } from '../i18n.js?v=202610291451';
-import { fmt } from '../calc.js?v=202610291451';
-import { insertRow, insertSansRetour, updateRow, supprimer, upsert, uploadPhotoCommunaute } from '../db.js?v=202610291451';
-import { dmId } from '../chat.js?v=202610291451';
-import { Avatar, AvisClient, erreur, depuis } from './social.js?v=202610291451';
+import { html, useState, useEffect, useRef, useMemo } from '../lib.js?v=202610291512';
+import { useApp, Modal, Badge } from '../ui.js?v=202610291512';
+import { tr, catName } from '../i18n.js?v=202610291512';
+import { fmt } from '../calc.js?v=202610291512';
+import { insertRow, insertSansRetour, updateRow, supprimer, upsert, uploadPhotoCommunaute } from '../db.js?v=202610291512';
+import { dmId } from '../chat.js?v=202610291512';
+import { Avatar, AvisClient, erreur, depuis } from './social.js?v=202610291512';
 
 const REACTIONS = [['👍', ['J\'aime', 'Like', 'Tiako']], ['❤️', ['J\'adore', 'Love', 'Tiako be']], ['💪', ['Courage', 'Strong', 'Matanjaha']], ['🔥', ['Bravo', 'Fire', 'Mahery']], ['👏', ['Applaudir', 'Applause', 'Tehaka']], ['🎉', ['Fête', 'Party', 'Fety']]];
 const TYPES = () => ({

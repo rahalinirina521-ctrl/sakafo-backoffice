@@ -1,11 +1,11 @@
 // Livreurs : fiches, compte de l'application livreur, dernière position GPS.
-import { html, useState } from '../lib.js?v=202610291451';
-import { useApp, Field, Badge, Empty, Modal } from '../ui.js?v=202610291451';
-import { nextId } from '../calc.js?v=202610291451';
-import { tr } from '../i18n.js?v=202610291451';
-import { COULEURS } from '../tournee.js?v=202610291451';
-import { MapView } from '../map.js?v=202610291451';
-import { param } from '../params.js?v=202610291451';
+import { html, useState } from '../lib.js?v=202610291512';
+import { useApp, Field, Badge, Empty, Modal } from '../ui.js?v=202610291512';
+import { nextId } from '../calc.js?v=202610291512';
+import { tr } from '../i18n.js?v=202610291512';
+import { COULEURS } from '../tournee.js?v=202610291512';
+import { MapView } from '../map.js?v=202610291512';
+import { param } from '../params.js?v=202610291512';
 
 export const depuis = (iso) => {
   if (!iso) return '—';

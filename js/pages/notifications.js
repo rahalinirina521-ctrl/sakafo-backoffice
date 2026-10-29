@@ -1,8 +1,8 @@
 // Notifications de l'admin : nouvelles inscriptions, messages des clients / livreurs.
-import { html } from '../lib.js?v=202610291451';
-import { useApp, Empty } from '../ui.js?v=202610291451';
-import { tr } from '../i18n.js?v=202610291451';
-import { depuis } from './livreurs.js?v=202610291451';
+import { html } from '../lib.js?v=202610291512';
+import { useApp, Empty } from '../ui.js?v=202610291512';
+import { tr } from '../i18n.js?v=202610291512';
+import { depuis } from './livreurs.js?v=202610291512';
 
 export function Notifications() {
   const app = useApp();
