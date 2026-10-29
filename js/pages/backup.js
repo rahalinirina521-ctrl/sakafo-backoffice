@@ -1,11 +1,11 @@
 // Sauvegarde & restauration : automatique chaque nuit, à la demande, fichier JSON, Excel, corbeille des suppressions.
-import { html, useState, useEffect } from '../lib.js?v=202610291359';
-import { useApp, Card, Badge, Empty } from '../ui.js?v=202610291359';
-import { exportAll } from '../excel.js?v=202610291359';
-import { MODE, readBrowserDemo, migrateDemoToSupabase, lire, upsert } from '../db.js?v=202610291359';
-import { tr } from '../i18n.js?v=202610291359';
-import { exporterJSON, lireFichier, resume, restaurer, listeSauvegardes, telechargerSauvegarde, sauvegarderMaintenant, ORDRE } from '../sauvegarde.js?v=202610291359';
-import { depuis } from './livreurs.js?v=202610291359';
+import { html, useState, useEffect } from '../lib.js?v=202610291423';
+import { useApp, Card, Badge, Empty } from '../ui.js?v=202610291423';
+import { exportAll } from '../excel.js?v=202610291423';
+import { MODE, readBrowserDemo, migrateDemoToSupabase, lire, upsert } from '../db.js?v=202610291423';
+import { tr } from '../i18n.js?v=202610291423';
+import { exporterJSON, lireFichier, resume, restaurer, listeSauvegardes, telechargerSauvegarde, sauvegarderMaintenant, ORDRE } from '../sauvegarde.js?v=202610291423';
+import { depuis } from './livreurs.js?v=202610291423';
 
 const NOMS = { categories: 'Objectifs', ingredients: 'Ingrédients', offres: 'Formules', options: 'Options / paramètres', plats: 'Plats', composition: 'Compositions', menus: 'Menus', clients: 'Clients', livreurs: 'Livreurs', calendrier: 'Planning', mesures: 'Pesées', livraisons: 'Livraisons', suggestions: 'Suggestions IA', avis: 'Avis', communaute: 'Communauté', amis: 'Amis', publications: 'Publications', reactions: 'Réactions', incidents: 'Incidents', messages: 'Messages', notifications: 'Notifications' };
 const ko = (n) => (n ? (n / 1024 > 1024 ? (n / 1048576).toFixed(1) + ' Mo' : Math.round(n / 1024) + ' ko') : '');

@@ -1,9 +1,9 @@
 // Composants partagés (back-office + application client) : profil, objectif, avis automatique, courbe de poids.
-import { html, useState, useRef } from './lib.js?v=202610291359';
-import { Field, Badge } from './ui.js?v=202610291359';
-import { tr } from './i18n.js?v=202610291359';
-import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610291359';
-import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610291359';
+import { html, useState, useRef } from './lib.js?v=202610291423';
+import { Field, Badge } from './ui.js?v=202610291423';
+import { tr } from './i18n.js?v=202610291423';
+import { ACTIVITES, fmt, isoDate } from './calc.js?v=202610291423';
+import { champsPour, ACTIVITE_LABELS, NIVEAU, courbePrevision, fmtDate, REFERENCES } from './conseil.js?v=202610291423';
 
 const t3 = (l) => tr(l[0], l[1], l[2]);
 
@@ -29,13 +29,14 @@ export function ProfilFields({ profil = {}, type, onChange, compact }) {
 }
 
 // Avis automatique
-export function AnalysePanel({ a, onUseKcal, showRefs }) {
+export function AnalysePanel({ a, onUseKcal, showRefs, onDate }) {
   if (!a) return null;
   if (!a.ok) return html`<p class="muted small">${tr('Complétez pour obtenir l\'avis : ', 'Complete to get the advice: ', 'Fenoy mba hahazoana ny torohevitra: ')}<b>${a.manque.join(', ')}</b></p>`;
   const v = a.verdict;
   const N = v ? NIVEAU[v.niveau] || NIVEAU.ok : null;
   return html`<div class="analyse">
-    ${v && html`<div class=${'verdict ' + N.tone}><b>${v.titre}</b><p>${v.texte}</p></div>`}
+    ${v && html`<div class=${'verdict ' + N.tone}><b>${v.titre}</b><p>${v.texte}</p>
+      ${onDate && v.dateProposee && !v.vu && html`<div class="row gap wrap"><button class="btn small primary" onClick=${() => onDate({ date_cible: v.dateProposee })}>✓ ${tr('Adopter le', 'Use', 'Raiso ny')} ${fmtDate(v.dateProposee)}</button><button class="btn small ghost" onClick=${() => onDate({ date_note_vue: v.dateSouhaitee })}>${tr('Garder ma date', 'Keep my date', 'Tehirizo ny datiko')}</button></div>`}</div>`}
     <div class="kpis">
       <div class="kpi"><small>${tr('Calories / jour', 'Calories / day', 'Kcal / andro')}</small><b>${fmt(a.kcal)}</b>${onUseKcal && html`<button class="link-btn small" onClick=${() => onUseKcal(a.kcal)}>${tr('Utiliser', 'Use', 'Ampiasao')}</button>`}</div>
       <div class="kpi"><small>${tr('Protéines', 'Protein', 'Proteinina')}</small><b>${a.macros.proteines} g</b></div>

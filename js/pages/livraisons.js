@@ -1,14 +1,14 @@
 // Livraisons du jour : génération à partir des abonnés, répartition entre livreurs, ordre optimisé, suivi en direct.
-import { html, useState, useMemo } from '../lib.js?v=202610291359';
-import { useApp, Badge, Empty, Card } from '../ui.js?v=202610291359';
-import { isoDate, addDays, uid } from '../calc.js?v=202610291359';
-import { tr, catName } from '../i18n.js?v=202610291359';
-import { MapView, optimiser, hasPos, heure, googleNav } from '../map.js?v=202610291359';
-import { STATUTS, CRENEAU_LABEL, COULEURS } from '../tournee.js?v=202610291359';
-import { param } from '../params.js?v=202610291359';
-import { depuis } from './livreurs.js?v=202610291359';
-import { aboCouvre, menuDuJour } from '../metier.js?v=202610291359';
-import { incidentLabel } from '../client/social.js?v=202610291359';
+import { html, useState, useMemo } from '../lib.js?v=202610291423';
+import { useApp, Badge, Empty, Card } from '../ui.js?v=202610291423';
+import { isoDate, addDays, uid } from '../calc.js?v=202610291423';
+import { tr, catName } from '../i18n.js?v=202610291423';
+import { MapView, optimiser, hasPos, heure, googleNav } from '../map.js?v=202610291423';
+import { STATUTS, CRENEAU_LABEL, COULEURS } from '../tournee.js?v=202610291423';
+import { param } from '../params.js?v=202610291423';
+import { depuis } from './livreurs.js?v=202610291423';
+import { aboCouvre, menuDuJour } from '../metier.js?v=202610291423';
+import { incidentLabel } from '../client/social.js?v=202610291423';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 export function Livraisons() {

@@ -1,8 +1,8 @@
 // Moteur de conseil « semi-IA » (règles nutritionnelles publiées, sans IA payante).
 // Il analyse le profil et l'objectif d'un client : faisabilité, kcal/jour, macros, prévision, alertes médicales.
 // Ce n'est pas un avis médical : il oriente vers un professionnel dès qu'une situation le demande.
-import { tr, getLang } from './i18n.js?v=202610291359';
-import { ACTIVITES, toNum, isoDate, addDays } from './calc.js?v=202610291359';
+import { tr, getLang } from './i18n.js?v=202610291423';
+import { ACTIVITES, toNum, isoDate, addDays } from './calc.js?v=202610291423';
 
 const n = toNum;
 const KCAL_PAR_KG = 7700; // énergie approx. d'1 kg de masse grasse
@@ -160,12 +160,20 @@ export function analyse(profil = {}, type = 'normal', mesures = []) {
         `${objTxt} ${kg(o.ecart)} at about ${f1(o.rate)} kg/week: reached around ${fmtDate(o.dateReal)} (≈ ${o.semaines} weeks).`,
         `${kg(o.ecart)} amin'ny ${f1(o.rate)} kg isan-kerinandro eo ho eo: ho tratra manodidina ny ${fmtDate(o.dateReal)} (≈ ${o.semaines} herinandro).`) };
     } else {
-      const sem = f1(o.semDispo);
-      out.verdict = { niveau: o.niveau, titre: o.niveau === 'irrealiste' ? tr('Délai irréaliste ⛔', 'Unrealistic timeline ⛔', 'Fotoana tsy azo tanterahina ⛔') : tr('Délai trop ambitieux ⚠️', 'Timeline too ambitious ⚠️', 'Fotoana fohy loatra ⚠️'),
-        texte: tr(
-          `${objTxt.charAt(0).toUpperCase() + objTxt.slice(1)} ${kg(o.ecart)} en ${sem} semaines demanderait ${f1(o.rateDemande)} kg/semaine. Le rythme sûr et durable est de ${rangeTxt} par semaine${sens === 'perte' ? ' : au-delà, on perd du muscle, on risque fatigue, carences, calculs biliaires et reprise rapide du poids (effet yo-yo)' : ''}. Date réaliste : ${fmtDate(o.dateReal)} (≈ ${o.semaines} semaines). Premier palier conseillé : ${sens === 'perte' ? '-' : '+'}${kg(Math.min(o.ecart, o.rateReco * 4.3))} le premier mois.`,
-          `${objTxt} ${kg(o.ecart)} in ${sem} weeks would require ${f1(o.rateDemande)} kg/week. A safe, lasting pace is ${rangeTxt} per week. Realistic date: ${fmtDate(o.dateReal)} (≈ ${o.semaines} weeks). First milestone: ${kg(Math.min(o.ecart, o.rateReco * 4.3))} in the first month.`,
-          `${kg(o.ecart)} ao anatin'ny herinandro ${sem} dia mitaky ${f1(o.rateDemande)} kg isan-kerinandro. Ny haingana azo antoka sy maharitra dia ${rangeTxt} isan-kerinandro${sens === 'perte' ? ': raha mihoatra, very ny hozatra, reraka, tsy ampy otrikaina ary miverina haingana ny lanja (yo-yo)' : ''}. Daty azo tanterahina: ${fmtDate(o.dateReal)} (≈ herinandro ${o.semaines}). Dingana voalohany: ${kg(Math.min(o.ecart, o.rateReco * 4.3))} amin'ny volana voalohany.`) };
+      // Date souhaitée plus courte que le rythme sûr : simple note (pas d'alerte), avec proposition de date réaliste.
+      const sem = Math.max(1, Math.round(o.semDispo));
+      const possible = Math.min(o.ecart, o.rateMax * o.semDispo);
+      const signe = sens === 'perte' ? '-' : '+';
+      const vu = p.date_note_vue === p.date_cible;
+      out.verdict = { niveau: 'note', dateProposee: o.dateReal, dateSouhaitee: dateCible, vu,
+        titre: tr('📌 Petite note de notre part', '📌 A small note from us', '📌 Fanamarihana kely avy aminay'),
+        texte: vu
+          ? tr(`Votre date : ${fmtDate(dateCible)} (≈ ${signe}${kg(possible)} possibles d'ici là). Nous continuons ensuite au même rythme jusqu'à ${kg(cible)}, vers le ${fmtDate(o.dateReal)}.`,
+            `Your date: ${fmtDate(dateCible)} (≈ ${signe}${kg(possible)} possible by then). We then continue at the same pace to ${kg(cible)}, around ${fmtDate(o.dateReal)}.`,
+            `Ny datinao: ${fmtDate(dateCible)} (≈ ${signe}${kg(possible)} azo tratrarina hatreo). Manohy amin'io haingana io izahay mandra-pahatongan'ny ${kg(cible)}, manodidina ny ${fmtDate(o.dateReal)}.`)
+          : tr(`D'après nos calculs, d'ici le ${fmtDate(dateCible)} (≈ ${sem} semaines) vous pouvez ${objTxt} environ ${kg(possible)} en toute sécurité (${rangeTxt} par semaine). Pour atteindre ${kg(cible)}, la date réaliste est le ${fmtDate(o.dateReal)} (≈ ${o.semaines} semaines). Votre programme suit ce rythme sûr : vous pouvez adopter cette date ou garder la vôtre.`,
+            `By our calculations, by ${fmtDate(dateCible)} (≈ ${sem} weeks) you can safely ${objTxt} about ${kg(possible)} (${rangeTxt} per week). To reach ${kg(cible)}, the realistic date is ${fmtDate(o.dateReal)} (≈ ${o.semaines} weeks). Your programme follows this safe pace: adopt this date or keep yours.`,
+            `Araka ny kajinay, hatramin'ny ${fmtDate(dateCible)} (≈ herinandro ${sem}) dia afaka ${objTxt} ${kg(possible)} eo ho eo ianao tsy misy loza (${rangeTxt} isan-kerinandro). Mba hahatratra ${kg(cible)}, ny daty azo tanterahina dia ${fmtDate(o.dateReal)} (≈ herinandro ${o.semaines}). Io haingana azo antoka io no arahin'ny programa: raiso io daty io na tehirizo ny anao.`) };
     }
     out.prevision = { depart: poids, cible, rate: o.rate * (sens === 'perte' ? -1 : 1), semaines: o.semaines, date: o.dateReal };
     if (sens === 'perte') out.conseils.push(tr('Les 1 à 2 premières semaines, la balance baisse souvent plus vite (eau) puis ralentit : c\'est normal.', 'The first 1-2 weeks the scale often drops faster (water), then slows: that\'s normal.', 'Amin\'ny herinandro 1-2 voalohany, mety hidina haingana kokoa ny lanja (rano) dia miadana avy eo: ara-dalàna izany.'));
@@ -292,6 +300,7 @@ export const NIVEAU = {
   attention: { tone: 'warn', icon: '⚠️' },
   irrealiste: { tone: 'bad', icon: '⛔' },
   medical: { tone: 'info', icon: '🩺' },
+  note: { tone: 'note', icon: '📌' },
 };
 
 export const REFERENCES = [

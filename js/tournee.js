@@ -1,5 +1,5 @@
 // Tournée de livraison : ETA de chaque arrêt à partir de la position actuelle (ou de la cuisine).
-import { route, hasPos } from './map.js?v=202610291359';
+import { route, hasPos } from './map.js?v=202610291423';
 
 // depart {lat,lng} ; stops : livraisons ordonnées (non livrées) → { etas: Map(id → {eta: Date, cumul_s, distance_m}), line, total }
 export async function calculerEtas(depart, stops, { trafic = 1.6, arret_min = 4, maintenant = new Date() } = {}) {

@@ -1,16 +1,16 @@
 // Espace client « personnalisé » : accueil résumé (avant abonnement), onglet Programme (objectif + calendrier),
 // et page Formules (livraison ou prescription sans livraison, compte démo).
-import { html, useState } from '../lib.js?v=202610291359';
-import { useApp, Badge, Field } from '../ui.js?v=202610291359';
-import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291359';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291359';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291359';
-import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291359';
-import { aboStatut, menuDuJour } from '../metier.js?v=202610291359';
-import { updateRow } from '../db.js?v=202610291359';
-import { param } from '../params.js?v=202610291359';
-import { Thumb } from '../pickers.js?v=202610291359';
-import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291359';
+import { html, useState } from '../lib.js?v=202610291423';
+import { useApp, Badge, Field } from '../ui.js?v=202610291423';
+import { tr, catName, platTitle, fotLabel } from '../i18n.js?v=202610291423';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum } from '../calc.js?v=202610291423';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291423';
+import { ProfilFields, AnalysePanel } from '../conseil-ui.js?v=202610291423';
+import { aboStatut, menuDuJour } from '../metier.js?v=202610291423';
+import { updateRow } from '../db.js?v=202610291423';
+import { param } from '../params.js?v=202610291423';
+import { Thumb } from '../pickers.js?v=202610291423';
+import { PlatModal, objectifsVisibles, Courses } from './vues.js?v=202610291423';
 
 const today = () => isoDate(new Date());
 const prenom = (n) => String(n || '').trim().split(/\s+/)[0] || '';
@@ -120,6 +120,13 @@ export function Programme({ client, onClient, abonne }) {
   const editCat = data.categories.find((c) => c.id === catId);
   const aEdit = edit ? analyse(prof, typeObjectif(editCat), mesures) : null;
 
+  async function saveDate(patch) {
+    try {
+      const profil = { ...(client.profil || {}), ...patch };
+      await updateRow('clients', client.id, { profil }); onClient({ ...client, profil });
+      toast(patch.date_cible ? tr('Nouvelle date enregistrée ✓', 'New date saved ✓', 'Voatahiry ny daty vaovao ✓') : tr('C\'est noté, nous gardons votre date', 'Noted, we keep your date', 'Voaray, tazoninay ny datinao'));
+    } catch (e) { toast(e.message, 'bad'); }
+  }
   async function saveObj() {
     try {
       const profil = { ...prof, poids_depart: prof.poids_depart || client.profil?.poids_depart || prof.poids };
@@ -149,9 +156,9 @@ export function Programme({ client, onClient, abonne }) {
       <div class="row between"><h2>⚙️ ${tr('Mon objectif en détail', 'My goal in detail', 'Ny antsipirian\'ny tanjoko')}</h2>${!edit && client.id !== 'CL-DEMO' && html`<button class="btn small" onClick=${() => { setProf(client.profil || {}); setCatId(client.categorie_id); setEdit(true); }}>✏️ ${tr('Modifier', 'Edit', 'Ovaina')}</button>`}</div>
       ${edit ? html`<${Field} label=${tr('Objectif', 'Goal', 'Tanjona')}><select value=${catId || ''} onChange=${(e) => setCatId(e.target.value)}>${objectifsVisibles(data).map((c) => html`<option value=${c.id}>${c.icone || ''} ${catName(c)}</option>`)}</select><//>
         <${ProfilFields} profil=${prof} type=${typeObjectif(editCat)} onChange=${setProf} />
-        <${AnalysePanel} a=${aEdit} />
+        <${AnalysePanel} a=${aEdit} onDate=${(patch) => setProf({ ...prof, ...patch })} />
         <div class="row gap"><button class="btn primary" onClick=${saveObj}>${tr('Enregistrer', 'Save', 'Tehirizo')}</button><button class="btn ghost" onClick=${() => setEdit(false)}>${tr('Annuler', 'Cancel', 'Aoka ihany')}</button></div>`
-        : html`<details><summary>${tr('Voir l\'analyse complète', 'See full analysis', 'Jereo ny fanadihadiana feno')}</summary><${AnalysePanel} a=${a} showRefs /></details>`}
+        : html`<details open=${a.verdict?.niveau === 'note' && !a.verdict.vu}><summary>${tr('Voir l\'analyse complète', 'See full analysis', 'Jereo ny fanadihadiana feno')}</summary><${AnalysePanel} a=${a} showRefs onDate=${client.id !== 'CL-DEMO' ? saveDate : null} /></details>`}
     </section>
     ${!abonne && html`<a class="btn primary big" href="#/formules">💳 ${tr('Démarrer mon programme', 'Start my programme', 'Hanomboka ny programako')}</a>`}
     ${plat && html`<${PlatModal} plat=${plat} client=${client} onClose=${() => setPlat(null)} showCompo=${abonne && conseil} />`}

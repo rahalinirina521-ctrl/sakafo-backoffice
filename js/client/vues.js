@@ -1,19 +1,19 @@
 // Vues de l'application client.
-import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291359';
-import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291359';
-import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291359';
-import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291359';
-import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291359';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291359';
-import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291359';
-import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291359';
-import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291359';
-import { Chat } from '../chat.js?v=202610291359';
-import { insertRow, updateRow, remove } from '../db.js?v=202610291359';
-import { param } from '../params.js?v=202610291359';
-import { AddressField } from '../address.js?v=202610291359';
-import { Thumb } from '../pickers.js?v=202610291359';
-import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291359';
+import { html, useState, useEffect, useMemo } from '../lib.js?v=202610291423';
+import { useApp, Badge, Modal, Field } from '../ui.js?v=202610291423';
+import { tr, catName, platText, platTitle, fotLabel, ingName, unitLabel } from '../i18n.js?v=202610291423';
+import { isoDate, addDays, menuRepas, platTotals, fmt, toNum, uid } from '../calc.js?v=202610291423';
+import { analyse, typeObjectif, fmtDate } from '../conseil.js?v=202610291423';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291423';
+import { aboStatut, menuDuJour, listeCourses } from '../metier.js?v=202610291423';
+import { MapView, hasPos, route, heure, fmtDuree } from '../map.js?v=202610291423';
+import { STATUTS, CRENEAU_LABEL } from '../tournee.js?v=202610291423';
+import { Chat } from '../chat.js?v=202610291423';
+import { insertRow, updateRow, remove } from '../db.js?v=202610291423';
+import { param } from '../params.js?v=202610291423';
+import { AddressField } from '../address.js?v=202610291423';
+import { Thumb } from '../pickers.js?v=202610291423';
+import { IncidentBanner, incidentPour, AvisForm, AvisListe, Etoiles, moyenne } from './social.js?v=202610291423';
 
 const t3 = (a) => tr(a[0], a[1], a[2]);
 const today = () => isoDate(new Date());

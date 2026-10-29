@@ -1,22 +1,22 @@
 // Application client (PWA) : tableau de bord, menus, livraison en direct, suivi, messages — et mode invité (démo limitée).
-import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291359';
-import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291359';
-import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291359';
-import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291359';
-import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291359';
-import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291359';
-import { analyse, typeObjectif } from '../conseil.js?v=202610291359';
-import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291359';
-import { aboStatut } from '../metier.js?v=202610291359';
-import { nonLus } from '../chat.js?v=202610291359';
-import { param } from '../params.js?v=202610291359';
-import { Thumb } from '../pickers.js?v=202610291359';
-import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291359';
-import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291359';
-import { MessagesHub, Communaute } from './social.js?v=202610291359';
-import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291359';
-import { Logo } from '../logo.js?v=202610291359';
-import { ThemeToggle } from '../theme.js?v=202610291359';
+import { html, render, useState, useEffect, useMemo } from '../lib.js?v=202610291423';
+import { AppCtx, Badge, useApp as useApp2 } from '../ui.js?v=202610291423';
+import { tr, catName, platTitle, platText } from '../i18n.js?v=202610291423';
+import { registerCustomUnits, fmt, isoDate } from '../calc.js?v=202610291423';
+import { MODE, loadAll, lireTable, updateRow } from '../db.js?v=202610291423';
+import { useLive, envoyerMessage, marquerLus } from '../live.js?v=202610291423';
+import { analyse, typeObjectif } from '../conseil.js?v=202610291423';
+import { ProfilFields, AnalysePanel, WeightChart } from '../conseil-ui.js?v=202610291423';
+import { aboStatut } from '../metier.js?v=202610291423';
+import { nonLus } from '../chat.js?v=202610291423';
+import { param } from '../params.js?v=202610291423';
+import { Thumb } from '../pickers.js?v=202610291423';
+import { LangSwitch, useLang, useToast, useAuth, NewPassword, UpdateNotice, UserMenu, CompteCard } from '../shell.js?v=202610291423';
+import { Accueil, LivraisonLive, Suivi, MessagesClient, Profil, PlatModal, objectifsVisibles } from './vues.js?v=202610291423';
+import { MessagesHub, Communaute } from './social.js?v=202610291423';
+import { Programme, AccueilDecouverte, Formules, aObjectif } from './programme.js?v=202610291423';
+import { Logo } from '../logo.js?v=202610291423';
+import { ThemeToggle } from '../theme.js?v=202610291423';
 
 const BRAND = 'Sakafo Sur Mesure';
 const DEMO_AS = (() => { const a = new URLSearchParams(location.search).get('as'); return a ? (a === 'invite' ? { user_id: 'demo-invite', admin: false, role: 'invite' } : { user_id: 'demo-' + a, admin: false, role: 'client', client_id: a }) : { user_id: 'demo-invite', admin: false, role: 'invite' }; })();
@@ -187,7 +187,7 @@ function Simulateur({ me, client, onClient, conv }) {
       <div class="obj-chips">${objs.map((c) => html`<button class=${'chip' + (c.id === catId ? ' on' : '')} onClick=${() => setCatId(c.id)}>${c.icone || ''} ${catName(c)}</button>`)}</div>
       <${ProfilFields} profil=${prof} type=${typeObjectif(cat)} onChange=${setProf} compact />
     </section>
-    <section class="c-card"><${AnalysePanel} a=${a} showRefs />${a.ok && a.prevision && html`<${WeightChart} mesures=${[]} prevision=${a.prevision} cible=${prof.poids_cible} />`}</section>
+    <section class="c-card"><${AnalysePanel} a=${a} showRefs onDate=${(patch) => setProf({ ...prof, ...patch })} />${a.ok && a.prevision && html`<${WeightChart} mesures=${[]} prevision=${a.prevision} cible=${prof.poids_cible} />`}</section>
     ${a.ok && html`<div class="locked"><span>🔒</span><p>${tr('Menus jour par jour, livraison, suivi de poids et messages avec l\'équipe : réservés aux abonnés.', 'Day-by-day menus, delivery, weight tracking and team messages: for subscribers.', 'Menu isan\'andro, fanaterana, fanaraha-maso lanja ary hafatra: ho an\'ny manana abonnement.')}</p>
       <button class="btn primary big" onClick=${demander}>${me ? tr('Enregistrer et voir mon programme', 'Save and see my programme', 'Tehirizo ary jereo ny programako') : tr('Créer mon compte pour commencer', 'Create my account to start', 'Hamorona kaonty hanombohana')}</button></div>`}
   </div>`;

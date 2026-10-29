@@ -1,11 +1,11 @@
 // Communauté (amis, fil d'actualité, encouragements), avis, messagerie par interlocuteur, incidents de livraison.
-import { html, useState, useMemo } from '../lib.js?v=202610291359';
-import { useApp, Modal, Badge } from '../ui.js?v=202610291359';
-import { tr, platTitle } from '../i18n.js?v=202610291359';
-import { fmt, isoDate } from '../calc.js?v=202610291359';
-import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291359';
-import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291359';
-import { heure } from '../map.js?v=202610291359';
+import { html, useState, useMemo } from '../lib.js?v=202610291423';
+import { useApp, Modal, Badge } from '../ui.js?v=202610291423';
+import { tr, platTitle } from '../i18n.js?v=202610291423';
+import { fmt, isoDate } from '../calc.js?v=202610291423';
+import { insertRow, updateRow, supprimer, upsert } from '../db.js?v=202610291423';
+import { Chat, ConvList, convLabel, dmId } from '../chat.js?v=202610291423';
+import { heure } from '../map.js?v=202610291423';
 
 const EMOJIS = ['👏', '💪', '🔥', '❤️', '🎉'];
 const depuis = (iso) => {

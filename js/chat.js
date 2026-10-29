@@ -1,7 +1,7 @@
 // Messagerie interne façon WhatsApp : bulles (mes messages à droite), séparateurs de jours, accusés de lecture,
 // liste des conversations avec aperçu et compteur de non-lus. Temps réel via Supabase.
-import { html, useState, useEffect, useRef } from './lib.js?v=202610291359';
-import { tr } from './i18n.js?v=202610291359';
+import { html, useState, useEffect, useRef } from './lib.js?v=202610291423';
+import { tr } from './i18n.js?v=202610291423';
 
 const ROLE_ICON = { admin: '🧑‍🍳', client: '🙂', livreur: '🛵', invite: '👤' };
 const pseudoDe = (data, cid) => (data.communaute || []).find((c) => c.client_id === cid)?.pseudo;
