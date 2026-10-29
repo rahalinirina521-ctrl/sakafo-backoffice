@@ -1,7 +1,7 @@
 // Ajout de plats en lot par l'IA (gratuit) : prompt + Excel à remplir dans ChatGPT / Claude.ai, puis import.
-import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290527';
-import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290527';
-import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290527';
+import { xlsxLib, sheetFromRows, readSheet, extractXlsxImage } from './excel.js?v=202610290532';
+import { NUTR, sumLines, uid, toNum } from './calc.js?v=202610290532';
+import { normalizePlatTexts, extractJson, TEXT_LANGS, PLAT_TEXT_FIELDS } from './prompts.js?v=202610290532';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const ING_CATS = 'Féculent / Protéine / Légumineuse / Légume / Fruit / Boisson / Laitier / Matière grasse / Condiment';
@@ -27,6 +27,15 @@ export const isExisting = (data, nom, nomCommercial) => {
   return [nom, nomCommercial].some((x) => x && keys.has(k(x)));
 };
 
+// "entre 450 et 550 kcal", "au moins 20 g", "au plus 5000 Ar"
+function between(a, b, u) {
+  a = toNum(a); b = toNum(b);
+  if (a && b) return `entre ${Math.min(a, b)} et ${Math.max(a, b)} ${u}`;
+  if (a) return `au moins ${a} ${u}`;
+  if (b) return `au plus ${b} ${u}`;
+  return '';
+}
+
 // ---------- Prompt ----------
 export function promptAjout(opts, data) {
   const cat = data.categories.find((c) => c.id === opts.categorie);
@@ -36,7 +45,7 @@ export function promptAjout(opts, data) {
   const moment = FOT_FR[opts.fotoana] || opts.fotoana;
   const what = opts.mode === 'noms'
     ? `PLATS À DOCUMENTER (${names.length}) — un plat par nom, garde ces noms comme « nom » :\n${names.map((n, i) => `${i + 1}. ${n}`).join('\n') || '(aucun nom fourni)'}\n${opts.fotoana ? `Moment par défaut : ${moment} (corrige si un plat est clairement d'un autre moment).` : 'Moment : choisis le bon moment pour chaque plat.'}`
-    : `PROPOSE ${opts.isa} NOUVEAUX PLATS :\n- Moment : ${moment || 'au choix'}\n- Cible par portion : environ ${opts.kcal || '?'} kcal (± 10 %)${opts.prot ? ', protéines au moins ' + opts.prot + ' g' : ''}\n- Budget maximum par portion : ${opts.budget ? opts.budget + ' Ar' : 'raisonnable pour Madagascar'}\n- Style : ${opts.style || '60 % plats malgaches revisités, 40 % plats du monde adaptés aux produits locaux'}\n- Exactement ${opts.isa} plats, tous différents entre eux (bases, protéines et cuissons variées).`;
+    : `PROPOSE ${opts.isa} NOUVEAUX PLATS :\n- Moment : ${moment || 'au choix'}\n- Calories par portion : ${between(opts.kcalMin, opts.kcalMax, 'kcal') || 'adaptées à l\'objectif'}\n- Protéines par portion : ${between(opts.protMin, opts.protMax, 'g') || 'adaptées à l\'objectif'}\n- Budget (coût des ingrédients) par portion : ${between(opts.budgetMin, opts.budgetMax, 'Ar') || 'raisonnable pour Madagascar'}\n- Style : ${opts.style || '60 % plats malgaches revisités, 40 % plats du monde adaptés aux produits locaux'}\n- Exactement ${opts.isa} plats, tous différents entre eux (bases, protéines et cuissons variées).`;
 
   return `Tu es nutritionniste diplômé, chef cuisinier et expert en marketing culinaire, pour un service de repas sur mesure livrés à Antananarivo (Madagascar).
 

@@ -1,23 +1,34 @@
 // Ajouter des plats avec l'IA (gratuit) : noms de plats OU demande d'idées → prompt + Excel → ChatGPT / Claude.ai remplit → import.
-import { html, useState, useMemo } from '../lib.js?v=202610290527';
-import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610290527';
-import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610290527';
-import { applyPlatTexts } from '../prompts.js?v=202610290527';
-import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290527';
-import { uploadPlatImage } from '../db.js?v=202610290527';
-import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames } from '../ajout.js?v=202610290527';
-import { fitLabel } from './plats.js?v=202610290527';
+import { html, useState, useMemo } from '../lib.js?v=202610290532';
+import { useApp, Card, Badge, Field, CopyBox, SelectOrAdd, navigate } from '../ui.js?v=202610290532';
+import { FOTOANA, SLOT_SHARE, slotTarget, fitStatus, nextId, uid, fmt, lineGrams, toNum } from '../calc.js?v=202610290532';
+import { applyPlatTexts } from '../prompts.js?v=202610290532';
+import { tr, fotLabel, catName, ingName, getLang } from '../i18n.js?v=202610290532';
+import { uploadPlatImage } from '../db.js?v=202610290532';
+import { promptAjout, exportAjout, readAjoutExcel, readAjoutJson, buildProps, parseNames } from '../ajout.js?v=202610290532';
+import { fitLabel } from './plats.js?v=202610290532';
 
 const PENDING_KEY = 'sakafo_ajout_attente';
+const r10 = (x) => Math.round(x / 10) * 10;
+// Intervalles par défaut : kcal ± 10 % autour de la cible du moment, protéines = 20 à 30 % des kcal
+function ranges(cat, fotoana) {
+  const t = slotTarget(cat, fotoana) || 500;
+  return { kcalMin: r10(t * 0.9), kcalMax: r10(t * 1.1), protMin: Math.round((t * 0.2) / 4), protMax: Math.round((t * 0.3) / 4) };
+}
+function Range({ label, a, b, onA, onB, unit, step }) {
+  return html`<${Field} label=${label}><div class="range-in">
+    <input type="number" min="0" step=${step || 1} value=${a} placeholder="min" onInput=${(e) => onA(e.target.value)} />
+    <span>→</span>
+    <input type="number" min="0" step=${step || 1} value=${b} placeholder="max" onInput=${(e) => onB(e.target.value)} />
+    ${unit && html`<small class="muted">${unit}</small>`}
+  </div><//>`;
+}
 
 export function Propositions() {
   const app = useApp();
   const { data, ingMap, toast } = app;
   const cats = [...data.categories].sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
-  const [opts, setOpts] = useState(() => {
-    const c = cats[0];
-    return { mode: 'idees', noms: '', categorie: c?.id || '', fotoana: 'Atoandro', kcal: c?.kcal_cible ? Math.round(c.kcal_cible * SLOT_SHARE.Atoandro) : 500, isa: 10, prot: '', budget: '', style: '', remarques: '' };
-  });
+  const [opts, setOpts] = useState(() => ({ mode: 'idees', noms: '', categorie: cats[0]?.id || '', fotoana: 'Atoandro', isa: 10, ...ranges(cats[0], 'Atoandro'), budgetMin: '', budgetMax: '', style: '', remarques: '' }));
   const [text, setText] = useState('');
   const [props, setProps] = useState(() => { try { return JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { return []; } });
   const savePending = (list) => { setProps(list); try { if (list.length) localStorage.setItem(PENDING_KEY, JSON.stringify(list)); else localStorage.removeItem(PENDING_KEY); } catch (e) { /* tsy voatery */ } };
@@ -27,11 +38,7 @@ export function Propositions() {
 
   const set = (k, v) => setOpts((o) => {
     const n = { ...o, [k]: v };
-    if (k === 'categorie' || k === 'fotoana') {
-      const c = data.categories.find((x) => x.id === n.categorie);
-      const t = slotTarget(c, n.fotoana);
-      if (t) n.kcal = Math.round(t);
-    }
+    if (k === 'categorie' || k === 'fotoana') Object.assign(n, ranges(data.categories.find((x) => x.id === n.categorie), n.fotoana));
     return n;
   });
 
@@ -127,9 +134,9 @@ export function Propositions() {
         <${Field} label=${tr('Moment', 'Meal time', 'Fotoana')}><${SelectOrAdd} type="fotoana" value=${opts.fotoana} defaults=${FOTOANA} labelFn=${fotLabel} onChange=${(v) => set('fotoana', v)} /><//>
         ${opts.mode === 'idees' && html`
           <${Field} label=${tr('Nombre de plats', 'Number of dishes', 'Isan\'ny sakafo')}><input type="number" min="1" max="20" value=${opts.isa} onInput=${(e) => set('isa', e.target.value)} /><//>
-          <${Field} label=${tr('Kcal par plat', 'Kcal per dish', 'Kcal isaky ny sakafo')}><input type="number" value=${opts.kcal} onInput=${(e) => set('kcal', e.target.value)} /><//>
-          <${Field} label=${tr('Protéines minimum (g)', 'Minimum protein (g)', 'Protéines farafahakeliny (g)')}><input type="number" value=${opts.prot} onInput=${(e) => set('prot', e.target.value)} /><//>
-          <${Field} label=${tr('Budget par plat (Ar)', 'Budget per dish (Ar)', 'Budget isaky ny sakafo (Ar)')}><input type="number" value=${opts.budget} onInput=${(e) => set('budget', e.target.value)} /><//>
+          <${Range} label=${tr('Kcal par plat', 'Kcal per dish', 'Kcal isaky ny sakafo')} unit="kcal" step="10" a=${opts.kcalMin} b=${opts.kcalMax} onA=${(v) => set('kcalMin', v)} onB=${(v) => set('kcalMax', v)} />
+          <${Range} label=${tr('Protéines par plat', 'Protein per dish', 'Protéines isaky ny sakafo')} unit="g" a=${opts.protMin} b=${opts.protMax} onA=${(v) => set('protMin', v)} onB=${(v) => set('protMax', v)} />
+          <${Range} label=${tr('Budget par plat (facultatif)', 'Budget per dish (optional)', 'Budget isaky ny sakafo (tsy voatery)')} unit="Ar" step="500" a=${opts.budgetMin} b=${opts.budgetMax} onA=${(v) => set('budgetMin', v)} onB=${(v) => set('budgetMax', v)} />
           <${Field} label=${tr('Style', 'Style', 'Endrika')} wide><input value=${opts.style} onInput=${(e) => set('style', e.target.value)} placeholder=${tr('ex. uniquement malgache, sans porc…', 'e.g. Malagasy only, no pork…', 'ohatra: malagasy fotsiny, tsy misy henakisoa…')} /><//>`}
         <${Field} label=${tr('Remarques (facultatif)', 'Remarks (optional)', 'Fanamarihana (tsy voatery)')} wide><input value=${opts.remarques} onInput=${(e) => set('remarques', e.target.value)} placeholder=${tr('ex. portions généreuses, sans piment', 'e.g. generous portions, no chilli', 'ohatra: be ny habetsahany, tsy misy sakay')} /><//>
       </div>

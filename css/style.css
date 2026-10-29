@@ -382,3 +382,7 @@ img { max-width: 100%; }
 .day-card .picker-btn .thumbs { width: 100%; }
 .day-card .picker-btn .pb-text b { white-space: normal; }
 .day-card .picker-btn .pb-caret { display: none; }
+
+.range-in { display: flex; align-items: center; gap: 6px; }
+.range-in input { flex: 1; min-width: 0; }
+.range-in span { color: var(--muted); }
