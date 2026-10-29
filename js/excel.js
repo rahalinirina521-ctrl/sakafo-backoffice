@@ -1,6 +1,6 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
-import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290543';
-import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290543';
+import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290636';
+import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290636';
 
 let XLSX = null;
 async function lib() {
@@ -126,9 +126,12 @@ export async function exportAll(data, ingMap) {
   add('Ingredients', data.ingredients);
   add('Menus', data.menus.map((m) => ({ ...m, repas: (m.repas || []).map((r) => `${r.fotoana}:${r.plat_id || ''}`).join(' | ') })));
   add('Categories', data.categories);
-  add('Clients', (data.clients || []).map((c) => ({ ...c, profil: JSON.stringify(c.profil || {}) })));
+  add('Clients', (data.clients || []).map((c) => ({ ...c, profil: JSON.stringify(c.profil || {}), creneaux: (c.creneaux || []).join(',') })));
   add('Planning', data.calendrier || []);
   add('Offres', data.offres || []);
+  add('Livreurs', data.livreurs || []);
+  add('Livraisons', data.livraisons || []);
+  add('Mesures', data.mesures || []);
   const d = new Date().toISOString().slice(0, 10);
   X.writeFile(wb, `backup_sakafo_${d}.xlsx`);
 }

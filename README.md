@@ -49,3 +49,17 @@ Raha foana ny `config.js` (ohatra amin'ny fanandramana), dia mandeha amin'ny "mo
 - `supabase/schema.sql`, `supabase/seed.sql`
 
 Ny sanda nutritionnelle fototra dia sanda antonony (USDA FoodData Central / Ciqual): hamarino alohan'ny hampiasana azy amin'ny client, indrindra ho an'ny diabète.
+
+## Applications client et livreur (v2)
+
+| Lien | Pour qui |
+|---|---|
+| `index.html` | Back-office (admin) |
+| `client.html` | Clients : tableau de bord, objectif + avis automatique, menus, livraison en direct, suivi du poids, messages. Sans abonnement → mode invité (démo limitée). |
+| `livreur.html` | Livreurs : tournée du jour, ordre optimisé, carte, ETA, GPS partagé, messages. |
+
+- Comptes : le client / livreur crée son compte avec l'e-mail saisi dans sa fiche → liaison automatique (trigger `private.relier_compte`).
+- Supabase → Authentication → URL Configuration : **Site URL** = l'adresse GitHub Pages du site, et ajouter `…/*` dans **Redirect URLs** (e-mails de confirmation / mot de passe).
+- Cartes : Leaflet + OpenStreetMap ; itinéraires et temps : OSRM public (gratuit, sans clé) × facteur trafic (Paramètres).
+- Migrations : `supabase/migration_006.sql` à `migration_009.sql`.
+- Avis automatique : `js/conseil.js` (Mifflin-St Jeor, NICE, IOM 2009, OMS, ISSN) — ne remplace pas un avis médical.

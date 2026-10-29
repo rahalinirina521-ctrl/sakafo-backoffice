@@ -1,22 +1,28 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290543';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo } from './db.js?v=202610290543';
-import { BRAND } from '../config.js?v=202610290543';
-import { AppCtx } from './ui.js?v=202610290543';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290543';
-import { registerCustomUnits } from './calc.js?v=202610290543';
-import { Dashboard } from './pages/dashboard.js?v=202610290543';
-import { PlatsList } from './pages/plats.js?v=202610290543';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290543';
-import { Ingredients } from './pages/ingredients.js?v=202610290543';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290543';
-import { Planning } from './pages/planning.js?v=202610290543';
-import { Clients } from './pages/clients.js?v=202610290543';
-import { Tarifs } from './pages/tarifs.js?v=202610290543';
-import { Propositions } from './pages/propositions.js?v=202610290543';
-import { Categories } from './pages/categories.js?v=202610290543';
-import { Backup } from './pages/backup.js?v=202610290543';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290636';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo, whoami, PK, updateRow } from './db.js?v=202610290636';
+import { useLive, envoyerMessage, marquerLus } from './live.js?v=202610290636';
+import { nonLus } from './chat.js?v=202610290636';
+import { BRAND } from '../config.js?v=202610290636';
+import { AppCtx } from './ui.js?v=202610290636';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290636';
+import { registerCustomUnits } from './calc.js?v=202610290636';
+import { Dashboard } from './pages/dashboard.js?v=202610290636';
+import { PlatsList } from './pages/plats.js?v=202610290636';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290636';
+import { Ingredients } from './pages/ingredients.js?v=202610290636';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290636';
+import { Planning } from './pages/planning.js?v=202610290636';
+import { Clients } from './pages/clients.js?v=202610290636';
+import { Tarifs } from './pages/tarifs.js?v=202610290636';
+import { Propositions } from './pages/propositions.js?v=202610290636';
+import { Categories } from './pages/categories.js?v=202610290636';
+import { Backup } from './pages/backup.js?v=202610290636';
+import { Livraisons } from './pages/livraisons.js?v=202610290636';
+import { Livreurs } from './pages/livreurs.js?v=202610290636';
+import { Messages } from './pages/messages.js?v=202610290636';
+import { Parametres } from './pages/parametres.js?v=202610290636';
 
-export const VERSION = '2026-10-29 05:43';
+export const VERSION = '2026-10-29 06:36';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -24,11 +30,15 @@ const nav = () => [
   ['/menus', tr('Menus', 'Menus', 'Menus')],
   ['/planning', tr('Planning', 'Planning', 'Planning')],
   ['/clients', tr('Clients', 'Customers', 'Clients')],
+  ['/livraisons', '🛵 ' + tr('Livraisons', 'Deliveries', 'Fanaterana')],
+  ['/messages', '💬 ' + tr('Messages', 'Messages', 'Hafatra')],
+  ['/livreurs', tr('Livreurs', 'Couriers', 'Mpitondra')],
   ['/tarifs', tr('Tarifs', 'Prices', 'Vidiny')],
   ['/ingredients', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
   ['/propositions', tr('Ajout IA (Excel)', 'AI add (Excel)', 'Ampiditra IA (Excel)')],
   ['/categories', tr('Objectifs', 'Goals', 'Tanjona')],
   ['/backup', tr('Sauvegarde Excel', 'Excel backup', 'Backup Excel')],
+  ['/parametres', '⚙️ ' + tr('Paramètres', 'Settings', 'Fikirana')],
 ];
 
 function useRoute() {
@@ -122,6 +132,7 @@ export function App() {
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [me, setMe] = useState(null);
 
   const changeLang = (l) => { setLang(l); setLangState(l); };
 
@@ -148,7 +159,11 @@ export function App() {
       } catch (e) { setError(e.message || String(e)); setSession(null); }
     })();
   }, []);
-  useEffect(() => { if (session) reload(); }, [session]);
+  useEffect(() => {
+    if (!session) { setMe(null); return; }
+    whoami().then((w) => { setMe({ ...w, id: w.user_id, role: 'admin', nom: BRAND }); if (w.admin) reload(); }).catch((e) => setError(e.message || String(e)));
+  }, [session]);
+  useLive(setData, [['messages'], ['positions'], ['livraisons'], ['profils']], [me?.admin]);
 
   const ingMap = useMemo(() => {
     registerCustomUnits(data?.options || []);
@@ -156,7 +171,14 @@ export function App() {
   }, [data]);
 
   const api = useMemo(() => ({
-    data, ingMap, toast, reload, lang,
+    data, ingMap, toast, reload, lang, me, setData,
+    send: (conv, texte) => envoyerMessage(setData, conv, texte, me),
+    markRead: (msgs) => marquerLus(setData, msgs, me),
+    async patch(table, id, p) {
+      await updateRow(table, id, p);
+      const k = PK[table] || 'id';
+      setData((d) => ({ ...d, [table]: (d[table] || []).map((x) => (x[k] === id ? { ...x, ...p } : x)) }));
+    },
     // manolo andalana manontolo (row feno)
     async save(table, rows) {
       rows = Array.isArray(rows) ? rows : [rows];
@@ -164,7 +186,8 @@ export function App() {
       setData((d) => {
         const list = [...(d[table] || [])];
         for (const r of rows) {
-          const i = list.findIndex((x) => x.id === r.id);
+          const k = PK[table] || 'id';
+          const i = list.findIndex((x) => x[k] === r[k]);
           if (i >= 0) list[i] = r; else list.push(r);
         }
         return { ...d, [table]: list };
@@ -197,10 +220,18 @@ export function App() {
       if (lines.length) await upsert('composition', lines);
       setData((d) => ({ ...d, composition: [...d.composition.filter((c) => c.plat_id !== platId), ...lines] }));
     },
-  }), [data, ingMap, toast, reload, lang]);
+  }), [data, ingMap, toast, reload, lang, me]);
 
   if (session === undefined) return html`<div class="center muted">${tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
   if (!session) return html`<${Login} lang=${lang} onLang=${changeLang} />`;
+  if (!me) return html`<div class="center muted">${error ? html`<span class="error">${error}</span>` : tr('Chargement…', 'Loading…', 'Miandrasa…')}</div>`;
+  if (!me.admin) {
+    return html`<div class="center"><div class="card login"><h2>${tr('Ce compte n\'est pas administrateur', 'This account is not an administrator', 'Tsy mpitantana ity kaonty ity')}</h2>
+      <p class="muted">${session.user?.email}</p>
+      <p>${tr('Utilisez l\'application qui vous correspond :', 'Use the app that matches your account:', 'Ampiasao ny application mifanaraka aminao:')}</p>
+      <div class="col"><a class="btn primary" href="client.html">🙂 ${tr('Application client', 'Customer app', 'App client')}</a><a class="btn" href="livreur.html">🛵 ${tr('Application livreur', 'Courier app', 'App livreur')}</a>
+      <button class="btn ghost" onClick=${async () => { await signOut(); setSession(null); }}>${tr('Se déconnecter', 'Sign out', 'Hivoaka')}</button></div></div></div>`;
+  }
   if (error && !data) {
     return html`<div class="center"><div class="card"><h2>${tr('Un problème est survenu', 'Something went wrong', 'Nisy olana')}</h2><p class="error">${error}</p>
       <p class="muted">${tr('Vérifiez config.js et les tables Supabase (voir le README).', 'Check config.js and the Supabase tables (see the README).', 'Hamarino ny config.js sy ny tables ao amin\'ny Supabase (jereo ny README).')}</p>
@@ -222,15 +253,20 @@ export function App() {
   else if (parts[0] === 'propositions') page = html`<${Propositions} />`;
   else if (parts[0] === 'categories') page = html`<${Categories} />`;
   else if (parts[0] === 'backup') page = html`<${Backup} />`;
+  else if (parts[0] === 'livraisons') page = html`<${Livraisons} />`;
+  else if (parts[0] === 'livreurs') page = html`<${Livreurs} />`;
+  else if (parts[0] === 'messages') page = html`<${Messages} key=${route} />`;
+  else if (parts[0] === 'parametres') page = html`<${Parametres} />`;
   else page = html`<p>${tr('Page introuvable.', 'Page not found.', 'Pejy tsy hita.')}</p>`;
 
   const active = '/' + (parts[0] || '');
+  const unread = [...new Set((data.messages || []).map((m) => m.conversation))].reduce((n, c) => n + nonLus(data.messages, c, me.id), 0);
   return html`<${AppCtx.Provider} value=${api}>
     <div class="layout">
       <aside class=${'sidebar' + (menuOpen ? ' open' : '')}>
         <div class="brand">${BRAND}<small>Back-office · ${tr('mise à jour', 'updated', 'navaozina')} ${VERSION}</small></div>
         <${LangSwitch} lang=${lang} onChange=${changeLang} />
-        <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}</a>`)}</nav>
+        <nav>${nav().map(([p, l]) => html`<a href=${'#' + p} class=${active === p ? 'active' : ''} onClick=${() => setMenuOpen(false)}>${l}${p === '/messages' && unread ? html` <span class="nav-badge">${unread}</span>` : null}</a>`)}</nav>
         <div class="side-foot">
           ${MODE === 'demo'
             ? html`<div class="demo-note"><b>${tr('Mode démo', 'Demo mode', 'Mode démo')}</b><br/>${tr('Les données sont enregistrées uniquement dans ce navigateur.', 'Data is saved in this browser only.', 'Ao amin\'ity navigateur ity ihany no voatahiry ny données.')}<br/>

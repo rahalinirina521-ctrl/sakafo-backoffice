@@ -1,8 +1,8 @@
-import { html, useState } from '../lib.js?v=202610290543';
-import { useApp, Card } from '../ui.js?v=202610290543';
-import { exportAll } from '../excel.js?v=202610290543';
-import { MODE, readBrowserDemo, migrateDemoToSupabase } from '../db.js?v=202610290543';
-import { tr } from '../i18n.js?v=202610290543';
+import { html, useState } from '../lib.js?v=202610290636';
+import { useApp, Card } from '../ui.js?v=202610290636';
+import { exportAll } from '../excel.js?v=202610290636';
+import { MODE, readBrowserDemo, migrateDemoToSupabase } from '../db.js?v=202610290636';
+import { tr } from '../i18n.js?v=202610290636';
 
 export function Backup() {
   const { data, ingMap, toast, reload } = useApp();

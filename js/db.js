@@ -1,11 +1,14 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290543';
-import { DEMO } from './seed.js?v=202610290543';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290543';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290636';
+import { DEMO } from './seed.js?v=202610290636';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290636';
 
-export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions'];
-const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions'];
+export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];
+const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres', 'suggestions', 'livreurs', 'livraisons', 'mesures', 'positions', 'messages', 'profils'];
+// clé primaire si ce n'est pas « id »
+export const PK = { positions: 'livreur_id', profils: 'user_id' };
+const pk = (t) => PK[t] || 'id';
 export const MODE = SUPABASE_URL && SUPABASE_ANON_KEY ? 'supabase' : 'demo';
 
 let client = null;
@@ -24,7 +27,7 @@ function demoLoad() {
   if (memory) return memory;
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY));
-    if (saved && saved.ingredients) { memory = saved; for (const t of ['options', 'clients', 'calendrier', 'offres', 'suggestions']) if (!memory[t]) memory[t] = t === 'offres' ? JSON.parse(JSON.stringify(DEMO.offres)) : []; return memory; }
+    if (saved && saved.ingredients) { memory = saved; for (const t of OPTIONAL_TABLES) if (!memory[t]) memory[t] = t === 'offres' ? JSON.parse(JSON.stringify(DEMO.offres)) : []; return memory; }
   } catch (e) { /* tsy misy localStorage */ }
   memory = JSON.parse(JSON.stringify(DEMO));
   demoSave();
@@ -41,12 +44,16 @@ export function resetDemo() {
 // ---------- Colonnes feno isaky ny table (mba tsy ho null ny not null) ----------
 const COLS = {
   ingredients: { id: null, nom_mg: '', nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true },
-  categories: { id: null, nom: '', nom_en: null, nom_mg: null, kcal_cible: null, tolerance: 0.1, prot_g_kg: null, cg_max: null, ordre: 0, regles: null },
+  categories: { id: null, nom: '', nom_en: null, nom_mg: null, kcal_cible: null, tolerance: 0.1, prot_g_kg: null, cg_max: null, ordre: 0, regles: null, statut: 'valide', type: null, description: null, icone: null },
   plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, conseil: null, conservation: null, post_reseaux: null, details: {}, image_url: null, prix_vente: null, statut: 'Voamarina', notes: null },
   composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
   options: { id: null, type: '', valeur: '', base: null, facteur: null, ordre: 0 },
   menus: { id: null, nom: '', categorie_id: null, repas: [], andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },
-  clients: { id: null, nom: '', telephone: null, adresse: null, repere: null, lat: null, lng: null, maps_url: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true },
+  clients: { id: null, nom: '', telephone: null, adresse: null, repere: null, lat: null, lng: null, maps_url: null, categorie_id: null, kcal_cible: null, allergies: null, notes: null, profil: {}, actif: true, email: null, formule: 'livraison', abonnement_debut: null, abonnement_fin: null, offre_id: null, creneaux: ['midi'] },
+  livreurs: { id: null, nom: '', telephone: null, email: null, vehicule: null, couleur: null, actif: true },
+  livraisons: { id: null, date: null, creneau: 'midi', client_id: null, livreur_id: null, statut: 'prevue', ordre: null, adresse: null, repere: null, lat: null, lng: null, eta: null, depart_at: null, livree_at: null, menu_id: null, note_livreur: null },
+  mesures: { id: null, client_id: null, date: null, poids: null, tour_taille: null, notes: null },
+  positions: { livreur_id: null, lat: null, lng: null, precision: null, vitesse: null, cap: null, updated_at: null },
   calendrier: { id: null, date: null, menu_id: null, categorie_id: null, client_id: null, notes: null },
   suggestions: { id: null, statut: 'attente', categorie_id: null, fotoana: null, nom: null, plat_id: null, data: {} },
   offres: { id: null, nom: '', nb_jours: 1, prix: null, categorie_id: null, description: null, actif: true, ordre: 0 },
@@ -67,7 +74,10 @@ export async function loadAll() {
   const c = await getClient();
   const out = {};
   await Promise.all(TABLES.map(async (t) => {
-    const { data, error } = await c.from(t).select('*');
+    let qy = c.from(t).select('*');
+    if (t === 'messages') qy = qy.order('created_at', { ascending: false }).limit(800);
+    if (t === 'livraisons') qy = qy.gte('date', new Date(Date.now() - 62 * 864e5).toISOString().slice(0, 10));
+    const { data, error } = await qy;
     if (error) { if (OPTIONAL_TABLES.includes(t)) { out[t] = []; return; } throw error; }
     out[t] = data || [];
   }));
@@ -82,14 +92,14 @@ export async function upsert(table, rows) {
     const d = demoLoad();
     for (const r of rows) {
       if (!d[table]) d[table] = [];
-      const i = d[table].findIndex((x) => x.id === r.id);
+      const i = d[table].findIndex((x) => x[pk(table)] === r[pk(table)]);
       if (i >= 0) d[table][i] = { ...r }; else d[table].push({ ...r });
     }
     demoSave();
     return;
   }
   const c = await getClient();
-  const { error } = await c.from(table).upsert(rows);
+  const { error } = await c.from(table).upsert(rows, { onConflict: pk(table) });
   if (error) throw error;
 }
 
@@ -98,7 +108,7 @@ export async function remove(table, ids) {
   if (!ids.length) return;
   if (MODE === 'demo') {
     const d = demoLoad();
-    d[table] = (d[table] || []).filter((x) => !ids.includes(x.id));
+    d[table] = (d[table] || []).filter((x) => !ids.includes(x[pk(table)]));
     if (table === 'plats') {
       d.composition = d.composition.filter((x) => !ids.includes(x.plat_id));
       d.menus.forEach((m) => ['maraina', 'atoandro', 'hariva', 'gouter'].forEach((k) => { if (ids.includes(m[k])) m[k] = null; }));
@@ -107,7 +117,7 @@ export async function remove(table, ids) {
     return;
   }
   const c = await getClient();
-  const { error } = await c.from(table).delete().in('id', ids);
+  const { error } = await c.from(table).delete().in(pk(table), ids);
   if (error) throw error;
 }
 
@@ -165,4 +175,68 @@ export async function migrateDemoToSupabase(d) {
     for (let i = 0; i < rows.length; i += 200) await upsert(t, rows.slice(i, i + 200));
   }
   return counts;
+}
+
+// ---------- Mise à jour partielle (clients et livreurs n'ont pas le droit d'INSERT) ----------
+export async function updateRow(table, id, patch) {
+  if (MODE === 'demo') {
+    const d = demoLoad(); const list = d[table] || (d[table] = []);
+    const i = list.findIndex((x) => x[pk(table)] === id);
+    if (i >= 0) list[i] = { ...list[i], ...patch };
+    demoSave(); return;
+  }
+  const c = await getClient();
+  const { error } = await c.from(table).update(patch).eq(pk(table), id);
+  if (error) throw error;
+}
+// Insertion simple (messages, mesures…) sans normalisation
+export async function insertRow(table, row) {
+  if (MODE === 'demo') { const d = demoLoad(); (d[table] || (d[table] = [])).push({ created_at: new Date().toISOString(), ...row }); demoSave(); return row; }
+  const c = await getClient();
+  const { data, error } = await c.from(table).insert(row).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Comptes ----------
+export async function signUp(email, password, nom) {
+  const c = await getClient();
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: { nom }, emailRedirectTo: location.href.split('#')[0] } });
+  if (error) throw error;
+  return data;
+}
+export async function resetPassword(email) {
+  const c = await getClient();
+  const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+  if (error) throw error;
+}
+export async function updatePassword(password) {
+  const c = await getClient();
+  const { error } = await c.auth.updateUser({ password });
+  if (error) throw error;
+}
+export async function onAuthChange(cb) {
+  if (MODE === 'demo') return () => {};
+  const c = await getClient();
+  const { data } = c.auth.onAuthStateChange((ev, session) => cb(ev, session));
+  return () => data.subscription.unsubscribe();
+}
+// Qui suis-je ? { user_id, admin, role: invite|client|livreur, client_id, livreur_id }
+export async function whoami(demoAs) {
+  if (MODE === 'demo') return demoAs || { user_id: 'demo', admin: true, role: 'client', client_id: null, livreur_id: null };
+  const c = await getClient();
+  const { data, error } = await c.rpc('whoami');
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Temps réel ----------
+// subscribe('messages', 'conversation=eq.client:CL0001', (payload) => …) → fonction d'arrêt
+export async function subscribe(table, filter, cb) {
+  if (MODE === 'demo') return () => {};
+  const c = await getClient();
+  const ch = c.channel('rt-' + table + '-' + Math.random().toString(36).slice(2))
+    .on('postgres_changes', { event: '*', schema: 'public', table, ...(filter ? { filter } : {}) }, (p) => cb(p))
+    .subscribe();
+  return () => { c.removeChannel(ch); };
 }
