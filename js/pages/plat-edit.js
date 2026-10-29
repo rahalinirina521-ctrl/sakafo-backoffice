@@ -14,7 +14,7 @@ const NEW_ING = { nom_fr: null, nom_en: null, categorie: null, etat: null, kcal:
 
 const EMPTY_PLAT = {
   nom: '', nom_commercial: '', marketing: '', nom_en: '', fotoana: 'Maraina', categories: [], description: '', avantages: '', effets: '',
-  nb: '', traductions: {}, details: {}, conseil: '', conservation: '', post_reseaux: '', image_url: '', prix_vente: null, statut: 'Draft', notes: '',
+  nb: '', traductions: {}, details: {}, conseil: '', conservation: '', post_reseaux: '', image_url: '', prix_vente: null, statut: 'Voamarina', notes: '',
 };
 
 const textLabel = (f) => ({

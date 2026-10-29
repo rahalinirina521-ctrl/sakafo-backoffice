@@ -58,7 +58,7 @@ create table if not exists plats (
   details     jsonb not null default '{}',   -- allergenes, regimes, preparation, temps_preparation, hashtags
   image_url   text,
   prix_vente  numeric,
-  statut      text not null default 'Draft', -- Draft / Voamarina
+  statut      text not null default 'Voamarina', -- Voamarina (Validé) / Draft
   notes       text,
   created_at  timestamptz not null default now()
 );

@@ -80,7 +80,7 @@ export function Propositions() {
         const platId = nextId('SK', platPool);
         const base = {
           id: platId, nom: p.nom || p.texts.texts.fr.nom_commercial || 'Plat', nom_commercial: '', marketing: '', nom_en: '', fotoana: p.fotoana, categories: [opts.categorie],
-          description: '', avantages: '', effets: '', nb: p.nb || '', traductions: {}, image_url: '', prix_vente: null, statut: 'Draft', notes: tr('Suggestion IA', 'AI suggestion', 'Soso-kevitra IA'),
+          description: '', avantages: '', effets: '', nb: p.nb || '', traductions: {}, image_url: '', prix_vente: null, statut: 'Voamarina', notes: tr('Suggestion IA', 'AI suggestion', 'Soso-kevitra IA'),
         };
         const plat = applyPlatTexts(base, p.texts);
         platPool.push(plat); newPlats.push(plat);

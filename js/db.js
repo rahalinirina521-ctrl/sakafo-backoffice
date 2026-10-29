@@ -42,7 +42,7 @@ export function resetDemo() {
 const COLS = {
   ingredients: { id: null, nom_mg: '', nom_fr: null, nom_en: null, categorie: null, etat: null, kcal: null, proteines: null, glucides: null, lipides: null, fibres: null, sucres: null, sodium: null, ig: null, poids_piece: null, densite: null, prix_kg: null, source: null, a_verifier: true },
   categories: { id: null, nom: '', nom_en: null, nom_mg: null, kcal_cible: null, tolerance: 0.1, prot_g_kg: null, cg_max: null, ordre: 0, regles: null },
-  plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, conseil: null, conservation: null, post_reseaux: null, details: {}, image_url: null, prix_vente: null, statut: 'Draft', notes: null },
+  plats: { id: null, nom: '', nom_commercial: null, marketing: null, nom_en: null, nb: null, traductions: {}, fotoana: null, categories: [], description: null, avantages: null, effets: null, conseil: null, conservation: null, post_reseaux: null, details: {}, image_url: null, prix_vente: null, statut: 'Voamarina', notes: null },
   composition: { id: null, plat_id: null, ingredient_id: null, quantite: 0, unite: 'g', grammes: 0, note: null, ordre: 0 },
   options: { id: null, type: '', valeur: '', base: null, facteur: null, ordre: 0 },
   menus: { id: null, nom: '', categorie_id: null, repas: [], andro: null, maraina: null, atoandro: null, hariva: null, gouter: null, notes: null },

@@ -1,7 +1,8 @@
 import { html, useState, useMemo } from '../lib.js';
 import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js';
 import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js';
-import { tr, fotLabel, catName, platTitle } from '../i18n.js';
+import { tr, fotLabel, catName, platTitle, platText } from '../i18n.js';
+import { Thumb } from '../pickers.js';
 
 export const fitLabel = (f) => ({
   Mety: tr('Adapté', 'Fits', 'Mety'),
@@ -15,15 +16,17 @@ export function PlatsList() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [fot, setFot] = useState('');
+  const [view, setView] = useState(() => { try { return localStorage.getItem('sakafo_plats_view') || 'cards'; } catch (e) { return 'cards'; } });
+  const chooseView = (v) => { setView(v); try { localStorage.setItem('sakafo_plats_view', v); } catch (e) { /* */ } };
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
     return data.plats
-      .filter((p) => (!s || (p.nom + ' ' + (p.nom_commercial || '') + ' ' + p.id).toLowerCase().includes(s)))
+      .filter((p) => (!s || (p.nom + ' ' + (p.nom_commercial || '') + ' ' + p.id + ' ' + fotLabel(p.fotoana)).toLowerCase().includes(s)))
       .filter((p) => (!cat || (p.categories || []).includes(cat)))
       .filter((p) => (!fot || p.fotoana === fot))
       .map((p) => ({ p, t: platTotals(p.id, data.composition, ingMap) }))
-      .sort((a, b) => a.p.id.localeCompare(b.p.id));
+      .sort((a, b) => b.p.id.localeCompare(a.p.id));
   }, [data, ingMap, q, cat, fot]);
 
   const catObj = data.categories.find((c) => c.id === cat);
@@ -43,8 +46,35 @@ export function PlatsList() {
         <option value="">${tr('Tous les moments', 'All meal times', 'Fotoana rehetra')}</option>
         ${optionList('fotoana', FOTOANA, data.options).map((f) => html`<option value=${f}>${fotLabel(f)}</option>`)}
       </select>
+      <div class="tabs mini view-toggle">
+        <button class=${'tab' + (view === 'cards' ? ' on' : '')} onClick=${() => chooseView('cards')} title=${tr('Cartes', 'Cards', 'Karatra')}>▦</button>
+        <button class=${'tab' + (view === 'table' ? ' on' : '')} onClick=${() => chooseView('table')} title=${tr('Tableau', 'Table', 'Tabilao')}>☰</button>
+      </div>
     </div>
-    ${rows.length === 0 ? html`<${Empty}>${tr('Aucun plat pour l\'instant. Cliquez sur « + Nouveau plat ».', 'No dishes yet. Click "+ New dish".', 'Mbola tsy misy sakafo. Tsindrio "+ Sakafo vaovao".')}<//>` : html`
+    ${rows.length === 0 ? html`<${Empty}>${tr('Aucun plat pour l\'instant. Cliquez sur « + Nouveau plat ».', 'No dishes yet. Click "+ New dish".', 'Mbola tsy misy sakafo. Tsindrio "+ Sakafo vaovao".')}<//>` : view === 'cards' ? html`
+    <div class="plat-grid">${rows.map(({ p, t }) => {
+      const fit = catObj ? fitStatus(t.kcal, slotTarget(catObj, p.fotoana), catObj.tolerance) : null;
+      const title = platTitle(p);
+      const pitch = platText(p, 'marketing');
+      return html`<a class="plat-card" href=${'#/plats/' + p.id}>
+        <div class="plat-photo">${p.image_url ? html`<img src=${p.image_url} alt=${title} loading="lazy" />` : html`<span class="plat-ph">${(title || '?').charAt(0).toUpperCase()}<small>${tr('Pas de photo', 'No photo', 'Tsy misy sary')}</small></span>`}
+          <span class="plat-moment">${fotLabel(p.fotoana)}</span>
+          ${p.statut !== 'Voamarina' && html`<span class="plat-draft">${statutLabel(p.statut)}</span>`}
+        </div>
+        <div class="plat-body">
+          <b class="plat-title">${title}</b>
+          <span class="muted small">${p.nom !== title ? p.nom + ' · ' : ''}${p.id}</span>
+          ${pitch && html`<p class="plat-pitch">${pitch}</p>`}
+          <div class="plat-macros"><span><b>${fmt(t.kcal)}</b> kcal</span><span>P ${fmt(t.proteines)} g</span><span>G ${fmt(t.glucides)} g</span><span>L ${fmt(t.lipides)} g</span></div>
+          <div class="plat-foot">
+            ${(p.categories || []).slice(0, 2).map((cid) => html`<span class="badge muted">${catName(data.categories.find((c) => c.id === cid))}</span>`)}
+            ${fit && html`<${Badge} tone=${fit.tone}>${fitLabel(fit)}${pctBadge(fit.ecart)}<//>`}
+            ${t.missing > 0 && html`<${Badge} tone="warn">${tr('incomplet', 'incomplete', 'tsy feno')}<//>`}
+            ${p.prix_vente ? html`<b class="plat-price">${fmt(p.prix_vente)} Ar</b>` : null}
+          </div>
+        </div>
+      </a>`;
+    })}</div>` : html`
     <div class="table-wrap"><table class="table resp">
       <thead><tr><th>ID</th><th>${tr('Nom', 'Name', 'Anarana')}</th><th>${tr('Moment', 'Meal', 'Fotoana')}</th><th class="num">Kcal</th><th class="num">${tr('Prot.', 'Prot.', 'Prot.')}</th><th class="num">${tr('Gluc.', 'Carbs', 'Gluc.')}</th><th class="num">${tr('Lip.', 'Fat', 'Lip.')}</th><th class="num">% prot</th>${catObj && html`<th>${tr('Adapté à', 'Fits', 'Mety amin\'ny')} ${catName(catObj)} ?</th>`}<th>${tr('Statut', 'Status', 'Sata')}</th></tr></thead>
       <tbody>${rows.map(({ p, t }) => {
@@ -52,7 +82,7 @@ export function PlatsList() {
         const title = platTitle(p);
         return html`<tr class="clickable" onClick=${() => navigate('/plats/' + p.id)}>
           <td class="mono">${p.id}</td>
-          <td><b>${title}</b>${title !== p.nom ? html`<div class="muted small">${p.nom}</div>` : null}${t.missing > 0 && html` <${Badge} tone="warn">${t.missing} ${tr('ingr. incomplets', 'incomplete ingr.', 'ingr. tsy feno')}<//>`}</td>
+          <td><span class="row gap"><${Thumb} plat=${p} size=${40} /><span><b>${title}</b>${title !== p.nom ? html`<div class="muted small">${p.nom}</div>` : null}${t.missing > 0 && html` <${Badge} tone="warn">${t.missing} ${tr('ingr. incomplets', 'incomplete ingr.', 'ingr. tsy feno')}<//>`}</span></span></td>
           <td>${fotLabel(p.fotoana)}</td>
           <td class="num"><b>${fmt(t.kcal)}</b></td>
           <td class="num">${fmt(t.proteines, 1)}</td>
