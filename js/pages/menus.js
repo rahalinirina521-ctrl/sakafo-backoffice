@@ -1,9 +1,9 @@
 // Menus = modèles réutilisables (Menu 1, Menu 2…) avec une liste de repas libre.
-import { html, useState, useMemo } from '../lib.js?v=202610290504';
-import { useApp, Badge, Card, Field, Empty, navigate, pctBadge, SelectOrAdd } from '../ui.js?v=202610290504';
-import { menuTotals, menuStatus, menuRepas, nextId, uid, platTotals, slotTarget, fmt, pct, FOTOANA } from '../calc.js?v=202610290504';
-import { tr, fotLabel, catName, platTitle } from '../i18n.js?v=202610290504';
-import { PlatPicker, Thumb } from '../pickers.js?v=202610290504';
+import { html, useState, useMemo } from '../lib.js?v=202610290520';
+import { useApp, Badge, Card, Field, Empty, navigate, pctBadge, SelectOrAdd } from '../ui.js?v=202610290520';
+import { menuTotals, menuStatus, menuRepas, nextId, uid, platTotals, slotTarget, fmt, pct, FOTOANA } from '../calc.js?v=202610290520';
+import { tr, fotLabel, catName, platTitle } from '../i18n.js?v=202610290520';
+import { PlatPicker, Thumb } from '../pickers.js?v=202610290520';
 
 export const statusLabel = (s) => ({
   OK: 'OK',

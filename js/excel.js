@@ -1,6 +1,6 @@
 // Export / import Excel (SheetJS, ampidirina rehefa ilaina ihany).
-import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290504';
-import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290504';
+import { ING_FIELDS, PLAT_SHEET_FIELDS, PLAT_TEXT_FIELDS, TEXT_LANGS, DETAIL_FIELDS, ingredientsToFill } from './prompts.js?v=202610290520';
+import { NUTR, sumLines, lineGrams } from './calc.js?v=202610290520';
 
 let XLSX = null;
 async function lib() {
@@ -48,9 +48,10 @@ function normHeader(h) {
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/\s*\/\s*100\s*g/g, '').replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
-const NUM_FIELDS = new Set(['kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'prix_kg', 'grammes', 'poids_piece', 'densite', 'quantite']);
+const NUM_FIELDS = new Set(['prix_vente', 'kcal', 'proteines', 'glucides', 'lipides', 'fibres', 'sucres', 'sodium', 'ig', 'prix_kg', 'grammes', 'poids_piece', 'densite', 'quantite']);
 
-function readSheet(X, ws) {
+export { lib as xlsxLib, sheetFromRows };
+export function readSheet(X, ws, keyField = 'id') {
   if (!ws) return [];
   const rows = X.utils.sheet_to_json(ws, { header: 1, defval: null, blankrows: false });
   if (!rows.length) return [];
@@ -69,7 +70,7 @@ function readSheet(X, ws) {
       o[h] = v;
     });
     return o;
-  }).filter((o) => o.id);
+  }).filter((o) => o[keyField]);
 }
 
 // Mamerina { plat, ingredients } mitovy amin'ny JSON

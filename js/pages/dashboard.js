@@ -1,8 +1,8 @@
-import { html, useMemo } from '../lib.js?v=202610290504';
-import { useApp, Card, Badge } from '../ui.js?v=202610290504';
-import { platTotals, isComplete } from '../calc.js?v=202610290504';
-import { tr, ingName, platTitle } from '../i18n.js?v=202610290504';
-import { MODE } from '../db.js?v=202610290504';
+import { html, useMemo } from '../lib.js?v=202610290520';
+import { useApp, Card, Badge } from '../ui.js?v=202610290520';
+import { platTotals, isComplete } from '../calc.js?v=202610290520';
+import { tr, ingName, platTitle } from '../i18n.js?v=202610290520';
+import { MODE } from '../db.js?v=202610290520';
 
 export function Dashboard() {
   const { data, ingMap } = useApp();
@@ -43,7 +43,7 @@ export function Dashboard() {
           html`<b>Paste the answer</b> (JSON or Excel) → nutrition values, piece weights, commercial name and marketing summary in FR / EN / MG filled in automatically.`,
           html`<b>Apetaho ny valiny</b> (JSON na Excel) → feno ho azy ny valeur, ny lanjan'ny isa, ny anarana commercial sy résumé marketing amin'ny FR / EN / MG.`)}</li>
         <li>${tr('Modifiez les quantités : les calories se recalculent aussitôt.', 'Change quantities: calories update instantly.', 'Ovay ny habetsahana: miova avy hatrany ny kcal.')}</li>
-        <li>${tr(html`À court d'idées : <a href="#/propositions">Suggestions IA</a> → gardez seulement ce qui vous plaît.`, html`Out of ideas: <a href="#/propositions">AI suggestions</a> → keep only what you like.`, html`Rehefa lany hevitra: <a href="#/propositions">Soso-kevitra IA</a> → izay tianao ihany no ampidirina.`)}</li>
+        <li>${tr(html`Plusieurs plats d'un coup (noms ou idées) : <a href="#/propositions">Ajout IA (Excel)</a> → prompt + Excel dans ChatGPT/Claude.ai, puis import.`, html`Several dishes at once (names or ideas): <a href="#/propositions">AI add (Excel)</a> → prompt + Excel in ChatGPT/Claude.ai, then import.`, html`Sakafo maromaro indray mandeha (anarana na hevitra): <a href="#/propositions">Ampiditra IA (Excel)</a> → prompt + Excel ao amin'ny ChatGPT/Claude.ai, dia import.`)}</li>
       </ol>
     <//>
 

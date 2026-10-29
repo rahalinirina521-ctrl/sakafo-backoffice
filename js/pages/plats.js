@@ -1,8 +1,8 @@
-import { html, useState, useMemo } from '../lib.js?v=202610290504';
-import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js?v=202610290504';
-import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js?v=202610290504';
-import { tr, fotLabel, catName, platTitle, platText } from '../i18n.js?v=202610290504';
-import { Thumb } from '../pickers.js?v=202610290504';
+import { html, useState, useMemo } from '../lib.js?v=202610290520';
+import { useApp, Badge, navigate, Empty, pctBadge } from '../ui.js?v=202610290520';
+import { platTotals, slotTarget, fitStatus, FOTOANA, optionList, fmt, pct } from '../calc.js?v=202610290520';
+import { tr, fotLabel, catName, platTitle, platText } from '../i18n.js?v=202610290520';
+import { Thumb } from '../pickers.js?v=202610290520';
 
 export const fitLabel = (f) => ({
   Mety: tr('Adapté', 'Fits', 'Mety'),
@@ -34,6 +34,7 @@ export function PlatsList() {
   return html`<div class="page">
     <div class="page-head">
       <h1>${tr('Plats', 'Dishes', 'Sakafo')} <span class="muted">(${data.plats.length})</span></h1>
+      <button class="btn" onClick=${() => navigate('/propositions')}>🤖 ${tr('Plusieurs plats (IA + Excel)', 'Several dishes (AI + Excel)', 'Sakafo maromaro (IA + Excel)')}</button>
       <button class="btn primary" onClick=${() => navigate('/plats/vaovao')}>+ ${tr('Nouveau plat', 'New dish', 'Sakafo vaovao')}</button>
     </div>
     <div class="filters">

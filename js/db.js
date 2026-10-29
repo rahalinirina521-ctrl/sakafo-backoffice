@@ -1,8 +1,8 @@
 // Fidirana amin'ny données: Supabase raha voafetra ao amin'ny config.js,
 // raha tsy izany dia "mode démo" (localStorage ao amin'ny navigateur).
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290504';
-import { DEMO } from './seed.js?v=202610290504';
-import { resizeImage, blobToDataUrl } from './image.js?v=202610290504';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js?v=202610290520';
+import { DEMO } from './seed.js?v=202610290520';
+import { resizeImage, blobToDataUrl } from './image.js?v=202610290520';
 
 export const TABLES = ['ingredients', 'categories', 'plats', 'composition', 'menus', 'options', 'clients', 'calendrier', 'offres'];
 const OPTIONAL_TABLES = ['options', 'clients', 'calendrier', 'offres'];
@@ -164,21 +164,4 @@ export async function migrateDemoToSupabase(d) {
     for (let i = 0; i < rows.length; i += 200) await upsert(t, rows.slice(i, i + 200));
   }
   return counts;
-}
-
-// ---------- IA ao anatiny (Edge Function "ia-hameno") ----------
-// Mamerina ny soratra navalin'ny IA. Raha tsy voafetra ny cle API: error.code = 'no_key'
-export async function callAI(prompt) {
-  if (MODE === 'demo') { const e = new Error('Supabase requis'); e.code = 'demo'; throw e; }
-  const c = await getClient();
-  const { data, error } = await c.functions.invoke('ia-hameno', { body: { prompt } });
-  if (error) {
-    let info = {};
-    try { info = await error.context.json(); } catch (x) { /* tsy JSON */ }
-    const e = new Error(info.error || error.message || 'Erreur IA');
-    e.code = info.code || 'ai';
-    throw e;
-  }
-  if (!data || typeof data.text !== 'string') throw new Error('Réponse IA vide');
-  return data.text;
 }

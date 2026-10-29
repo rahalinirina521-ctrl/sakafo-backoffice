@@ -1,22 +1,22 @@
-import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290504';
-import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo } from './db.js?v=202610290504';
-import { BRAND } from '../config.js?v=202610290504';
-import { AppCtx } from './ui.js?v=202610290504';
-import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290504';
-import { registerCustomUnits } from './calc.js?v=202610290504';
-import { Dashboard } from './pages/dashboard.js?v=202610290504';
-import { PlatsList } from './pages/plats.js?v=202610290504';
-import { PlatEdit } from './pages/plat-edit.js?v=202610290504';
-import { Ingredients } from './pages/ingredients.js?v=202610290504';
-import { Menus, MenuEdit } from './pages/menus.js?v=202610290504';
-import { Planning } from './pages/planning.js?v=202610290504';
-import { Clients } from './pages/clients.js?v=202610290504';
-import { Tarifs } from './pages/tarifs.js?v=202610290504';
-import { Propositions } from './pages/propositions.js?v=202610290504';
-import { Categories } from './pages/categories.js?v=202610290504';
-import { Backup } from './pages/backup.js?v=202610290504';
+import { html, render, useState, useEffect, useMemo, useCallback } from './lib.js?v=202610290520';
+import { MODE, loadAll, upsert, remove, getSession, signIn, signOut, getClient, resetDemo } from './db.js?v=202610290520';
+import { BRAND } from '../config.js?v=202610290520';
+import { AppCtx } from './ui.js?v=202610290520';
+import { tr, getLang, setLang, LANGS, LANG_SHORT } from './i18n.js?v=202610290520';
+import { registerCustomUnits } from './calc.js?v=202610290520';
+import { Dashboard } from './pages/dashboard.js?v=202610290520';
+import { PlatsList } from './pages/plats.js?v=202610290520';
+import { PlatEdit } from './pages/plat-edit.js?v=202610290520';
+import { Ingredients } from './pages/ingredients.js?v=202610290520';
+import { Menus, MenuEdit } from './pages/menus.js?v=202610290520';
+import { Planning } from './pages/planning.js?v=202610290520';
+import { Clients } from './pages/clients.js?v=202610290520';
+import { Tarifs } from './pages/tarifs.js?v=202610290520';
+import { Propositions } from './pages/propositions.js?v=202610290520';
+import { Categories } from './pages/categories.js?v=202610290520';
+import { Backup } from './pages/backup.js?v=202610290520';
 
-export const VERSION = '2026-10-29 05:04';
+export const VERSION = '2026-10-29 05:20';
 
 const nav = () => [
   ['/', tr('Tableau de bord', 'Dashboard', 'Tableau de bord')],
@@ -26,7 +26,7 @@ const nav = () => [
   ['/clients', tr('Clients', 'Customers', 'Clients')],
   ['/tarifs', tr('Tarifs', 'Prices', 'Vidiny')],
   ['/ingredients', tr('Ingrédients', 'Ingredients', 'Ingrédients')],
-  ['/propositions', tr('Suggestions IA', 'AI suggestions', 'Soso-kevitra IA')],
+  ['/propositions', tr('Ajout IA (Excel)', 'AI add (Excel)', 'Ampiditra IA (Excel)')],
   ['/categories', tr('Objectifs', 'Goals', 'Tanjona')],
   ['/backup', tr('Sauvegarde Excel', 'Excel backup', 'Backup Excel')],
 ];

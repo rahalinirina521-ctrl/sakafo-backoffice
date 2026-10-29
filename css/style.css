@@ -125,6 +125,7 @@ textarea { resize: vertical; }
 .ai-steps { display: grid; grid-template-columns: 1.3fr .8fr 1.3fr; gap: 16px; }
 .ai-step { background: #fafbf8; border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .ai-step h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
+.ai-steps.two { grid-template-columns: 1.4fr 1fr; }
 .num-circle { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; font-size: 12px; }
 .copybox { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .copybox textarea { font-size: 12px; }
@@ -158,7 +159,7 @@ textarea { resize: vertical; }
 /* responsive */
 @media (max-width: 1100px) {
   .edit-grid { grid-template-columns: 1fr; } .sticky { position: static; }
-  .ai-steps { grid-template-columns: 1fr; }
+  .ai-steps, .ai-steps.two { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; }

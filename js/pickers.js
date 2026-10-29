@@ -1,8 +1,8 @@
 // Mpisafidy misy fikarohana sy sary: sakafo (plat) sy menu.
-import { html, useState, useMemo } from './lib.js?v=202610290504';
-import { useApp, Badge } from './ui.js?v=202610290504';
-import { platTotals, menuTotals, menuRepas, fmt } from './calc.js?v=202610290504';
-import { tr, fotLabel, catName, platTitle } from './i18n.js?v=202610290504';
+import { html, useState, useMemo } from './lib.js?v=202610290520';
+import { useApp, Badge } from './ui.js?v=202610290520';
+import { platTotals, menuTotals, menuRepas, fmt } from './calc.js?v=202610290520';
+import { tr, fotLabel, catName, platTitle } from './i18n.js?v=202610290520';
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
