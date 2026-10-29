@@ -39,9 +39,7 @@ export function Planning() {
   const resolve = (d) => {
     if (scope === 'cat') return { menuId: own(d)?.menu_id || null, source: own(d) ? 'own' : null };
     const o = own(d);
-    if (o) return { menuId: o.menu_id, source: 'own' };
-    const g = generic(d);
-    return { menuId: g?.menu_id || null, source: g ? 'general' : null };
+    return { menuId: o?.menu_id || null, source: o ? 'own' : null, suggestion: generic(d)?.menu_id || null };
   };
   const row = (d, menuId) => ({ id: keyFor(d), date: d, menu_id: menuId, categorie_id: scope === 'cat' ? catId : (client?.categorie_id || null), client_id: scope === 'client' ? clientId : null, notes: null });
 
@@ -60,6 +58,11 @@ export function Planning() {
     if (!rows.length) throw new Error(tr('La semaine précédente est vide.', 'The previous week is empty.', 'Foana ny herinandro teo aloha.'));
     await app.save('calendrier', rows);
   }, tr('Semaine précédente copiée', 'Previous week copied', 'Voadika ny herinandro teo aloha'));
+  const copyGeneral = () => bulk(async () => {
+    const rows = days.filter((d) => !own(d) && generic(d)).map((d) => row(d, generic(d).menu_id));
+    if (!rows.length) throw new Error(tr('Rien à reprendre (jours déjà remplis ou pas de menu général).', 'Nothing to copy (days already filled or no general menu).', 'Tsy misy haka.'));
+    await app.save('calendrier', rows);
+  }, tr('Menu général repris pour les jours vides', 'General menu applied to empty days', 'Napetraka amin\'ny andro foana ny menu iraisana'));
   const sameAll = (menuId) => menuId && bulk(() => app.save('calendrier', days.map((d) => row(d, menuId))), tr('Menu appliqué à toute la semaine', 'Menu applied to the whole week', 'Napetraka amin\'ny herinandro manontolo'));
   const repeat = () => bulk(async () => {
     const rows = [];
@@ -89,7 +92,7 @@ export function Planning() {
     </div>
     <p class="muted small">${scope === 'cat'
       ? tr('Le menu général est servi à tous les clients de cet objectif, sauf ceux qui ont un menu personnalisé ce jour-là.', 'The general menu is served to all customers with this goal, except those with a personal menu that day.', 'Ny menu iraisana dia omena ny client rehetra manana io tanjona io, afa-tsy izay manana menu manokana amin\'io andro io.')
-      : tr('Les jours sans menu personnalisé utilisent le menu général de son objectif (en gris). Choisissez un autre menu pour personnaliser.', 'Days without a personal menu use the general menu for their goal (grey). Choose another menu to personalise.', 'Ny andro tsy misy menu manokana dia mampiasa ny menu iraisana amin\'ny tanjony (miloko volondavenona). Misafidiana menu hafa raha hanokana.')}</p>
+      : tr('Choisissez le menu de chaque jour pour ce client. 💡 = suggestion : le menu général prévu ce jour-là pour son objectif (un clic pour l\'utiliser).', 'Choose the menu of each day for this customer. 💡 = suggestion: the general menu planned that day for their goal (one click to use it).', 'Safidio ny menu isan\'andro ho an\'ity client ity. 💡 = soso-kevitra: ny menu iraisana voalahatra amin\'io andro io ho an\'ny tanjony (tsindrio indray mandeha raha hampiasa azy).')}</p>
 
     ${scope === 'client' && !client ? html`<${Empty}>${tr('Aucun client pour l\'instant.', 'No customer yet.', 'Mbola tsy misy client.')}<//>` : html`
     <${Card}>
@@ -107,16 +110,17 @@ export function Planning() {
         const st = t ? menuStatus(null, t, category, cible) : null;
         return html`<div class=${'day-card' + (d === today ? ' today' : '') + (r.source === 'general' ? ' general' : '')}>
           <div class="day-head"><b>${dayName(d)}</b><span class="muted small">${dayShort(d)}</span></div>
-          <${MenuPicker} value=${r.menuId} categorieId=${effCat} onChange=${(v) => setDay(d, v)} placeholder=${tr('+ Choisir un menu', '+ Choose a menu', '+ Misafidiana menu')} />
+          <${MenuPicker} value=${r.menuId} categorieId=${effCat} suggestedId=${r.suggestion} onChange=${(v) => setDay(d, v)} placeholder=${tr('+ Choisir un menu', '+ Choose a menu', '+ Misafidiana menu')} />
           <div class="day-foot">
             ${st && html`<${Badge} tone=${st.tone}>${fmt(t.kcal)} kcal${pctBadge(st.ecart)}<//>`}
-            ${r.source === 'general' && html`<span class="badge muted">${tr('menu général', 'general menu', 'menu iraisana')}</span>`}
-            ${scope === 'client' && r.source === 'own' && generic(d) && html`<button class="link-btn" onClick=${() => setDay(d, null)}>${tr('Revenir au général', 'Back to general', 'Hiverina amin\'ny iraisana')}</button>`}
+            ${scope === 'client' && !r.menuId && r.suggestion && html`<button class="suggest-btn" title=${tr('Utiliser le menu général du jour', 'Use the general menu of the day', 'Ampiasao ny menu iraisana androany')} onClick=${() => setDay(d, r.suggestion)}>💡 ${data.menus.find((m) => m.id === r.suggestion)?.nom || r.suggestion}</button>`}
+            ${scope === 'client' && r.menuId && r.menuId === r.suggestion && html`<span class="badge muted">${tr('= menu général', '= general menu', '= menu iraisana')}</span>`}
           </div>
         </div>`;
       })}</div>
 
       <div class="week-actions">
+        ${scope === 'client' && days.some((d) => generic(d)) && html`<button class="btn" disabled=${busy} onClick=${copyGeneral}>💡 ${tr('Reprendre le menu général de la semaine', 'Use the general menu for the week', 'Raisina ny menu iraisana amin\'ity herinandro ity')}</button>`}
         <button class="btn" disabled=${busy} onClick=${copyPrev}>${tr('Copier la semaine précédente', 'Copy previous week', 'Adikao ny herinandro teo aloha')}</button>
         <span class="row gap wrap"><span class="muted small">${tr('Même menu toute la semaine :', 'Same menu all week:', 'Menu iray ihany mandritra ny herinandro:')}</span><${MenuPicker} value=${null} categorieId=${effCat} onChange=${sameAll} placeholder=${tr('Choisir…', 'Choose…', 'Safidio…')} compact /></span>
         <span class="row gap wrap"><button class="btn" disabled=${busy} onClick=${repeat}>${tr('Répéter cette semaine sur', 'Repeat this week for', 'Avereno ity herinandro ity mandritra ny')}</button>

@@ -76,7 +76,7 @@ export function PlatPicker({ value, fotoana, categorieId, onChange, placeholder 
 }
 
 // ---------- Menu ----------
-export function MenuPicker({ value, categorieId, onChange, placeholder, compact }) {
+export function MenuPicker({ value, categorieId, onChange, placeholder, compact, suggestedId }) {
   const { data, ingMap } = useApp();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -102,6 +102,17 @@ export function MenuPicker({ value, categorieId, onChange, placeholder, compact 
     </button>
     ${open && html`<${PickerModal} title=${tr('Choisir un menu', 'Choose a menu', 'Misafidiana menu')} onClose=${() => setOpen(false)} search=${search} setSearch=${setSearch} filters=${filters}>
       ${value && html`<button class="picker-item clear" onClick=${() => { onChange(null); setOpen(false); }}>✕ ${tr('Aucun menu ce jour', 'No menu this day', 'Tsy misy menu amin\'io andro io')}</button>`}
+      ${suggestedId && data.menus.find((m) => m.id === suggestedId) && (() => {
+        const m = data.menus.find((x) => x.id === suggestedId);
+        const ps = platsOf(m);
+        return html`<p class="picker-group">💡 ${tr('Suggestion : menu général du jour', 'Suggestion: general menu of the day', 'Soso-kevitra: menu iraisana androany')}</p>
+          <button class="picker-item suggest" onClick=${() => { onChange(m.id); setOpen(false); setSearch(''); }}>
+            <span class="thumbs">${ps.slice(0, 4).map((p) => html`<${Thumb} plat=${p} size=${40} />`)}</span>
+            <span class="pi-text"><b>${m.nom || m.id}</b><small>${ps.map((p) => platTitle(p)).join(' · ')}</small></span>
+            <span class="pi-kcal"><b>${fmt(tot(m).kcal)}</b><small>kcal</small></span>
+          </button>
+          <p class="picker-group">${tr('Tous les menus', 'All menus', 'Menus rehetra')}</p>`;
+      })()}
       ${list.length === 0 && html`<p class="muted center-text">${tr('Aucun menu. Créez-en un dans « Menus ».', 'No menu. Create one in "Menus".', 'Tsy misy menu. Mamorona ao amin\'ny "Menus".')}</p>`}
       ${list.map((m) => {
         const t = tot(m);

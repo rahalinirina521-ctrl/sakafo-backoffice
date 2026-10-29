@@ -367,3 +367,11 @@ img { max-width: 100%; }
 .map-links .btn { text-decoration: none; }
 .addr-cell { display: block; margin-bottom: 4px; }
 @media (max-width: 760px) { .small-input { font-size: 16px; } .map-preview { height: 200px; } }
+
+.picker-item.suggest { border-color: #f2c27a; background: #fff8ec; }
+.suggest-btn { font: inherit; font-size: 12px; border: 1px dashed #f2c27a; background: #fff8ec; color: #7a4a00; border-radius: 99px; padding: 3px 10px; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest-btn:hover { background: #ffefd2; }
+.day-card .picker-btn { flex-wrap: wrap; gap: 6px; }
+.day-card .picker-btn .thumbs { width: 100%; }
+.day-card .picker-btn .pb-text b { white-space: normal; }
+.day-card .picker-btn .pb-caret { display: none; }
